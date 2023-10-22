@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Home{% endblock %} {% block content%}
+<h1 align="center">Chat</h1>
+<img src="https://scontent-fra3-1.cdninstagram.com/v/t51.29350-15/387685346_285699594342644_6636709025233878081_n.jpg?_nc_cat=105&ccb=1-7&_nc_sid=c4dd86&_nc_ohc=T-6uAJqxNmkAX_Qmzk7&_nc_ht=scontent-fra3-1.cdninstagram.com&edm=AEQ6tj4EAAAA&oh=00_AfAAC5pDowx6JCU_cPRLbziDHex4SQTyb8DF5DdzYdTBLQ&oe=653AADC2" alt="Instagram Image" width="300">
+<ul class="list-group">
+  {% for dat in comments %}
+    <li class="list-group-item">
+      <span class="badge badge-primary badge-pill">{{ dat["username"] }}</span>
+      : {{ dat["text"] }}
+    </li>
+    {% if "replies" in dat %}
+      <ul class="list-group ml-3">
+        {% for datt in dat["replies"]["data"] %}
+          <li class="list-group-item">
+            <span class="badge badge-primary badge-pill">{{ datt["username"] }}</span>
+            : {{ datt["text"] }}
+          </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+  {% endfor %}
+</ul>
+<form method="POST">
+  <textarea name="note" id="note" class="form-control"></textarea>
+  <br />
+  <div align="center">
+    <button type="submit" class="btn btn-primary">Ask</button>
+  </div>
+</form>
+
+
+<button type="button" class="close" onclick="test()">
+  <span aria-hidden="true">&times;</span>
+</button>
+{% endblock %}
