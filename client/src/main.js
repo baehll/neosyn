@@ -48,7 +48,7 @@ function fbEvents() {
                     if(res.authResponse) {
                         console.log("logged in")
                     }
-                })
+                }, {scope: 'instagram_basic,pages_show_list'})
             } else {
                 store.populateData();
             }
