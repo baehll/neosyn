@@ -1,10 +1,10 @@
 <template>
-    <div class='row'>
-        <div class="col-1 pt-2">
+    <div class='d-flex row border border-2 flex-nowrap'>
+        <div class="col-2 ps-0">
             <img :src="state.profile_picture_url" class="profile-picture"/>
             <!--Profile picture-->
         </div>
-        <div class="col ps-4">
+        <div class="col-10">
             <div class="row">
                 <div class="col">
                     <b>{{ comment.username }}</b>
@@ -27,7 +27,7 @@
                 </p>
             </div>
             <div class="row mb-1">
-                <div class="divider ">
+                <div class="divider">
 
                 </div>
             </div>
@@ -57,7 +57,6 @@ const state = reactive({
 })
 
 onMounted(() => {
-    console.log(props.comment)
     FB.api(props.comment.from.id, {fields:"profile_picture_url"}, (res) => {
         state.profile_picture_url = res.profile_picture_url;
     })
@@ -74,7 +73,6 @@ onMounted(() => {
 }
 .divider {
     height: 0.3em;
-    max-width: 90%;
     background-color: rgb(170, 170, 170);
 }
 </style>

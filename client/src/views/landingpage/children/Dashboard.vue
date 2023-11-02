@@ -4,11 +4,22 @@
             <h1>Dashboard!</h1>
         </div>
         <div class="row">
-            <template v-if="store.name != ''">
-                <div>
-                    <h4>Hallo, {{ store.name }}</h4>
+            <div class="card p-0 comment-list">
+                <div class="card-header bg-white">
+                    <h3>Recent Comments</h3>
                 </div>
-            </template>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush" v-for="pageComments in store.comments" style="">
+                        <template v-for="c in pageComments.data">
+                            <Comment :comment="c" class="list-group-item rounded-4 p-3 m-1" />
+                            <template v-for="r in c.replies?.data">
+                                <Comment :comment="r" class="list-group-item rounded-4 p-3 m-1" />
+                            </template>
+                        </template>
+                    </ul>
+                </div>
+            </div>
+            <!--
             <div class="col">
                 <template v-for="page in store.pages">
                     <div class="row border border-5">
@@ -34,6 +45,7 @@
                     </div>
                 </template>
             </div>
+            -->
         </div>
     </div>
 </template>
@@ -43,9 +55,12 @@ import { useFBStore } from "../../../store/fb"
 import Comment from '../../../components/Comments.vue'
 
 const store = useFBStore();
-
 </script>
 
 <style scoped>
-
+.comment-list {
+    max-height: 60%;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
 </style>
