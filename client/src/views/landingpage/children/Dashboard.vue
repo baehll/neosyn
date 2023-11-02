@@ -8,14 +8,14 @@
                 <div class="card-header bg-white">
                     <h3>Recent Comments</h3>
                 </div>
-                <div class="card-body">
-                    <ul class="list-group list-group-flush" v-for="pageComments in store.comments" style="">
-                        <template v-for="c in pageComments.data">
-                            <Comment :comment="c" class="list-group-item rounded-4 p-3 m-1" />
+                <div class="card-body comment-list-body">
+                    <ul class="list-group list-group-flush" v-for="pageComments in store.comments">
+                        <div v-for="c in pageComments">
+                            <Comment :comment="c" class="list-group-item rounded-4 p-3 m-1 shadow-lg" />
                             <template v-for="r in c.replies?.data">
                                 <Comment :comment="r" class="list-group-item rounded-4 p-3 m-1" />
                             </template>
-                        </template>
+                        </div>
                     </ul>
                 </div>
             </div>
@@ -52,14 +52,19 @@
 
 <script setup>
 import { useFBStore } from "../../../store/fb"
-import Comment from '../../../components/Comments.vue'
+import Comment from '../../../components/Comment.vue'
+import { reactive } from "vue";
 
 const store = useFBStore();
+
 </script>
 
 <style scoped>
 .comment-list {
-    max-height: 60%;
+    max-height: 60vh;
+}
+
+.comment-list-body {
     overflow-y: auto;
     overflow-x: hidden;
 }

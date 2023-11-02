@@ -57,12 +57,14 @@ const state = reactive({
 })
 
 onMounted(() => {
+    console.log(props.comment)
     FB.api(props.comment.from.id, {fields:"profile_picture_url"}, (res) => {
         state.profile_picture_url = res.profile_picture_url;
     })
     const d = new Date(props.comment.timestamp)
     state.time = d.getDay() + "." + d.getMonth() + "." + d.getFullYear() + ", " + d.getHours() + ":" + d.getMinutes();
 })
+
 </script>
 
 <style>

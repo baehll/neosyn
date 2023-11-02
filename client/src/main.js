@@ -48,10 +48,9 @@ function fbEvents() {
                     if(res.authResponse) {
                         console.log("logged in")
                     }
-                }, {scope: 'instagram_basic,pages_show_list'})
-            } else {
-                store.populateData();
+                }, {scope: 'pages_show_list,business_management,instagram_basic,instagram_manage_comments,pages_read_engagement,pages_manage_metadata,pages_read_user_content,pages_manage_ads,pages_manage_engagement,public_profile'})
             }
+            store.populateData();
         })
     })
 }
