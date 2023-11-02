@@ -52,7 +52,6 @@ function fbEvents() {
             } else {
                 store.populateData();
             }
-            console.log("fb sdk ready");
         })
     })
 }

@@ -22,14 +22,10 @@
                                     <h3>
                                         {{ media.caption }}
                                     </h3>
-                                    <template v-for="comment in media.comments.data">
-                                        <div class="border border-5">
-                                            <b>{{ comment.username }}</b> {{ comment.text }}
-                                        </div>
-                                        <template v-for="reply in comment.replies.data">
-                                            <div class="ms-4 border border-5 ">
-                                                <b>{{ reply.username }}</b> {{ reply.text }}
-                                            </div>
+                                    <template v-for="c in media.comments.data">
+                                        <Comment :comment="c" class="border border-3"/>
+                                        <template v-for="r in c.replies.data">
+                                            <Comment :comment="r" class="ms-4 border border-3"/>
                                         </template>
                                     </template>
                                 </div>
@@ -43,14 +39,10 @@
 </template>
 
 <script setup>
-import { onMounted, reactive } from 'vue';
-import {useFBStore} from "../../../store/fb"
+import { useFBStore } from "../../../store/fb"
+import Comment from '../../../components/Comments.vue'
 
 const store = useFBStore();
-
-onMounted(() => {
-    
-})
 
 </script>
 
