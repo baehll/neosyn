@@ -6,6 +6,8 @@ export const useFBStore = defineStore('fb', () => {
     const comments = ref([])
     const initFinished = ref(false)
 
+    const axios = inject('AXIOS_INSTANCE')
+
     function populateData() {
         //Zuerst alle zugehörigen Pages/Accounts finden
         FB.api("/me/accounts", (resp) => {
@@ -38,10 +40,9 @@ export const useFBStore = defineStore('fb', () => {
     }
 
     function sendAuthTokens() {
-        const axios = inject('AXIOS_INSTANCE')
 
         FB.getLoginStatus((res) => {
-            axios.postForm("token", {token: res.authResponse.accessToken})
+            axios.post("token?token="+res.authResponse.accessToken)
         })
     }
 
