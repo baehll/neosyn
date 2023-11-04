@@ -1,5 +1,5 @@
 import { defineStore } from "pinia";
-import {ref} from "vue"
+import { inject, ref } from "vue"
 
 export const useFBStore = defineStore('fb', () => {
     const pages = ref([])
@@ -37,11 +37,20 @@ export const useFBStore = defineStore('fb', () => {
         initFinished.value = true;
     }
 
+    function sendAuthTokens() {
+        const axios = inject('AXIOS_INSTANCE')
+
+        FB.getLoginStatus((res) => {
+            axios.postForm("token", {token: res.authResponse.accessToken})
+        })
+    }
+
 
     return {
         initFinished, 
         pages,
         comments, 
-        populateData 
+        populateData,
+        sendAuthTokens 
     }
 })

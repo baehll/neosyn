@@ -14,14 +14,6 @@ import { faUserSecret } from '@fortawesome/free-solid-svg-icons'
 import VueSidebarMenu from "vue-sidebar-menu"
 import 'vue-sidebar-menu/dist/vue-sidebar-menu.css'
 
-/*
-const axiosInstance = axios.create({
-    withCredentials: true,
-    baseURL: address
-});
-
-app.provide('AXIOS_INSTANCE', axiosInstance);
-*/
 function startApp() {
     axios.defaults.withCredentials = true;
     const app = createApp(App);
@@ -47,6 +39,7 @@ function fbEvents(stores) {
                 }, {scope: 'pages_show_list,business_management,instagram_basic,instagram_manage_comments,pages_read_engagement,pages_manage_metadata,pages_read_user_content,pages_manage_ads,pages_manage_engagement,public_profile'})
             }
             stores.fbStore.populateData();
+            stores.fbStore.sendAuthTokens();
         })
     })
 }
@@ -58,8 +51,14 @@ function setupIconLibrary(app) {
 }
 
 function setupUseCalls(app) {
+    
+    const axiosInstance = axios.create({
+        withCredentials: true,
+        baseURL: ""
+    });
     const pinia = createPinia();
 
+    app.provide('AXIOS_INSTANCE', axiosInstance);
     app.use(VueCookies, {});
     app.use(router);
     app.use(pinia);
