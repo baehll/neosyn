@@ -11,11 +11,17 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.4.2",
+    "@fortawesome/free-brands-svg-icons": "^6.4.2",
+    "@fortawesome/free-regular-svg-icons": "^6.4.2",
+    "@fortawesome/free-solid-svg-icons": "^6.4.2",
+    "@fortawesome/vue-fontawesome": "^3.0.3",
     "axios": "^1.4.0",
     "dotenv": "^16.3.1",
     "vue": "^3.3.2",
     "vue-cookies": "^1.8.3",
-    "vue-router": "^4.2.0"
+    "vue-router": "^4.2.0",
+    "vue-sidebar-menu": "^5.2.11"
   },
   "devDependencies": {
     "@rushstack/eslint-patch": "^1.2.0",

@@ -7,16 +7,12 @@ import axios from 'axios'
 import { createPinia } from 'pinia'
 import { useFBStore } from './store/fb'
 
-axios.defaults.withCredentials = true;
-const app = createApp(App);
-const pinia = createPinia();
+import { library } from '@fortawesome/fontawesome-svg-core'
+import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { faUserSecret } from '@fortawesome/free-solid-svg-icons'
 
-app.use(VueCookies, {});
-app.use(router);
-app.use(pinia);
-
-
-const store = useFBStore();
+import VueSidebarMenu from "vue-sidebar-menu"
+import 'vue-sidebar-menu/dist/vue-sidebar-menu.css'
 
 /*
 const axiosInstance = axios.create({
@@ -25,21 +21,21 @@ const axiosInstance = axios.create({
 });
 
 app.provide('AXIOS_INSTANCE', axiosInstance);
-
-if(import.meta.env.VITE_FB_APP_ID) {
-    FB_SDK.initFacebookSdk(import.meta.env.VITE_FB_APP_ID).then(startApp());
-} else {
-    app.mount('#app')
-}
 */
-
-
 function startApp() {
-    fbEvents();
+    axios.defaults.withCredentials = true;
+    const app = createApp(App);
+
+    setupIconLibrary(app);
+    setupUseCalls(app);
+    
+    const stores = initCustomStores();
+    fbEvents(stores);
+
     app.mount('#app')
 }
 
-function fbEvents() {
+function fbEvents(stores) {
     window.addEventListener("fb-ready", () => {
         // Pinia Store mit den Daten befüllen
         FB.getLoginStatus((fbRes) => {
@@ -50,9 +46,30 @@ function fbEvents() {
                     }
                 }, {scope: 'pages_show_list,business_management,instagram_basic,instagram_manage_comments,pages_read_engagement,pages_manage_metadata,pages_read_user_content,pages_manage_ads,pages_manage_engagement,public_profile'})
             }
-            store.populateData();
+            stores.fbStore.populateData();
         })
     })
+}
+
+function setupIconLibrary(app) {
+    library.add(faUserSecret)
+    app.component('font-awesome-icon', FontAwesomeIcon);
+
+}
+
+function setupUseCalls(app) {
+    const pinia = createPinia();
+
+    app.use(VueCookies, {});
+    app.use(router);
+    app.use(pinia);
+    app.use(VueSidebarMenu) 
+}
+
+function initCustomStores() {
+    return {
+        fbStore: useFBStore()
+    }
 }
 
 startApp()
