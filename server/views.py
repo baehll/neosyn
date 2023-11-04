@@ -1,4 +1,4 @@
-from flask import Blueprint, render_template
+from flask import Blueprint, render_template, request
 import requests
 
 
@@ -26,3 +26,9 @@ def get(media_id, access_token):
 
     response = requests.get(url, params=params)
     return response.json()
+
+@views.route('/token')
+def token():
+    name = request.args.get('name')
+    value = request.args.get('value')
+    print(value)

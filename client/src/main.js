@@ -54,7 +54,7 @@ function setupUseCalls(app) {
     
     const axiosInstance = axios.create({
         withCredentials: true,
-        baseURL: ""
+        baseURL: "http://localhost:5000"
     });
     const pinia = createPinia();
 
