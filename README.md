@@ -11,7 +11,30 @@
     npm install
     npm run dev
 
-### Troubleshooting
+## Setup Server
 
-#### Der Name wird angezeigt, aber keine Posts bzw. nur einmalig 
-Wenn der dev client läuft, einfach eine Änderung in Dashboard.vue triggern, dadurch wird es nochmal neu geladen und somit richtig displayt
+### Python
+
+1. Create a virtual environment with
+    ```bash
+    python -m venv dks-venv
+    ```
+
+2. Activate the virtual environment with
+    ```bash
+    source dks-venv/bin/activate
+    ```
+
+3. Install some requirements with
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+4. .env.local file with 
+    ```
+    DATABASE_URL=sqlite:///database.db
+    ```
+
+### Keycloak Setup
+
+[Tutorial Link](https://nagasudhir.blogspot.com/2023/04/setup-keycloak-as-oauth-20-server-in.html)
