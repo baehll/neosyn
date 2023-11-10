@@ -1,5 +1,6 @@
 import { defineStore } from "pinia";
 import { inject, ref } from "vue"
+import "bootstrap"
 
 export const useFBStore = defineStore('fb', () => {
     const pages = ref([])
@@ -9,6 +10,8 @@ export const useFBStore = defineStore('fb', () => {
     const axios = inject('AXIOS_INSTANCE')
 
     function populateData() {
+        pages.value = []
+        comments.value = []
         //Zuerst alle zugehörigen Pages/Accounts finden
         FB.api("/me/accounts", (resp) => {
             //über jede Page iterieren
@@ -37,21 +40,49 @@ export const useFBStore = defineStore('fb', () => {
             });
         })
         initFinished.value = true;
+        
+        comments.value.forEach((c) => {
+            c.sort((a, b) => {
+                a = new Date(a);
+                b = new Date(b);
+                (a.timestamp > b.timestamp) ? 1 : ((b.timestamp > a.timestamp) ? -1 : 0)
+            })
+        })
     }
 
     function sendAuthTokens() {
-
         FB.getLoginStatus((res) => {
             axios.post("token?token="+res.authResponse.accessToken)
         })
     }
 
+    function postReplyToComment(commentId, comment) {
+        FB.api("/" + commentId + "/replies", "POST", {
+            "message": comment
+        }, (res) => {
+            if(res && !res.error) {
+                console.log("erfolgreich gepostet")
+                populateData()
+            }
+        })
+    }
+
+    function deleteComment(commentID) {
+        FB.api("/" + commentID, "DELETE", (res) => {
+            if(res && !res.error) {
+                console.log("erfolgreich gelöscht")
+                populateData()
+            }
+        })
+    }
 
     return {
         initFinished, 
         pages,
         comments, 
         populateData,
-        sendAuthTokens 
+        sendAuthTokens,
+        postReplyToComment,
+        deleteComment
     }
 })

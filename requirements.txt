@@ -3,3 +3,12 @@ Flask-SQLAlchemy==3.0.5
 flask-cors
 python-decouple
 requests
+celery
+redis
+pandas
+openai
+backoff
+tiktoken
+scipy
+gunicorn
+psycopg2
