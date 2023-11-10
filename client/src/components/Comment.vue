@@ -33,28 +33,43 @@
             </div>
             <div class="row">
                 <div class="col-auto">
-                    <button>Reply</button>
+                    <button class="btn disabled">Reply</button>
                 </div>
                 <div class="col-auto">
-                    <button>Fast Edit</button>
+                    <button @click="fastReply" class="btn btn-primary">Fast Reply</button>
                 </div>
                 <div class="col-auto">
-                    <button>Delete</button>
+                    <button @click="fbStore.deleteComment(props.comment.id)" class="btn">Delete</button>
                 </div>
             </div>
         </div>
+        <FastReplyModal :picked="state.picked" @send="sendComment"/>
     </div>
 </template>
 
 <script setup>
-import { onMounted, reactive } from 'vue';
-
-
+import { inject, onMounted, reactive } from 'vue';
+import FastReplyModal from "./FastReplyModal.vue"
+import { useOpenaiStore } from "../store/openai"
+import { useFBStore } from '../store/fb';
+ 
+const openaiStore = useOpenaiStore()
+const fbStore = useFBStore()
 const props = defineProps(['comment'])
 const state = reactive({
     profile_picture_url: "",
-    time:""
+    time: "",
+    picked: ""
 })
+
+async function fastReply() {
+    openaiStore.updateFastReplies(props.comment)
+}    
+
+function sendComment(val) {
+    fbStore.postReplyToComment(openaiStore.currentCommentID, val)
+    state.picked = ""
+}
 
 onMounted(() => {
     //console.log(props.comment)
@@ -62,8 +77,12 @@ onMounted(() => {
         state.profile_picture_url = res.profile_picture_url;
     })
     const d = new Date(props.comment.timestamp)
-    state.time = d.getDay() + "." + d.getMonth() + "." + d.getFullYear() + ", " + d.getHours() + ":" + d.getMinutes();
+    state.time = `${formatNumbers(d.getDay())}.${formatNumbers(d.getMonth())}.${d.getFullYear()}, ${formatNumbers(d.getHours())}:${formatNumbers(d.getMinutes())}`;
 })
+
+function formatNumbers(i) {
+    return i.toString().padStart(2, "0")
+}
 
 </script>
 

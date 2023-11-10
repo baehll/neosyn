@@ -1,7 +1,6 @@
 from flask import Blueprint, render_template, request, jsonify
 import requests
 
-
 views = Blueprint('views', __name__)
 
 @views.route('/')
@@ -31,6 +30,6 @@ def get(media_id, access_token):
 def token():
     name = request.args.get('name')
     value = request.args.get('token')
-    print(value)
+    #print(value)
     return jsonify({})
-    
+ 

@@ -34,14 +34,19 @@ function fbEvents(stores) {
             if(fbRes && fbRes.status !== 'connected') {
                 FB.login((res) => {
                     if(res.authResponse) {
-                        console.log("logged in")
+                        initFBData(stores)
                     }
                 }, {scope: 'pages_show_list,business_management,instagram_basic,instagram_manage_comments,pages_read_engagement,pages_manage_metadata,pages_read_user_content,pages_manage_ads,pages_manage_engagement,public_profile'})
+            } else {
+                initFBData(stores)
             }
-            stores.fbStore.populateData();
-            stores.fbStore.sendAuthTokens();
         })
     })
+}
+
+function initFBData(stores) {
+    stores.fbStore.populateData();
+    stores.fbStore.sendAuthTokens();
 }
 
 function setupIconLibrary(app) {
@@ -54,7 +59,7 @@ function setupUseCalls(app) {
     
     const axiosInstance = axios.create({
         withCredentials: true,
-        baseURL: "http://localhost:5000"
+        baseURL: import.meta.env.VITE_BASE_URL
     });
     const pinia = createPinia();
 

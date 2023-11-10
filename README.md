@@ -4,8 +4,10 @@
 
 .env.local file in /client/
 
+    ```
     VITE_FB_APP_ID=175537112285037
-
+    VITE_BASE_URL=http://localhost:5000
+    ```
 ### Commands
 
     npm install
@@ -33,8 +35,6 @@
 4. .env.local file with 
     ```
     DATABASE_URL=sqlite:///database.db
+    OAUTH_PROVIDER=http://localhost:8080/realms/myorg
+    OPENAI_API_KEY=<KEY>
     ```
-
-### Keycloak Setup
-
-[Tutorial Link](https://nagasudhir.blogspot.com/2023/04/setup-keycloak-as-oauth-20-server-in.html)

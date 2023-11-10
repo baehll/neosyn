@@ -7,9 +7,12 @@
             <div class="card p-0 comment-list">
                 <div class="card-header bg-white">
                     <h3>Recent Comments</h3>
+                    <button type="button" class="btn" @click="fbStore.populateData()">
+                        <i class="fa-solid fa-repeat"></i>
+                    </button>
                 </div>
                 <div class="card-body comment-list-body">
-                    <ul class="list-group list-group-flush" v-for="pageComments in store.comments">
+                    <ul class="list-group list-group-flush" v-for="pageComments in fbStore.comments">
                         <div v-for="c in pageComments">
                             <Comment :comment="c" class="list-group-item rounded-4 p-3 m-1 shadow-lg" />
                             <template v-for="r in c.replies?.data">
@@ -21,7 +24,7 @@
             </div>
             <!--
             <div class="col">
-                <template v-for="page in store.pages">
+                <template v-for="page in fbStore.pages">
                     <div class="row border border-5">
                         <h3>{{ page.name }}</h3>
                         <template v-for="media in page.media_objs">
@@ -55,7 +58,7 @@ import { useFBStore } from "../../../store/fb"
 import Comment from '../../../components/Comment.vue'
 import { reactive } from "vue";
 
-const store = useFBStore();
+const fbStore = useFBStore();
 
 </script>
 

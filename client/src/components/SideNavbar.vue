@@ -10,7 +10,7 @@ const menu = [
     },{
         href: '/',
         title: 'Metrics',
-        icon: "fa-solid fa-chart-line",
+        icon: "fa-solid fa-chart-line"/*,
         child: [
             {
                 href: '/metrics/dashboard',
@@ -37,10 +37,10 @@ const menu = [
                 title: 'Report'
             }, 
             {
-                href: 'metrics/content',
+                href: '/metrics/content',
                 title: 'Content'
             }
-        ]
+        ]*/
     },{
         href: "/",
         title: "Interactions",
