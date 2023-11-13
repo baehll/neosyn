@@ -9,7 +9,7 @@
                 <div class="modal-body">
                     <fieldset>
                         <legend>Bitte Wähle eine Antwort:</legend>
-                        <template v-for="answer, index in openaiStore.fastReplies">
+                        <template v-for="answer, index in apiStore.fastReplies">
                             <div class="form-check">
                                 <input type="radio" class="form-check-input" :id="'answer'+index" v-model="pick" name="answers" :value="answer">
                                 <label :for="'answer'+index" class="form-check-label">{{ answer }}</label>
@@ -27,12 +27,12 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, ref } from "vue";
+import { ref } from "vue";
 import { useFBStore } from "../store/fb";
-import { useOpenaiStore } from "../store/openai"
+import { useAPIStore } from "../store/api"
 
 const emit = defineEmits(['send'])
-const openaiStore = useOpenaiStore()
+const apiStore = useAPIStore()
 const pick = ref("")
 
 function send() {

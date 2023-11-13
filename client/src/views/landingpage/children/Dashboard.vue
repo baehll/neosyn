@@ -1,7 +1,7 @@
 <template>
     <div>
         <div class="row">
-            <h1>Dashboard!</h1>
+            <h1>Dashboard</h1>
         </div>
         <div class="row">
             <div class="card p-0 comment-list">

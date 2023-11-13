@@ -39,7 +39,7 @@
                     <button @click="fastReply" class="btn btn-primary">Fast Reply</button>
                 </div>
                 <div class="col-auto">
-                    <button @click="fbStore.deleteComment(props.comment.id)" class="btn">Delete</button>
+                    <button @click="fbStore.deleteComment(props.comment.id)" class="btn btn-primary">Delete</button>
                 </div>
             </div>
         </div>
@@ -50,10 +50,10 @@
 <script setup>
 import { inject, onMounted, reactive } from 'vue';
 import FastReplyModal from "./FastReplyModal.vue"
-import { useOpenaiStore } from "../store/openai"
+import { useAPIStore } from "../store/api"
 import { useFBStore } from '../store/fb';
  
-const openaiStore = useOpenaiStore()
+const apiStore = useAPIStore()
 const fbStore = useFBStore()
 const props = defineProps(['comment'])
 const state = reactive({
@@ -63,11 +63,11 @@ const state = reactive({
 })
 
 async function fastReply() {
-    openaiStore.updateFastReplies(props.comment)
+    apiStore.updateFastReplies(props.comment)
 }    
 
 function sendComment(val) {
-    fbStore.postReplyToComment(openaiStore.currentCommentID, val)
+    fbStore.postReplyToComment(props.commment.id, val)
     state.picked = ""
 }
 
