@@ -5,8 +5,7 @@
     </div>
     <!-- main body -->
     <div class="container">
-        <Dashboard></Dashboard>
-        <!--<router-view></router-view>-->
+        <router-view></router-view>
     </div>
 </template>
 

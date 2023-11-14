@@ -9,8 +9,8 @@ const router = createRouter({
     routes: [
         {
             path: "/",
-            name: "login",
-            component: Login
+            name: "Dashboard",
+            component: Dashboard
         },
         {
             path: "/landingpage",

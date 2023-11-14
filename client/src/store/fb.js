@@ -21,26 +21,26 @@ export const useFBStore = defineStore('fb', () => {
                 FB.api(e.id, {fields: 'instagram_business_account'}, (res) => {
                     currentPage.acc = res.instagram_business_account.id;
                     //von jedem business account alle zugehörigen posts + comments + comment_replies sammeln
-                    FB.api(currentPage.acc + "/media", {fields: 'caption,id,like_count,media_type,media_url,timestamp,username,comments_count,comments'}, (r) => {
+                    FB.api(currentPage.acc + "/media", {fields: 'caption,id,like_count,media_type,media_url,timestamp,username,comments_count,comments,children{media_url}'}, (r) => {
                         //console.log(r)
-
                         currentPage.media_objs = r.data
 
                         //r.data sind alle medien, die auf einem Business Account sind, die jeweils ihre eigenen Kommentare haben
-                        r.data.forEach(p => {
-                            if(p.comments_count > 0) {
-                                FB.api(p.id + "/comments", {fields: "from, text, username, timestamp, replies{from, timestamp, username, text}"}, (commentRes) => {
+                        for(let key in r.data) {
+                            let post = r.data[key]
+                            if(post.comments_count > 0) {
+                                FB.api(post.id + "/comments", {fields: "from, text, username, timestamp, like_count,replies{from, timestamp, username, text}"}, (commentRes) => {
                                     comments.value.push(commentRes.data)
+                                    currentPage.media_objs[key].comments = commentRes.data
                                 })
                             }
-                        })
+                        }
                     })
                 })
                 pages.value.push(currentPage);
             });
         })
-        initFinished.value = true;
-        
+        //Nach Zeitstempel sortieren
         comments.value.forEach((c) => {
             c.sort((a, b) => {
                 a = new Date(a);
@@ -48,6 +48,8 @@ export const useFBStore = defineStore('fb', () => {
                 (a.timestamp > b.timestamp) ? 1 : ((b.timestamp > a.timestamp) ? -1 : 0)
             })
         })
+        
+        initFinished.value = true;
     }
 
     function sendAuthTokens() {

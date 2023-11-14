@@ -9,7 +9,7 @@ const menu = [
         hiddenOnCollapse: true
     },{
         href: '/',
-        title: 'Metrics',
+        title: 'Dashboard',
         icon: "fa-solid fa-chart-line"/*,
         child: [
             {
@@ -42,25 +42,29 @@ const menu = [
             }
         ]*/
     },{
-        href: "/",
+        href: "/interactions",
         title: "Interactions",
         icon: "fas fa-comments"
     },{
         href: "/",
         title: "Tasks",
-        icon: "fas fa-check"
+        icon: "fas fa-check",
+        disabled: true
     },{
         href: "/",
         title: "Search",
-        icon: "fas fa-magnifying-glass"
+        icon: "fas fa-magnifying-glass",
+        disabled: true
     },{
         href: "/",
         title: "Links",
-        icon: "fas fa-link"
+        icon: "fas fa-link",
+        disabled: true
     },{
         href: "/",
         title: "Statistics",
-        icon: "fas fa-chart-simple"
+        icon: "fas fa-chart-simple",
+        disabled: true
     }
 ]
 
