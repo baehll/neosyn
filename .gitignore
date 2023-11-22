@@ -164,3 +164,7 @@ cython_debug/
 
 
 *.ipynb
+
+# Ignore contents of server/static
+/server/static/*
+!/server/static/.gitkeep

@@ -1,16 +1,23 @@
-from flask import Blueprint, render_template, request, jsonify
+from flask import Blueprint, render_template, request, jsonify, send_from_directory
 import requests
 
 views = Blueprint('views', __name__)
 
-@views.route('/')
-def index():
-    media_id = 18006078842062541
-    access_token = "EAAJtrkmf9eYBO2TQojC7Wcg7ZCOrzEqVAdcZBSyZBeZBw8PO5pZCa5NCQv6ezUpjpozbHIBLIcZAoBGAhW0yPjBwZBfmyXUMb8xb4ZCFvOfb3z37a5waeuxbLoXwvGU7gT902zerhJw9HOcOFjV11lQ8jh0ImW3TBmDrruOMYJHk4a9AsZBpCBSQ0ZCgTWXgEGA4GY9UfWlLsGXWdoBzlUxeCjQQMQTGSEoAZDZD"
+# @views.route('/')
+# def index():
+#     media_id = 18006078842062541
+#     access_token = "EAAJtrkmf9eYBO2TQojC7Wcg7ZCOrzEqVAdcZBSyZBeZBw8PO5pZCa5NCQv6ezUpjpozbHIBLIcZAoBGAhW0yPjBwZBfmyXUMb8xb4ZCFvOfb3z37a5waeuxbLoXwvGU7gT902zerhJw9HOcOFjV11lQ8jh0ImW3TBmDrruOMYJHk4a9AsZBpCBSQ0ZCgTWXgEGA4GY9UfWlLsGXWdoBzlUxeCjQQMQTGSEoAZDZD"
     
-    comments = get(media_id, access_token)['comments']['data']
+#     comments = get(media_id, access_token)['comments']['data']
 
-    return render_template("home.html", comments=comments, user=None)
+#     return render_template("home.html", comments=comments, user=None)
+
+@views.route('/')
+# @views.route('/prices')
+# @views.route('/chatting')
+# @views.route('/about')
+def index():
+    return send_from_directory('static', 'index.html')
 
 
 def get(media_id, access_token):
