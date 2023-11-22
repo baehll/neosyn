@@ -16,17 +16,18 @@
       "vue-router": "^4.2.0"
     },
     "devDependencies": {
-      "@rushstack/eslint-patch": "^1.2.0",
-      "@vitejs/plugin-vue": "^4.2.3",
-      "@vue/eslint-config-prettier": "^7.1.0",
-      "eslint": "^8.39.0",
-      "eslint-plugin-vue": "^9.11.0",
-      "prettier": "^2.8.8",
-      "sass": "^1.63.6",
-      "vite": "^4.3.5",
-      "volar-service-vetur": "latest",
-      "@vitejs/plugin-basic-ssl": "^1.0.1"
-    },
+        "@rushstack/eslint-patch": "^1.2.0",
+        "@vitejs/plugin-basic-ssl": "^1.0.1",
+        "@vitejs/plugin-vue": "^4.2.3",
+        "@vue/eslint-config-prettier": "^7.1.0",
+        "eslint": "^8.39.0",
+        "eslint-plugin-vue": "^9.11.0",
+        "pinia": "^2.1.7",
+        "prettier": "^2.8.8",
+        "sass": "^1.63.6",
+        "vite": "^4.3.5",
+        "volar-service-vetur": "latest"
+        },
       "cacheDirectories": [
       "client/node_modules"
     ]
