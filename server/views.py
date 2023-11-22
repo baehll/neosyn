@@ -12,13 +12,16 @@ views = Blueprint('views', __name__)
 
 #     return render_template("home.html", comments=comments, user=None)
 
-@views.route('/')
 # @views.route('/prices')
 # @views.route('/chatting')
 # @views.route('/about')
+@views.route('/')
 def index():
     return send_from_directory('static', 'index.html')
 
+@views.route('/assets/<path:filename>')
+def serve_static_assets(filename):
+    return send_from_directory('static/assets', filename)
 
 def get(media_id, access_token):
     url = "https://graph.facebook.com/v18.0/" + str(media_id)
