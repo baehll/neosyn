@@ -59,7 +59,7 @@ import { inject, onMounted, reactive } from 'vue';
 import { useAPIStore } from "../store/api"
 import { useFBStore } from '../store/fb';
 import utils from '../utils';
-import Fastreplymodal from './fastreplymodal.vue';
+import Fastreplymodal from './FastReplyModal.vue';
  
 const apiStore = useAPIStore()
 const fbStore = useFBStore()
