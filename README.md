@@ -35,6 +35,5 @@
 4. .env.local file with 
     ```
     DATABASE_URL=sqlite:///database.db
-    OAUTH_PROVIDER=http://localhost:8080/realms/myorg
     OPENAI_API_KEY=<KEY>
     ```

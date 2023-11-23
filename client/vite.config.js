@@ -1,7 +1,16 @@
 import { defineConfig } from 'vite'
 import vue from '@vitejs/plugin-vue'
-import basicSsl from '@vitejs/plugin-basic-ssl'
+
+
 // https://vitejs.dev/config/
-export default defineConfig({
-  plugins: [vue(), basicSsl()],
+export default defineConfig( async ({command, mode}) => {
+    let configObj = {
+        plugins: [vue()]
+    };
+    if (mode === 'development') {
+        const sslPlugin = await import('@vitejs/plugin-basic-ssl')
+        configObj.plugins.push(sslPlugin.default())
+    }
+
+    return configObj;
 })
