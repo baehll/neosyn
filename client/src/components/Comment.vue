@@ -36,14 +36,10 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-auto">
-                        <button class="btn disabled">Reply</button>
-                    </div>
-                    <div class="col-auto">
-                        <button @click="fastReply" class="btn btn-primary">Fast Reply</button>
-                    </div>
-                    <div class="col-auto">
-                        <button @click="fbStore.deleteComment(props.comment.id)" class="btn btn-primary">Delete</button>
+                    <div class="col-auto d-flex justify-content-center align-items-center">
+                        <button class="mx-1 btn disabled">Reply</button>
+                        <button @click="fastReply" class="mx-1 btn btn-primary">Fast Reply</button>
+                        <button @click="fbStore.deleteComment(props.comment.id)" class="mx-1 btn btn-primary">Delete</button>
                     </div>
                 </div>
             </template>

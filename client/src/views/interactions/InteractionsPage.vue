@@ -9,9 +9,9 @@
                 </template>
             </select>
         </p>
-        <div class="row">
+        <div class="row" v-if="fbStore.initFinished">
             <template v-for="media in fbStore.pages[selected].media_objs">
-                <IGPost style="min-width: 85vw; max-height: fit-content;" :post_obj="media" />
+                <IGPost style="max-height: fit-content;" :post_obj="media" />
             </template>
         </div>
     </div>

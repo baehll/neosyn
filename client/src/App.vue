@@ -1,19 +1,12 @@
 <template>
     <div class="container">    
-        <div class="">
-            <SideNavbar></SideNavbar>
-        </div>
+        <SideNavbar></SideNavbar>
         <router-view></router-view>
     </div>
 </template>
 
 <script setup>
-import Login from "./views/Login.vue"
-import SideNavbar from './components/SideNavbar.vue';
-
-function isTokenNull() {
-    return localStorage.getItem("token") == null;
-}
+import SideNavbar from './components/sidenavbar.vue';
 
 </script>
 

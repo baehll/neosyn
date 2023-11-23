@@ -2,7 +2,7 @@
         <div class="border border-5 row">
             <template v-if="post_obj.media_type === 'IMAGE'">
                 <div class="col-8 d-flex justify-content-center align-items-center">
-                    <img :src="post_obj.media_url" class="pic border border-2"/>
+                    <img :src="post_obj.media_url" class="img-fluid border border-2 "/>
                 </div>
             </template>
             <template v-else-if="post_obj.media_type === 'CAROUSEL_ALBUM'">
@@ -11,7 +11,7 @@
                         <template v-for="child, i in post_obj.children.data">
                             <div class="carousel-item" :class="(i == 0) ? 'active': ''">
                                 <div class="d-flex justify-content-center align-items-center">
-                                    <img :src="child.media_url" class="pic border border-2"/>
+                                    <img :src="child.media_url" class="img-fluid border border-2"/>
                                 </div>
                             </div>
                         </template>
@@ -26,7 +26,7 @@
                     </button>
                 </div>
             </template>
-            <div class="col text-start comment-list ">
+            <div class="col-4 text-start comment-list ">
                 <div class="row">
                     <p>
                         <b>{{ post_obj.username }} - {{ utils.dateFormatter(new Date(post_obj.timestamp)) }} </b>
@@ -39,7 +39,7 @@
                         {{ post_obj.caption }}
                     </h3>
                 </div>
-                <div class="row comment-list-body h-100">
+                <div class="row comment-list-body ">
                     <template v-for="c in post_obj.comments">
                         <Comment :comment="c" :actions_enabled="true" class="border border-3"/>
                         <template v-if="c?.replies != null">
@@ -77,5 +77,6 @@ const fbStore = useFBStore();
 .comment-list-body {
     overflow-y: auto;
     overflow-x: hidden;
+    max-height: 70%;
 }
 </style>
