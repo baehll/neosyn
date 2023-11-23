@@ -42,6 +42,11 @@ const menu = [
             }
         ]*/
     },{
+        href: "/login",
+        title: "Login",
+        icon: "fas fa-right-to-bracket"
+    }
+    ,{
         href: "/interactions",
         title: "Interactions",
         icon: "fas fa-comments"

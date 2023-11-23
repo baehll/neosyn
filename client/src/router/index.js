@@ -58,6 +58,11 @@ const router = createRouter({
                     name: "chat"
                 }
             ]
+        },
+        {
+            path: "/login",
+            name: "login",
+            component: Login
         }
     ]
 })
