@@ -13,6 +13,7 @@ import { faUserSecret } from '@fortawesome/free-solid-svg-icons'
 
 import VueSidebarMenu from "vue-sidebar-menu"
 import 'vue-sidebar-menu/dist/vue-sidebar-menu.css'
+import { useAuthStore } from './store/auth'
 
 function startApp() {
     axios.defaults.withCredentials = true;
@@ -62,11 +63,11 @@ function setupUseCalls(app) {
         baseURL: import.meta.env.VITE_BASE_URL
     });
     const pinia = createPinia();
+    app.use(pinia);
 
     app.provide('AXIOS_INSTANCE', axiosInstance);
     app.use(VueCookies, {});
     app.use(router);
-    app.use(pinia);
     app.use(VueSidebarMenu) 
 }
 

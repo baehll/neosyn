@@ -36,4 +36,7 @@
     ```
     DATABASE_URL=sqlite:///database.db
     OPENAI_API_KEY=<KEY>
+    DEFAULT_USERS=<username>:<password>//<username>:<password>//...
+    JWT_SECRET_TOKEN=<KEY>
+    FLASK_SECRET_KEY=<KEY>
     ```

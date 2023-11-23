@@ -11,4 +11,5 @@ backoff
 tiktoken
 scipy
 gunicorn
+PyJWT
 # psycopg2

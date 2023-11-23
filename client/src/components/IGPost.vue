@@ -26,7 +26,7 @@
                     </button>
                 </div>
             </template>
-            <div class="col text-start border border-5 comment-list ">
+            <div class="col text-start comment-list ">
                 <div class="row">
                     <p>
                         <b>{{ post_obj.username }} - {{ utils.dateFormatter(new Date(post_obj.timestamp)) }} </b>
@@ -39,17 +39,15 @@
                         {{ post_obj.caption }}
                     </h3>
                 </div>
-                <div class="row comment-list-body">
+                <div class="row comment-list-body h-100">
                     <template v-for="c in post_obj.comments">
-                    <div class="">
                         <Comment :comment="c" :actions_enabled="true" class="border border-3"/>
                         <template v-if="c?.replies != null">
                             <template v-for="r in c.replies.data">
                                 <Comment :comment="r" :actions_enabled="true" class="ms-4 border border-3"/>
                             </template>
                         </template>
-                    </div>
-                </template>
+                    </template>
                 </div>
             </div>
         </div>
@@ -73,12 +71,11 @@ const fbStore = useFBStore();
 }
 
 .comment-list {
-    max-height: 35vh;
+    max-height: 50vh;
 }
 
 .comment-list-body {
     overflow-y: auto;
     overflow-x: hidden;
-    max-height: 80%;
 }
 </style>

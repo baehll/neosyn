@@ -26,7 +26,7 @@
                     {{ comment.text }}
                 </p>
                 <p>
-                    {{ comment.like_count }} <i class="fa-solid fa-thumbs-up"></i>
+                    {{ (comment.like_count != null) ? comment.like_count : 0 }} <i class="fa-solid fa-thumbs-up"></i>
                 </p>
             </div>
             <template v-if="props.actions_enabled">

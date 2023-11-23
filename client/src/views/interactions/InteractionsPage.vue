@@ -11,7 +11,7 @@
         </p>
         <div class="row">
             <template v-for="media in fbStore.pages[selected].media_objs">
-                <IGPost style="min-width: 85vw;" :post_obj="media" />
+                <IGPost style="min-width: 85vw; max-height: fit-content;" :post_obj="media" />
             </template>
         </div>
     </div>

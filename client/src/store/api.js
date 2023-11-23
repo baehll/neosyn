@@ -1,10 +1,10 @@
 import { defineStore } from "pinia";
 import { ref, inject } from "vue";
+import { useRouter } from "vue-router";
 import "bootstrap"
 
 export const useAPIStore = defineStore("api", () => {
     const fastReplies = ref([])
-    //const currentCommentID = ref("")
 
     const axios = inject("AXIOS_INSTANCE");
 
@@ -18,7 +18,6 @@ export const useAPIStore = defineStore("api", () => {
 
     return {
         fastReplies,
-        //currentCommentID,
         updateFastReplies
     }
 })
