@@ -12,4 +12,4 @@ tiktoken
 scipy
 gunicorn
 PyJWT
-# psycopg2
+psycopg2
