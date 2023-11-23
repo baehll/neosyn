@@ -2,13 +2,14 @@ from flask import (
     Blueprint, jsonify, request
 )
 import requests
+import jwt
 
 from . import GPT_MODEL, CLIENT
 
 api = Blueprint('api', __name__)
 
 @api.route("/fast_response", methods=["POST"])
-def register():
+def fast_response():
     comment = request.get_json()["comment"]
     prompt = f'''
         Generiere 5 Antworten auf das folgende Kommentar, als wärst du ein Social Media Manager für ein Unternehmen.

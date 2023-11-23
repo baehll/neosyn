@@ -1,14 +1,19 @@
 <template> 
-    <SidebarMenu :menu="menu" :collapsed="true"></SidebarMenu>
+    <SidebarMenu :menu="menu" :collapsed="true" v-if="authStore.isAuthenticated"></SidebarMenu>
 </template>
 
 <script setup>
+import { useAuthStore } from '../store/auth';
+
+
+const authStore = useAuthStore();
+
 const menu = [
     {
         header: "Main Navigation",
         hiddenOnCollapse: true
     },{
-        href: '/',
+        href: '/dashboard',
         title: 'Dashboard',
         icon: "fa-solid fa-chart-line"/*,
         child: [
