@@ -6,7 +6,7 @@
 </template>
 
 <script setup>
-import SideNavbar from './components/sidenavbar.vue';
+import SideNavbar from './components/SideNavbar.vue';
 
 </script>
 
