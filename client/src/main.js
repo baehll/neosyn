@@ -66,6 +66,7 @@ function setupUseCalls(app) {
     app.use(pinia);
 
     app.provide('AXIOS_INSTANCE', axiosInstance);
+    app.provide("VITE_FB_APP_ID", import.meta.env.VITE_FB_APP_ID)
     app.use(VueCookies, {});
     app.use(router);
     app.use(VueSidebarMenu) 

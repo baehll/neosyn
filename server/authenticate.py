@@ -6,7 +6,6 @@ import jwt
 from decouple import config
 from datetime import datetime, timedelta
 from .models import db, User
-from .utils.env import ENV_VARS
 
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
@@ -25,7 +24,7 @@ def login():
             'user_id': user.id,
             'username': user.username,
             'exp': datetime.utcnow() + timedelta(days=1)
-        }, ENV_VARS["JWT_SECRET_TOKEN"])
+        }, config("JWT_SECRET_TOKEN"))
         
         return jsonify({'token': token})
     else:

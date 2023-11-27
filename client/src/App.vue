@@ -8,12 +8,8 @@
 </template>
 
 <script setup>
-import Login from "./views/Login.vue"
 import SideNavbar from './components/SideNavbar.vue';
 
-function isTokenNull() {
-    return localStorage.getItem("token") == null;
-}
 
 </script>
 

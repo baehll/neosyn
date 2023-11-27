@@ -2,13 +2,13 @@ from flask import (
     Blueprint, jsonify, request
 )
 import requests
-import jwt
-
+from flask_jwt_extended import jwt_required
 from . import GPT_MODEL, CLIENT
 
 api = Blueprint('api', __name__)
 
 @api.route("/fast_response", methods=["POST"])
+@jwt_required()
 def fast_response():
     comment = request.get_json()["comment"]
     prompt = f'''

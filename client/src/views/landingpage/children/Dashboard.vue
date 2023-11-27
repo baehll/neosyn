@@ -29,10 +29,22 @@
 <script setup>
 import { useFBStore } from "../../../store/fb"
 import Comment from '../../../components/Comment.vue'
-import { reactive } from "vue";
+import { inject, onMounted} from "vue";
 
 const fbStore = useFBStore();
+const appId = inject("VITE_FB_APP_ID");
 
+onMounted(() => {
+    window.fbAsyncInit = function() {
+        FB.init({
+            appId            : appId,
+            xfbml            : true,
+            version          : 'v18.0',
+            status           : true
+        });
+        FB.Event.subscribe('auth.statusChange', dispatchEvent(new Event('fb-ready')))
+    };
+})
 </script>
 
 <style scoped>
