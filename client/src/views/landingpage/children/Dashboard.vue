@@ -29,22 +29,50 @@
 <script setup>
 import { useFBStore } from "../../../store/fb"
 import Comment from '../../../components/Comment.vue'
-import { inject, onMounted} from "vue";
+import { inject, onBeforeMount, onMounted} from "vue";
 
 const fbStore = useFBStore();
-const appId = inject("VITE_FB_APP_ID");
+const app_id = inject("VITE_FB_APP_ID");
+
+const initFacebook = () => {
+    return new Promise((resolve, reject) => {
+        window.fbAsyncInit = function () {
+            FB.init({
+            appId: app_id,
+            xfbml: true,
+            version: 'v18.0',
+            status: true
+            });
+
+            // Hier kannst du zusätzliche Anpassungen vornehmen, wenn nötig
+
+            FB.Event.subscribe('auth.statusChange', () => {
+            FB.getLoginStatus((fbRes) => {
+                if(fbRes && fbRes.status !== 'connected') {
+                    FB.login((res) => {
+                        if(res.authResponse) {
+                            fbStore.populateData()
+                        }
+                    }, {scope: 'pages_show_list,business_management,instagram_basic,instagram_manage_comments,pages_read_engagement,pages_manage_metadata,pages_read_user_content,pages_manage_ads,pages_manage_engagement,public_profile'})
+                } else {
+                    fbStore.populateData()
+                }
+            })
+        })
+            resolve(); // Resolviere das Promise, wenn die Initialisierung abgeschlossen ist
+        };
+  });
+}
 
 onMounted(() => {
-    window.fbAsyncInit = function() {
-        FB.init({
-            appId            : appId,
-            xfbml            : true,
-            version          : 'v18.0',
-            status           : true
+    if(!fbStore.initFinished) {
+        initFacebook().then(() => {
+            fbStore.populateData();
         });
-        FB.Event.subscribe('auth.statusChange', dispatchEvent(new Event('fb-ready')))
-    };
+
+    }
 })
+
 </script>
 
 <style scoped>

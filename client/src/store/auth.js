@@ -1,10 +1,12 @@
 import { defineStore } from 'pinia'
 import { ref, inject } from 'vue'
+import { useRouter } from "vue-router";
 
 export const useAuthStore = defineStore('auth', () => {
     const isAuthenticated = ref(localStorage.getItem("token") != null)
 
     const axios = inject("AXIOS_INSTANCE");
+    const router = useRouter()
 
     async function login(un, pw) {
         try {
@@ -15,8 +17,11 @@ export const useAuthStore = defineStore('auth', () => {
     
             let token = res.data.token;
             localStorage.setItem('token', token)
-            isAuthenticated.value = true
+            isAuthenticated.value = true;
 
+            axios.defaults.headers.common['Authorization'] = "Bearer " + token
+            
+            console.log(axios)
         } catch (error) {
             console.error("Login failed", error)
         }
@@ -24,12 +29,13 @@ export const useAuthStore = defineStore('auth', () => {
 
     async function logout() {
         try {
+            console.log(axios.defaults)
             let res = await axios.post("/auth/logout")
-        } catch (error) {
-            console.error("Logout failed", error)
-        } finally {
             localStorage.removeItem("token")
             isAuthenticated.value = false
+            router.push("/")
+        } catch (error) {
+            console.error("Logout failed", error)
         }
     }
 

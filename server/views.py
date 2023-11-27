@@ -36,8 +36,6 @@ def get(media_id, access_token):
 
 @views.route('/token', methods=["POST"])
 def token():
-    name = request.args.get('name')
-    value = request.args.get('token')
     #print(value)
     return jsonify({})
  

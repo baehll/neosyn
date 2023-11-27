@@ -5,7 +5,6 @@ import router from "./router"
 import VueCookies from 'vue-cookies'
 import axios from 'axios'
 import { createPinia } from 'pinia'
-import { useFBStore } from './store/fb'
 
 import { library } from '@fortawesome/fontawesome-svg-core'
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
@@ -13,7 +12,6 @@ import { faUserSecret } from '@fortawesome/free-solid-svg-icons'
 
 import VueSidebarMenu from "vue-sidebar-menu"
 import 'vue-sidebar-menu/dist/vue-sidebar-menu.css'
-import { useAuthStore } from './store/auth'
 
 function startApp() {
     axios.defaults.withCredentials = true;
@@ -21,34 +19,10 @@ function startApp() {
 
     setupIconLibrary(app);
     setupUseCalls(app);
-    
-    const stores = initCustomStores();
-    fbEvents(stores);
 
     app.mount('#app')
 }
 
-function fbEvents(stores) {
-    window.addEventListener("fb-ready", () => {
-        // Pinia Store mit den Daten befüllen
-        FB.getLoginStatus((fbRes) => {
-            if(fbRes && fbRes.status !== 'connected') {
-                FB.login((res) => {
-                    if(res.authResponse) {
-                        initFBData(stores)
-                    }
-                }, {scope: 'pages_show_list,business_management,instagram_basic,instagram_manage_comments,pages_read_engagement,pages_manage_metadata,pages_read_user_content,pages_manage_ads,pages_manage_engagement,public_profile'})
-            } else {
-                initFBData(stores)
-            }
-        })
-    })
-}
-
-function initFBData(stores) {
-    stores.fbStore.populateData();
-    //stores.fbStore.sendAuthTokens();
-}
 
 function setupIconLibrary(app) {
     library.add(faUserSecret)
@@ -57,11 +31,15 @@ function setupIconLibrary(app) {
 }
 
 function setupUseCalls(app) {
-    
-    const axiosInstance = axios.create({
+    let axiosConfig = {
         withCredentials: true,
         baseURL: import.meta.env.VITE_BASE_URL
-    });
+    };
+
+    if(localStorage.getItem("token") != null) {
+        axiosConfig["headers"] = {"Authorization" : "Bearer " + localStorage.getItem("token")}
+    }
+    const axiosInstance = axios.create(axiosConfig);
     const pinia = createPinia();
     app.use(pinia);
 
@@ -70,12 +48,6 @@ function setupUseCalls(app) {
     app.use(VueCookies, {});
     app.use(router);
     app.use(VueSidebarMenu) 
-}
-
-function initCustomStores() {
-    return {
-        fbStore: useFBStore()
-    }
 }
 
 startApp()

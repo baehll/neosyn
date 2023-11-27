@@ -33,5 +33,11 @@ def login():
 @authenticate.route("/logout", methods=["POST"])
 @jwt_required()
 def logout():
-    user_logged_out = signal('user_logged_out')
-    user_logged_out.send(current_app.get_current_object(), jwt_payload=get_jwt_identity())
+    try:
+        print(get_jwt_identity())
+        user_logged_out = signal('user_logged_out')
+        user_logged_out.send(current_app.get_current_object(), jwt_payload=get_jwt_identity())
+        return jsonify({"Successful"})
+    except:
+        print("error on logout")
+        return jsonify({"Unsuccessful"})
