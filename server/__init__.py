@@ -1,4 +1,5 @@
 from flask import Flask
+from blinker import signal
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from decouple import config
@@ -9,18 +10,35 @@ from flask_jwt_extended import JWTManager
 
 EMBEDDING_MODEL = "text-embedding-ada-002"
 GPT_MODEL = "gpt-3.5-turbo"
+JWT_REVOKED_TOKENS = set()
 
 ENV = EnvManager()
 ENV.init_default_users()
 
 CLIENT = OpenAI(api_key=config("OPENAI_API_KEY"))
+user_logged_out = signal('user-logged-out')
+
+def handle_user_logout(sender, **extra):
+    jti = extra['jwt_payload']['jti']
+    JWT_REVOKED_TOKENS.add(jti)
+
+def check_jwt_token(sender, **extra):
+    jti = extra['jwt_payload']['jti']
+    if jti in JWT_REVOKED_TOKENS:
+        return False
+    return True
+
 def create_app() -> Flask:
     
     app = Flask(__name__)
     app.config['SECRET_KEY'] = config("FLASK_SECRET_KEY")
 
     CORS(app, supports_credentials=True)
-    JWTManager(app)
+    jwt = JWTManager(app)
+
+    jwt.token_in_blocklist_loader(check_jwt_token)
+
+    user_logged_out.connect(handle_user_logout, app)
 
     uri = config("DATABASE_URL")
     if uri.startswith("postgres://"):

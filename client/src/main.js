@@ -47,7 +47,7 @@ function fbEvents(stores) {
 
 function initFBData(stores) {
     stores.fbStore.populateData();
-    stores.fbStore.sendAuthTokens();
+    //stores.fbStore.sendAuthTokens();
 }
 
 function setupIconLibrary(app) {

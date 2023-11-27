@@ -1,14 +1,14 @@
 from flask import (
-    Blueprint, jsonify, request
+    Blueprint, jsonify, request, current_app
 )
+from blinker import signal
 import requests
 import jwt
 from decouple import config
 from datetime import datetime, timedelta
 from .models import db, User
-
+from flask_jwt_extended import get_jwt_identity, jwt_required
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
 
 authenticate = Blueprint('authenticate', __name__)
 
@@ -29,3 +29,9 @@ def login():
         return jsonify({'token': token})
     else:
         return jsonify({'message': 'Invalid Credentials'}), 401
+    
+@authenticate.route("/logout", methods=["POST"])
+@jwt_required()
+def logout():
+    user_logged_out = signal('user_logged_out')
+    user_logged_out.send(current_app.get_current_object(), jwt_payload=get_jwt_identity())
