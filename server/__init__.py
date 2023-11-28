@@ -13,7 +13,6 @@ GPT_MODEL = "gpt-3.5-turbo"
 JWT_REVOKED_TOKENS = set()
 
 ENV = EnvManager()
-ENV.init_default_users()
 
 CLIENT = OpenAI(api_key=config("OPENAI_API_KEY"))
 user_logged_out = signal('user-logged-out')
@@ -22,16 +21,19 @@ def handle_user_logout(sender, **extra):
     jti = extra['jwt_payload']['jti']
     JWT_REVOKED_TOKENS.add(jti)
 
-def check_jwt_token(sender, **extra):
-    jti = extra['jwt_payload']['jti']
+def check_jwt_token(*sender, **extra):
+    jti = sender[1]['jti']
     if jti in JWT_REVOKED_TOKENS:
-        return False
-    return True
+        return True
+    return False
 
 def create_app() -> Flask:
     
     app = Flask(__name__)
+
     app.config['SECRET_KEY'] = config("FLASK_SECRET_KEY")
+    app.config['JWT_SECRET_KEY'] = config("JWT_SECRET_TOKEN")
+    app.config['JWT_IDENTITY_CLAIM'] = 'sub'
 
     CORS(app, supports_credentials=True)
     jwt = JWTManager(app)
@@ -51,6 +53,7 @@ def create_app() -> Flask:
         
         # Default Users aus den .env-Vars hinzufügen, wenn die DB 
         if User.query.count() == 0:
+            ENV.init_default_users()
             for user in ENV.DEFAULT_USERS:
                 u = User(username=user[0])
                 u.set_password(user[1])
