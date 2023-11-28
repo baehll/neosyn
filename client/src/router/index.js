@@ -72,14 +72,14 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
     
     const authStore = useAuthStore();
-
     if(to.matched.some(r =>  r.meta.requiresAuth)) {
-        if(!authStore.isAuthenticated) {
+        if(!authStore.checkAuthentication()) {
+            localStorage.removeItem("token")
             next("/");
         } else {
-            next();
+            next()
         }
-    } else if (to.path === "/" && authStore.isAuthenticated){
+    } else if (to.path === "/" && authStore.checkAuthentication()){
         next("/dashboard")
     } else {
         next()

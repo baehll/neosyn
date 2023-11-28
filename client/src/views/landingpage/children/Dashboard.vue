@@ -32,45 +32,43 @@ import Comment from '../../../components/Comment.vue'
 import { inject, onBeforeMount, onMounted} from "vue";
 
 const fbStore = useFBStore();
-const app_id = inject("VITE_FB_APP_ID");
-
-const initFacebook = () => {
-    return new Promise((resolve, reject) => {
-        window.fbAsyncInit = function () {
-            FB.init({
-            appId: app_id,
-            xfbml: true,
-            version: 'v18.0',
-            status: true
-            });
-
-            // Hier kannst du zusätzliche Anpassungen vornehmen, wenn nötig
-
-            FB.Event.subscribe('auth.statusChange', () => {
-            FB.getLoginStatus((fbRes) => {
-                if(fbRes && fbRes.status !== 'connected') {
-                    FB.login((res) => {
-                        if(res.authResponse) {
-                            fbStore.populateData()
-                        }
-                    }, {scope: 'pages_show_list,business_management,instagram_basic,instagram_manage_comments,pages_read_engagement,pages_manage_metadata,pages_read_user_content,pages_manage_ads,pages_manage_engagement,public_profile'})
-                } else {
-                    fbStore.populateData()
-                }
-            })
-        })
-            resolve(); // Resolviere das Promise, wenn die Initialisierung abgeschlossen ist
-        };
-  });
-}
 
 onMounted(() => {
-    if(!fbStore.initFinished) {
-        initFacebook().then(() => {
-            fbStore.populateData();
-        });
-
+    FB.init({
+        appId: import.meta.env.VITE_FB_APP_ID,
+        version: "v18.0",
+        xfbml: true,
+        status: true,
+        cookie: true,
+    });
+    
+    // Check if the current user is logged in and has authorized the app
+    FB.getLoginStatus(checkLoginStatus);
+    
+    // Login in the current user via Facebook and ask for email permission
+    function authUser() {
+        FB.login(checkLoginStatus, {scope: 'pages_show_list,business_management,instagram_basic,instagram_manage_comments,pages_read_engagement,pages_manage_metadata,pages_read_user_content,pages_manage_ads,pages_manage_engagement,public_profile'});
     }
+    
+    // Check the result of the user status and display login button if necessary
+    function checkLoginStatus(response) {
+        if(response && response.status == 'connected') {
+            fbStore.populateData();
+        } else {
+            authUser();
+            fbStore.populateData();
+        }
+    }
+    /*  
+    console.log("timing test")
+    if(!fbStore.initFinished) {
+        console.log("test1")
+        fbStore.loginToFB();
+        console.log("1store angeblich geladen,  " + fbStore.pages.length)
+    } else {
+        console.log("2store angeblich geladen,  " + fbStore.pages.length)
+    }
+    */
 })
 
 </script>

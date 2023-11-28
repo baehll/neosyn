@@ -1,12 +1,13 @@
 import { defineStore } from 'pinia'
 import { ref, inject } from 'vue'
 import { useRouter } from "vue-router";
+import { parseJwt } from '../utils';
 
 export const useAuthStore = defineStore('auth', () => {
-    const isAuthenticated = ref(localStorage.getItem("token") != null)
+    const isAuthenticated = ref(localStorage.getItem("token") != null);
 
     const axios = inject("AXIOS_INSTANCE");
-    const router = useRouter()
+    const router = useRouter();
 
     async function login(un, pw) {
         try {
@@ -21,7 +22,6 @@ export const useAuthStore = defineStore('auth', () => {
 
             axios.defaults.headers.common['Authorization'] = "Bearer " + token
             
-            console.log(axios)
         } catch (error) {
             console.error("Login failed", error)
         }
@@ -29,7 +29,6 @@ export const useAuthStore = defineStore('auth', () => {
 
     async function logout() {
         try {
-            console.log(axios.defaults)
             let res = await axios.post("/auth/logout", {headers: [{"Content-Type" : "application/json"}]})
             localStorage.removeItem("token")
             isAuthenticated.value = false
@@ -39,8 +38,18 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
+    function checkAuthentication() {
+        if(localStorage.getItem("token") != null) {
+            const jwtToken = parseJwt(localStorage.getItem("token"));
+            return (jwtToken.exp < Date.now());
+        } else {
+            return false;
+        }
+    }
+
     return {
         isAuthenticated,
+        checkAuthentication,
         login,
         logout
     }

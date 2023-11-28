@@ -58,7 +58,7 @@
 import { inject, onMounted, reactive } from 'vue';
 import { useAPIStore } from "../store/api"
 import { useFBStore } from '../store/fb';
-import utils from '../utils';
+import {dateFormatter} from '../utils';
 import Fastreplymodal from './FastReplyModal.vue';
  
 const apiStore = useAPIStore()
@@ -84,7 +84,7 @@ onMounted(() => {
     FB.api(props.comment.from.id, {fields:"profile_picture_url"}, (res) => {
         state.profile_picture_url = res.profile_picture_url;
     })
-    state.time = utils.dateFormatter(new Date(props.comment.timestamp));
+    state.time = dateFormatter(new Date(props.comment.timestamp));
 })
 
 

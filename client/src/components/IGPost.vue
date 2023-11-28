@@ -55,7 +55,7 @@
 
 <script setup>
 import { useFBStore } from '../store/fb';
-import utils from '../utils';
+import { formatNumbers } from '../utils';
 import Comment from './Comment.vue';
 
 const props = defineProps(["post_obj"])

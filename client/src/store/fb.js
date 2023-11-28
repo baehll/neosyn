@@ -78,10 +78,26 @@ export const useFBStore = defineStore('fb', () => {
         })
     }
 
+    function loginToFB() {
+        FB.getLoginStatus(({authResponse}) => {
+            console.log(authResponse)
+            if(authResponse && authResponse.status != "connected") {
+                FB.login((res) => {
+                    if(res.authResponse) {
+                        populateData();
+                    }
+                }, {scope: 'pages_show_list,business_management,instagram_basic,instagram_manage_comments,pages_read_engagement,pages_manage_metadata,pages_read_user_content,pages_manage_ads,pages_manage_engagement,public_profile'})
+            } else {
+                populateData();
+            }
+        })
+    }
+
     return {
         initFinished, 
         pages,
         comments, 
+        loginToFB,
         populateData,
         sendAuthTokens,
         postReplyToComment,
