@@ -1,6 +1,6 @@
 <template>
     <div class="container">    
-        <div v-if="authStore.isAuthenticated" >
+        <div v-if="authStore.authenticated" >
             <TopNavbar></TopNavbar>
             <SideNavbar></SideNavbar>
         </div>
@@ -14,6 +14,7 @@
 import SideNavbar from './components/SideNavbar.vue';
 import TopNavbar from './components/TopNavbar.vue';
 import { useAuthStore } from './store/auth';
+import { reactive } from 'vue';
 
 const authStore = useAuthStore()
 </script>
