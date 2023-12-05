@@ -10,21 +10,19 @@
             </select>
         </p>
         <div class="row">
-            <template v-if="fbStore.initFinished && fbStore.pages.length > 0">
+            <template v-if="fbStore.initFinished">
                 <template v-for="media in fbStore.pages[selected].media_objs">
                     <IGPost style="min-width: 85vw; max-height: fit-content;" :post_obj="media" />
                 </template>
             </template>
         </div>
     </div>
-    <GeneratedReplyModal></GeneratedReplyModal>
 </template>
 
 <script setup>
 import { ref } from 'vue';
 import IGPost from '../../components/IGPost.vue';
 import { useFBStore } from '../../store/fb';
-import GeneratedReplyModal from '../../components/GeneratedReplyModal.vue';
 
 const selected = ref(0)
 

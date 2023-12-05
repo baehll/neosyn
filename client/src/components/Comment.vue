@@ -46,7 +46,6 @@
                 </div>
             </div>
         </div>
-        <Fastreplymodal :picked="state.picked" @send="sendComment"/>
     </div>
 </template>
 
@@ -55,7 +54,6 @@ import { inject, onMounted, reactive } from 'vue';
 import { useAPIStore } from "../store/api"
 import { useFBStore } from '../store/fb';
 import {dateFormatter} from '../utils';
-import Fastreplymodal from './FastReplyModal.vue';
  
 const apiStore = useAPIStore()
 const fbStore = useFBStore()
@@ -69,16 +67,11 @@ const state = reactive({
 })
 
 async function fastReply() {
-    apiStore.updateFastReplies(props.comment)
+    apiStore.updateFastReplies(props.comment.text, props.comment.id)
 }    
 
 async function sendReply() {
     emit("generate-reply", props.comment.text, props.comment.id)
-}
-
-function sendComment(val) {
-    fbStore.replyToComment(props.comment.id, val)
-    state.picked = ""
 }
 
 onMounted(() => {

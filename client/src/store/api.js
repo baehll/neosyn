@@ -4,7 +4,10 @@ import { useRouter } from "vue-router";
 import "bootstrap"
 
 export const useAPIStore = defineStore("api", () => {
-    const fastReplies = ref([])
+    const fastReplies = ref({
+        replies: [],
+        targetId: ""
+    })
     const generatedReply = ref({
         parent: "",
         text: ""
@@ -29,9 +32,10 @@ export const useAPIStore = defineStore("api", () => {
         }
     }
 
-    async function updateFastReplies(comment) {
-        let res = await axios.post("/api/fast_response", {"comment": comment.text})
-        fastReplies.value = res.data.answers;
+    async function updateFastReplies(commentText, commentId) {
+        let res = await axios.post("/api/fast_response", {"comment": commentText})
+        fastReplies.value.replies = res.data.answers;
+        fastReplies.value.targetId = commentId;
         const modal = new bootstrap.Modal("#fastReplyModal")
         modal.show()
     }

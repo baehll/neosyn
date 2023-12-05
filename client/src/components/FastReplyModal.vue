@@ -10,7 +10,7 @@
                     <!---->
                     <fieldset>
                         <legend>Bitte Wähle eine Antwort:</legend>
-                        <template v-for="answer, index in apiStore.fastReplies">
+                        <template v-for="answer, index in apiStore.fastReplies.replies">
                             <div class="form-check">
                                 <input type="radio" class="form-check-input" :id="'answer'+index" v-model="pick" name="answers" :value="answer">
                                 <label :for="'answer'+index" class="form-check-label">{{ answer }}</label>
@@ -31,13 +31,15 @@
 <script setup>
 import { ref } from "vue";
 import { useAPIStore } from "../store/api"
+import { useFBStore } from "../store/fb";
 
-const emit = defineEmits(['send'])
 const apiStore = useAPIStore()
+const fbStore = useFBStore();
 const pick = ref("")
 
 function send() {
-    emit("send", pick._value)
+    fbStore.replyToComment(apiStore.fastReplies.targetId, pick.value)
+
 }
 </script>
 
