@@ -11,6 +11,7 @@ export const useFBStore = defineStore('fb', () => {
 
     function populateData() {
         pages.value = []
+        initFinished.value = false
         comments.value = []
         //Zuerst alle zugehörigen Pages/Accounts finden
         FB.api("/me/accounts", (resp) => {
@@ -29,7 +30,7 @@ export const useFBStore = defineStore('fb', () => {
                         for(let key in r.data) {
                             let post = r.data[key]
                             if(post.comments_count > 0) {
-                                FB.api(post.id + "/comments", {fields: "from, text, username, timestamp, like_count,replies{from, timestamp, username, text}"}, (commentRes) => {
+                                FB.api(post.id + "/comments", {fields: "from, text, username, timestamp, parent, like_count,replies{from, parent, timestamp, username, text}"}, (commentRes) => {
                                     comments.value.push(commentRes.data)
                                     currentPage.media_objs[key].comments = commentRes.data
                                 })
@@ -54,17 +55,27 @@ export const useFBStore = defineStore('fb', () => {
 
     function sendAuthTokens() {
         FB.getLoginStatus((res) => {
-            axios.post("token?token="+res.authResponse.accessToken)
+            axios.post("token?token=" + res.authResponse.accessToken)
         })
     }
 
-    function postReplyToComment(commentId, comment) {
+    function replyToComment(commentId, comment) {
         FB.api("/" + commentId + "/replies", "POST", {
             "message": comment
         }, (res) => {
             if(res && !res.error) {
                 console.log("erfolgreich gepostet")
-                populateData()
+                populateData();
+            }
+        })
+    }
+
+    function replyToObject(id, message) {
+        FB.api("/" + id + "/comments", "POST", {
+            "message": message
+        }, (res) => {
+            if(res && !res.error) {
+                populateData();
             }
         })
     }
@@ -100,7 +111,8 @@ export const useFBStore = defineStore('fb', () => {
         loginToFB,
         populateData,
         sendAuthTokens,
-        postReplyToComment,
-        deleteComment
+        replyToComment,
+        deleteComment,
+        replyToObject
     }
 })

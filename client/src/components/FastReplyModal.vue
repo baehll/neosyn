@@ -7,6 +7,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
                 </div>
                 <div class="modal-body">
+                    <!---->
                     <fieldset>
                         <legend>Bitte Wähle eine Antwort:</legend>
                         <template v-for="answer, index in apiStore.fastReplies">
@@ -16,6 +17,7 @@
                             </div>
                         </template>
                     </fieldset>
+                    <!---->
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn" data-bs-dismiss="modal" aria-label="Schließen">Schließen</button>
@@ -28,7 +30,6 @@
 
 <script setup>
 import { ref } from "vue";
-import { useFBStore } from "../store/fb";
 import { useAPIStore } from "../store/api"
 
 const emit = defineEmits(['send'])

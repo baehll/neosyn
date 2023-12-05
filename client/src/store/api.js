@@ -5,19 +5,55 @@ import "bootstrap"
 
 export const useAPIStore = defineStore("api", () => {
     const fastReplies = ref([])
+    const generatedReply = ref({
+        parent: "",
+        text: ""
+    })
+    const replyContext = ref({
+        id: "",
+        media_url: "",
+        caption: "",
+        comment: ""
+    })
 
     const axios = inject("AXIOS_INSTANCE");
 
+    function setContext(id, media_url, caption, comment = "") {
+        replyContext.value.id = id;
+        replyContext.value.media_url = media_url;
+        replyContext.value.caption = caption;
+        if(comment == "") {
+            replyContext.value.comment = "";
+        } else {
+            replyContext.value.comment = comment;
+        }
+    }
+
     async function updateFastReplies(comment) {
-        //currentCommentID.value = comment.id
         let res = await axios.post("/api/fast_response", {"comment": comment.text})
         fastReplies.value = res.data.answers;
         const modal = new bootstrap.Modal("#fastReplyModal")
         modal.show()
     }
 
+    async function generateResponseWithContext(targetId) {
+        try {
+            let res = await axios.post("/api/context_response", replyContext.value);
+            console.log(res.data.answer)
+            generatedReply.value.parent = targetId;
+            generatedReply.value.text = res.data.answer;
+            const modal = new bootstrap.Modal("#generatedReplyModal")
+            modal.show();
+        } catch (error) {
+            console.error("Error when requesting Respone with Context", error)
+        }
+    }
+
     return {
         fastReplies,
-        updateFastReplies
+        generatedReply,
+        updateFastReplies,
+        generateResponseWithContext,
+        setContext
     }
 })

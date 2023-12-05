@@ -14,9 +14,9 @@
                 <div class="card-body comment-list-body">
                     <ul class="list-group list-group-flush" v-for="pageComments in fbStore.comments">
                         <div v-for="c in pageComments">
-                            <Comment :comment="c" :actions_enabled="true" class="list-group-item rounded-4 p-3 m-1 shadow-lg" />
+                            <Comment :comment="c" class="list-group-item rounded-4 p-3 m-1 shadow-lg" />
                             <template v-for="r in c.replies?.data">
-                                <Comment :comment="r" :actions_enabled="true" class="list-group-item rounded-4 p-3 m-1" />
+                                <Comment :comment="r" class="list-group-item rounded-4 p-3 m-1" />
                             </template>
                         </div>
                     </ul>
@@ -59,16 +59,6 @@ onMounted(() => {
             fbStore.populateData();
         }
     }
-    /*  
-    console.log("timing test")
-    if(!fbStore.initFinished) {
-        console.log("test1")
-        fbStore.loginToFB();
-        console.log("1store angeblich geladen,  " + fbStore.pages.length)
-    } else {
-        console.log("2store angeblich geladen,  " + fbStore.pages.length)
-    }
-    */
 })
 
 </script>
