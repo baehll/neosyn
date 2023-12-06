@@ -10,6 +10,7 @@
 
 <script setup>
 import { useAuthStore } from '../store/auth';
+import { useGeneralStore } from '../store/general';
 
 const authStore = useAuthStore()
 </script>

@@ -1,6 +1,7 @@
 import { defineStore } from "pinia";
 import { inject, ref } from "vue"
 import "bootstrap"
+import { useGeneralStore } from "./general"
 
 export const useFBStore = defineStore('fb', () => {
     const pages = ref([])
@@ -8,11 +9,13 @@ export const useFBStore = defineStore('fb', () => {
     const initFinished = ref(false)
 
     const axios = inject('AXIOS_INSTANCE')
+    const gnStore = useGeneralStore();
 
     function populateData() {
         pages.value = []
         initFinished.value = false
         comments.value = []
+
         //Zuerst alle zugehörigen Pages/Accounts finden
         FB.api("/me/accounts", (resp) => {
             //über jede Page iterieren
@@ -51,6 +54,7 @@ export const useFBStore = defineStore('fb', () => {
         })
         
         initFinished.value = true;
+        
     }
 
     function sendAuthTokens() {
@@ -60,55 +64,65 @@ export const useFBStore = defineStore('fb', () => {
     }
 
     function replyToComment(commentId, comment) {
-        FB.api("/" + commentId + "/replies", "POST", {
-            "message": comment
-        }, (res) => {
-            if(res && !res.error) {
-                console.log("erfolgreich gepostet")
-                populateData();
-            }
-        })
+        try {
+            gnStore.showLoadingScreen();
+            FB.api("/" + commentId + "/replies", "POST", {
+                "message": comment
+            }, (res) => {
+                if(res && !res.error) {
+                    gnStore.hideLoadingScreen();
+                    populateData();
+                }
+            })
+        } catch (error) {
+            console.error("Error while replying to comment\n", error)
+        } finally {
+            gnStore.hideLoadingScreen();
+        }
     }
 
     function replyToObject(id, message) {
-        FB.api("/" + id + "/comments", "POST", {
-            "message": message
-        }, (res) => {
-            if(res && !res.error) {
-                populateData();
-            }
-        })
+        try {
+            gnStore.showLoadingScreen();
+
+            FB.api("/" + id + "/comments", "POST", {
+                "message": message
+            }, (res) => {
+                if(res && !res.error) {
+                    gnStore.hideLoadingScreen();
+                    populateData();
+                }
+            })
+        } catch (error) {
+            console.error("Error while replying to object\n",error)
+        } finally {
+            gnStore.hideLoadingScreen();
+        }
     }
 
     function deleteComment(commentID) {
-        FB.api("/" + commentID, "DELETE", (res) => {
-            if(res && !res.error) {
-                console.log("erfolgreich gelöscht")
-                populateData()
-            }
-        })
+        try {
+            gnStore.showLoadingScreen();
+            FB.api("/" + commentID, "DELETE", (res) => {
+                if(res && !res.error) {
+                    gnStore.hideLoadingScreen();
+                    populateData();
+                }
+            })
+        } catch (error) {
+            console.error("Error while deleting comment\n",error)
+        } finally {
+            gnStore.hideLoadingScreen();
+        }
+        
+        
     }
 
-    function loginToFB() {
-        FB.getLoginStatus(({authResponse}) => {
-            console.log(authResponse)
-            if(authResponse && authResponse.status != "connected") {
-                FB.login((res) => {
-                    if(res.authResponse) {
-                        populateData();
-                    }
-                }, {scope: 'pages_show_list,business_management,instagram_basic,instagram_manage_comments,pages_read_engagement,pages_manage_metadata,pages_read_user_content,pages_manage_ads,pages_manage_engagement,public_profile'})
-            } else {
-                populateData();
-            }
-        })
-    }
 
     return {
         initFinished, 
         pages,
         comments, 
-        loginToFB,
         populateData,
         sendAuthTokens,
         replyToComment,

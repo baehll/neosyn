@@ -34,31 +34,35 @@ import { inject, onBeforeMount, onMounted} from "vue";
 const fbStore = useFBStore();
 
 onBeforeMount(() => {
-    FB.init({
-        appId: import.meta.env.VITE_FB_APP_ID,
-        version: "v18.0",
-        xfbml: true,
-        status: true,
-        cookie: true,
-    });
-    
-    // Check if the current user is logged in and has authorized the app
-    FB.getLoginStatus(checkLoginStatus);
-    
-    // Login in the current user via Facebook and ask for email permission
-    function authUser() {
-        FB.login(checkLoginStatus, {scope: 'pages_show_list,business_management,instagram_basic,instagram_manage_comments,pages_read_engagement,pages_manage_metadata,pages_read_user_content,pages_manage_ads,pages_manage_engagement,public_profile'});
-    }
-    
-    // Check the result of the user status and display login button if necessary
-    function checkLoginStatus(response) {
-        if(response && response.status == 'connected') {
-            if(!fbStore.initFinished) fbStore.populateData();
-        } else {
-            authUser();
-            fbStore.populateData();
+    try {
+        FB.init({
+            appId: import.meta.env.VITE_FB_APP_ID,
+            version: "v18.0",
+            xfbml: true,
+            status: true,
+            cookie: true,
+        });
+        
+        // Check if the current user is logged in and has authorized the app
+        FB.getLoginStatus(checkLoginStatus);
+        
+        // Login in the current user via Facebook and ask for email permission
+        function authUser() {
+            FB.login(checkLoginStatus, {scope: 'pages_show_list,business_management,instagram_basic,instagram_manage_comments,pages_read_engagement,pages_manage_metadata,pages_read_user_content,pages_manage_ads,pages_manage_engagement,public_profile'});
         }
-    }
+        
+        // Check the result of the user status and display login button if necessary
+        function checkLoginStatus(response) {
+            if(response && response.status == 'connected') {
+                if(!fbStore.initFinished) fbStore.populateData();
+            } else {
+                authUser();
+                fbStore.populateData();
+            }
+        }
+    } catch (error) {
+        console.error("Error while trying to setup FB JDK\n" + error)
+    }   
 })
 
 </script>

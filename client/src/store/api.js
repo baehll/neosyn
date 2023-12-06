@@ -2,16 +2,19 @@ import { defineStore } from "pinia";
 import { ref, inject } from "vue";
 import { useRouter } from "vue-router";
 import "bootstrap"
+import { useGeneralStore } from "./general";
 
 export const useAPIStore = defineStore("api", () => {
     const fastReplies = ref({
         replies: [],
         targetId: ""
     })
+
     const generatedReply = ref({
         parent: "",
         text: ""
     })
+    
     const replyContext = ref({
         id: "",
         media_url: "",
@@ -20,6 +23,7 @@ export const useAPIStore = defineStore("api", () => {
     })
 
     const axios = inject("AXIOS_INSTANCE");
+    const gnStore = useGeneralStore();
 
     function setContext(id, media_url, caption, comment = "") {
         replyContext.value.id = id;
@@ -33,23 +37,40 @@ export const useAPIStore = defineStore("api", () => {
     }
 
     async function updateFastReplies(commentText, commentId) {
-        let res = await axios.post("/api/fast_response", {"comment": commentText})
-        fastReplies.value.replies = res.data.answers;
-        fastReplies.value.targetId = commentId;
-        const modal = new bootstrap.Modal("#fastReplyModal")
-        modal.show()
+        try {
+            gnStore.showLoadingScreen()
+
+            let res = await axios.post("/api/fast_response", {"comment": commentText})
+            fastReplies.value.replies = res.data.answers;
+            fastReplies.value.targetId = commentId;
+
+            gnStore.hideLoadingScreen()
+            const modal = new bootstrap.Modal("#fastReplyModal")
+            modal.show()
+        } catch (error) {
+            console.log("Error while fetching quick responses, " + error)
+        } finally {
+            if(gnStore.infoModalActive) gnStore.hideLoadingScreen();
+        }
+
     }
 
     async function generateResponseWithContext(targetId) {
         try {
+            gnStore.showLoadingScreen();
+
             let res = await axios.post("/api/context_response", replyContext.value);
-            console.log(res.data.answer)
             generatedReply.value.parent = targetId;
             generatedReply.value.text = res.data.answer;
-            const modal = new bootstrap.Modal("#generatedReplyModal")
+
+            gnStore.hideLoadingScreen();
+            
+            const modal = new bootstrap.Modal("#generatedReplyModal");
             modal.show();
         } catch (error) {
             console.error("Error when requesting Respone with Context", error)
+        } finally {
+            if(gnStore.infoModalActive) gnStore.hideLoadingScreen();
         }
     }
 
