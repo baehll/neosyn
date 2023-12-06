@@ -38,12 +38,12 @@ function setupUseCalls(app) {
     };
 
     // Initialisiert den Authorization header, falls einer bereits vorliegt und nicht abgelaufen ist
-    if(localStorage.getItem("token") != null) {
-        const jwtPayload = parseJwt(localStorage.getItem("token"))
-        if(jwtPayload.exp < Date.now()) {
-            localStorage.removeItem("token")
+    if(sessionStorage.getItem("token") != null) {
+        const jwtPayload = parseJwt(sessionStorage.getItem("token"))
+        if(jwtPayload.exp > Date.now()) {
+            sessionStorage.removeItem("token")
         } else {
-            axiosConfig["headers"] = {"Authorization" : "Bearer " + localStorage.getItem("token")}
+            axiosConfig["headers"] = {"Authorization" : "Bearer " + sessionStorage.getItem("token")}
         }
     }
 

@@ -33,7 +33,7 @@ import { inject, onBeforeMount, onMounted} from "vue";
 
 const fbStore = useFBStore();
 
-onMounted(() => {
+onBeforeMount(() => {
     FB.init({
         appId: import.meta.env.VITE_FB_APP_ID,
         version: "v18.0",
@@ -53,7 +53,7 @@ onMounted(() => {
     // Check the result of the user status and display login button if necessary
     function checkLoginStatus(response) {
         if(response && response.status == 'connected') {
-            fbStore.populateData();
+            if(!fbStore.initFinished) fbStore.populateData();
         } else {
             authUser();
             fbStore.populateData();

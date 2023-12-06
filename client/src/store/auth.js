@@ -7,7 +7,12 @@ export const useAuthStore = defineStore('auth', () => {
     const axios = inject("AXIOS_INSTANCE");
     const router = useRouter();
     const authenticated = ref(false);
-
+    
+    /**
+     * 
+     * @param {*} un 
+     * @param {*} pw 
+     */
     async function login(un, pw) {
         try {
             let res = await axios.post("/auth/login", {
@@ -26,6 +31,9 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
+    /**
+     * 
+     */
     async function logout() {
         try {
             let res = await axios.post("/auth/logout", {headers: [{"Content-Type" : "application/json"}]})
@@ -38,18 +46,20 @@ export const useAuthStore = defineStore('auth', () => {
         }
     }
 
+    /**
+     * 
+     * @returns 
+     */
     function isAuthenticated() {
         if(sessionStorage.getItem("token") == null) {
             authenticated.value = false;
             return false;
         } else {
-            //(parseJwt(localStorage.getItem("token")).exp > Date.now())
             const jwtToken = parseJwt(sessionStorage.getItem("token"));
             if(jwtToken.exp < Date.now()) {
                 authenticated.value = true;
                 return true;
             } else {
-                //localStorage.removeItem("token")
                 authenticated.value = false;
                 return false;
             }

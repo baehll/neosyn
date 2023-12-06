@@ -75,17 +75,13 @@ router.beforeEach((to, from, next) => {
     const authStore = useAuthStore();
     if(to.matched.some(r =>  r.meta.requiresAuth)) {
         if(!authStore.isAuthenticated()) {
-            console.log("not authenticated")
             next("/");
         } else {
-            console.log("authenticated")
             next()
         }
     } else if (to.path === "/" && authStore.isAuthenticated()){
-        console.log("umleitung zum dashboard")
-        //next("/dashboard")
+        next("/dashboard")
     } else {
-        console.log("default")
         next()
     }
 })
