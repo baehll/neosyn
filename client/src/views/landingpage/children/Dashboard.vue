@@ -12,13 +12,21 @@
                     </button>
                 </div>
                 <div class="card-body comment-list-body">
-                    <ul class="list-group list-group-flush" v-for="pageComments in fbStore.comments">
-                        <div v-for="c in pageComments">
-                            <Comment :comment="c" class="list-group-item rounded-4 p-3 m-1 shadow-lg" />
-                            <template v-for="r in c.replies?.data">
-                                <Comment :comment="r" class="list-group-item rounded-4 p-3 m-1" />
+                    <ul class="list-group list-group-flush" v-show="isReady">
+                        <template v-for="page in fbStore.pages">
+                            <template v-for="post in page.media_objs">
+                                <template v-for="comment in post.comments" :key="comment.id">
+                                    <li class="list-group-item border-0" >
+                                        <Comment :comment="comment" :shallow="true" class="list-group-item rounded-4 p-3 m-1 shadow-lg" />
+                                    </li>
+                                    <template v-for="reply in comment.replies?.data" :key="reply.id">
+                                        <li class="list-group-item border-0">
+                                            <Comment :comment="reply" :shallow="true" class="list-group-item rounded-4 p-3 m-1 shadow-lg" />
+                                        </li>
+                                    </template>
+                                </template>
                             </template>
-                        </div>
+                        </template>
                     </ul>
                 </div>
             </div>
@@ -30,8 +38,14 @@
 import { useFBStore } from "../../../store/fb"
 import Comment from '../../../components/Comment.vue'
 import { inject, onBeforeMount, onMounted} from "vue";
+import { useAPIStore } from "../../../store/api";
 
 const fbStore = useFBStore();
+const apiStore = useAPIStore();
+
+function isReady() {
+    return fbStore.initFinished;
+}
 
 onBeforeMount(() => {
     try {

@@ -36,7 +36,7 @@
             </div>
             <div class="row">
                 <div class="col-auto">
-                    <button @click="sendReply" class="btn btn-primary">Reply</button>
+                    <button @click="sendReply" class="btn btn-primary" :class="{'disabled': props.shallow}">Reply</button>
                 </div>
                 <div class="col-auto">
                     <button @click="fastReply" class="btn btn-primary">Fast Reply</button>
@@ -58,7 +58,7 @@ import {dateFormatter} from '../utils';
 const apiStore = useAPIStore()
 const fbStore = useFBStore()
 const emit = defineEmits(['generate-reply'])
-const props = defineProps(['comment'])
+const props = defineProps(['comment', 'shallow'])
 
 const state = reactive({
     profile_picture_url: "",

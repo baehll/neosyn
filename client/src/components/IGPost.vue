@@ -39,17 +39,23 @@
                         {{ post_obj.caption }}
                     </h3>
                 </div>
-                <div class="row comment-list-body h-100" >
-                    <template v-for="c in post_obj.comments">
-                        <Comment :comment="c" class="border border-3" @generate-reply="generateReplyWithContext"/>
-                        <template v-if="c?.replies != null">
-                            <div class="ms-4 border border-3">
-                                <template v-for="r in c.replies.data">
-                                    <Comment :comment="r" @generate-reply="generateReplyWithContext"/>
+                <div class="row comment-list-body h-100 border border-5" >
+                    <ul class="list-group list-group-flush">
+                        <template v-for="c in post_obj.comments">
+                            <div class="border border-3">
+                                <li  class="list-group-item pb-0">
+                                    <Comment :comment="c" :shallow="false" class="" @generate-reply="generateReplyWithContext"/>
+                                </li>
+                                <template v-if="c?.replies != null">
+                                    <li class="list-group-item pt-0 ms-2">
+                                        <template v-for="r in c.replies.data" :key="r.id">
+                                            <Comment :comment="r" :shallow="false" @generate-reply="generateReplyWithContext"/>
+                                        </template>
+                                    </li>
                                 </template>
                             </div>
                         </template>
-                    </template>
+                    </ul>
                 </div>
             </div>
         </div>
