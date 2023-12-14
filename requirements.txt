@@ -1,4 +1,6 @@
 Flask
+flask-login
+Flask-JWT-Extended
 Flask-SQLAlchemy==3.0.5
 flask-cors
 python-decouple

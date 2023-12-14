@@ -1,13 +1,8 @@
 <template> 
-    <SidebarMenu :menu="menu" :collapsed="true" v-if="authStore.isAuthenticated"></SidebarMenu>
+    <SidebarMenu :menu="menu" :collapsed="true"></SidebarMenu>
 </template>
 
 <script setup>
-import { useAuthStore } from '../store/auth';
-
-
-const authStore = useAuthStore();
-
 const menu = [
     {
         header: "Main Navigation",

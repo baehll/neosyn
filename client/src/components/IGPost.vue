@@ -29,7 +29,7 @@
             <div class="col-4 text-start comment-list ">
                 <div class="row">
                     <p>
-                        <b>{{ post_obj.username }} - {{ utils.dateFormatter(new Date(post_obj.timestamp)) }} </b>
+                        <b>{{ post_obj.username }} - {{ dateFormatter(new Date(post_obj.timestamp)) }} </b>
                             <p>
                                 <i class="fa-solid fa-thumbs-up"></i> {{ post_obj.like_count > 0 ? post_obj.like_count : "0" }}
                                 <i class="fa-solid fa-comment"></i> {{ post_obj.comments_count }}
@@ -39,27 +39,43 @@
                         {{ post_obj.caption }}
                     </h3>
                 </div>
-                <div class="row comment-list-body ">
-                    <template v-for="c in post_obj.comments">
-                        <Comment :comment="c" :actions_enabled="true" class="border border-3"/>
-                        <template v-if="c?.replies != null">
-                            <template v-for="r in c.replies.data">
-                                <Comment :comment="r" :actions_enabled="true" class="ms-4 border border-3"/>
-                            </template>
+                <div class="row comment-list-body h-100 border border-5" >
+                    <ul class="list-group list-group-flush">
+                        <template v-for="c in post_obj.comments">
+                            <div class="border border-3">
+                                <li  class="list-group-item pb-0">
+                                    <Comment :comment="c" :shallow="false" class="" @generate-reply="generateReplyWithContext"/>
+                                </li>
+                                <template v-if="c?.replies != null">
+                                    <li class="list-group-item pt-0 ms-2">
+                                        <template v-for="r in c.replies.data" :key="r.id">
+                                            <Comment :comment="r" :shallow="false" @generate-reply="generateReplyWithContext"/>
+                                        </template>
+                                    </li>
+                                </template>
+                            </div>
                         </template>
-                    </template>
+                    </ul>
                 </div>
             </div>
         </div>
 </template>
 
 <script setup>
+import { useAPIStore } from '../store/api';
 import { useFBStore } from '../store/fb';
-import utils from '../utils';
+import { dateFormatter } from '../utils';
 import Comment from './Comment.vue';
 
 const props = defineProps(["post_obj"])
 const fbStore = useFBStore();
+const apiStore = useAPIStore();
+
+function generateReplyWithContext(commentText, targetId) {
+    apiStore.setContext(props.post_obj.id, props.post_obj.media_url, props.post_obj.caption, commentText);
+    apiStore.generateResponseWithContext(targetId)
+}
+
 
 </script>
 

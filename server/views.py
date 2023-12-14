@@ -25,8 +25,6 @@ def serve_static_assets(filename):
 
 def get(media_id, access_token):
     url = "https://graph.facebook.com/v18.0/" + str(media_id)
-
-
     params = {
         "fields": "comments_count,comments{text, username, replies{username, text}}",
         "transport": "cors",
@@ -38,8 +36,6 @@ def get(media_id, access_token):
 
 @views.route('/token', methods=["POST"])
 def token():
-    name = request.args.get('name')
-    value = request.args.get('token')
     #print(value)
     return jsonify({})
  

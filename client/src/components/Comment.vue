@@ -29,24 +29,23 @@
                     {{ (comment.like_count != null) ? comment.like_count : 0 }} <i class="fa-solid fa-thumbs-up"></i>
                 </p>
             </div>
-            <template v-if="props.actions_enabled">
-                <div class="row mb-1">
-                    <div class="divider">
+            <div class="row mb-1">
+                <div class="divider">
 
-                    </div>
                 </div>
-                <div class="row">
-                    <div class="col-auto d-flex justify-content-center align-items-center">
-                        <button class="mx-1 btn disabled">Reply</button>
-                        <button @click="fastReply" class="mx-1 btn btn-primary">Fast Reply</button>
-                        <button @click="fbStore.deleteComment(props.comment.id)" class="mx-1 btn btn-primary">Delete</button>
-                    </div>
+            </div>
+            <div class="row">
+                <div class="col-auto">
+                    <button @click="sendReply" class="btn btn-primary" :class="{'disabled': props.shallow}">Reply</button>
                 </div>
-            </template>
+                <div class="col-auto">
+                    <button @click="fastReply" class="btn btn-primary">Fast Reply</button>
+                </div>
+                <div class="col-auto">
+                    <button @click="fbStore.deleteComment(props.comment.id)" class="btn btn-primary">Delete</button>
+                </div>
+            </div>
         </div>
-        <template v-if="props.actions_enabled">
-            <Fastreplymodal :picked="state.picked" @send="sendComment"/>
-        </template>
     </div>
 </template>
 
@@ -54,12 +53,13 @@
 import { inject, onMounted, reactive } from 'vue';
 import { useAPIStore } from "../store/api"
 import { useFBStore } from '../store/fb';
-import utils from '../utils';
-import Fastreplymodal from './FastReplyModal.vue';
+import {dateFormatter} from '../utils';
  
 const apiStore = useAPIStore()
 const fbStore = useFBStore()
-const props = defineProps(['comment', 'actions_enabled'])
+const emit = defineEmits(['generate-reply'])
+const props = defineProps(['comment', 'shallow'])
+
 const state = reactive({
     profile_picture_url: "",
     time: "",
@@ -67,12 +67,11 @@ const state = reactive({
 })
 
 async function fastReply() {
-    apiStore.updateFastReplies(props.comment)
+    apiStore.updateFastReplies(props.comment.text, props.comment.id)
 }    
 
-function sendComment(val) {
-    fbStore.postReplyToComment(props.comment.id, val)
-    state.picked = ""
+async function sendReply() {
+    emit("generate-reply", props.comment.text, props.comment.id)
 }
 
 onMounted(() => {
@@ -80,7 +79,7 @@ onMounted(() => {
     FB.api(props.comment.from.id, {fields:"profile_picture_url"}, (res) => {
         state.profile_picture_url = res.profile_picture_url;
     })
-    state.time = utils.dateFormatter(new Date(props.comment.timestamp));
+    state.time = dateFormatter(new Date(props.comment.timestamp));
 })
 
 

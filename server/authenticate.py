@@ -1,15 +1,12 @@
 from flask import (
-    Blueprint, jsonify, request
+    Blueprint, jsonify, request, current_app
 )
-import requests
-import jwt
+from blinker import signal
 from decouple import config
-from datetime import datetime, timedelta
+from datetime import timedelta
 from .models import db, User
-from .utils.env import ENV_VARS
+from flask_jwt_extended import get_jwt_identity, jwt_required, create_access_token
 
-from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
 
 authenticate = Blueprint('authenticate', __name__)
 
@@ -21,12 +18,20 @@ def login():
     
     if user and user.check_password(data['password']):
         # JWToken generieren mit user infos
-        token = jwt.encode({
-            'user_id': user.id,
-            'username': user.username,
-            'exp': datetime.utcnow() + timedelta(days=1)
-        }, ENV_VARS["JWT_SECRET_TOKEN"])
-        
+        token = create_access_token(identity=user.id, expires_delta=timedelta(days=1))
+        print(token)
         return jsonify({'token': token})
     else:
         return jsonify({'message': 'Invalid Credentials'}), 401
+    
+@authenticate.route("/logout", methods=["POST"])
+@jwt_required()
+def logout():
+    try:
+        #print(get_jwt_identity())
+        user_logged_out = signal('user_logged_out')
+        user_logged_out.send(current_app, jwt_payload=get_jwt_identity())
+        return jsonify({"msg":"Successful"})
+    except:
+        print("error on logout")
+        return jsonify({"msg":"Unsuccessful"})

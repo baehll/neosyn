@@ -7,15 +7,17 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Schließen"></button>
                 </div>
                 <div class="modal-body">
+                    <!---->
                     <fieldset>
                         <legend>Bitte Wähle eine Antwort:</legend>
-                        <template v-for="answer, index in apiStore.fastReplies">
+                        <template v-for="answer, index in apiStore.fastReplies.replies">
                             <div class="form-check">
                                 <input type="radio" class="form-check-input" :id="'answer'+index" v-model="pick" name="answers" :value="answer">
                                 <label :for="'answer'+index" class="form-check-label">{{ answer }}</label>
                             </div>
                         </template>
                     </fieldset>
+                    <!---->
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn" data-bs-dismiss="modal" aria-label="Schließen">Schließen</button>
@@ -28,15 +30,16 @@
 
 <script setup>
 import { ref } from "vue";
-import { useFBStore } from "../store/fb";
 import { useAPIStore } from "../store/api"
+import { useFBStore } from "../store/fb";
 
-const emit = defineEmits(['send'])
 const apiStore = useAPIStore()
+const fbStore = useFBStore();
 const pick = ref("")
 
 function send() {
-    emit("send", pick._value)
+    fbStore.replyToComment(apiStore.fastReplies.targetId, pick.value)
+
 }
 </script>
 

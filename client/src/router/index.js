@@ -4,6 +4,7 @@ import Login from "../views/Login.vue"
 import Dashboard from "../views/landingpage/children/Dashboard.vue"
 import InteractionsPage from "../views/interactions/InteractionsPage.vue"
 import { useAuthStore } from '../store/auth'
+import { parseJwt } from "../utils"
 
 const routes = [
     {
@@ -72,14 +73,13 @@ const router = createRouter({
 router.beforeEach((to, from, next) => {
     
     const authStore = useAuthStore();
-
     if(to.matched.some(r =>  r.meta.requiresAuth)) {
-        if(!authStore.isAuthenticated) {
+        if(!authStore.isAuthenticated()) {
             next("/");
         } else {
-            next();
+            next()
         }
-    } else if (to.path === "/" && authStore.isAuthenticated){
+    } else if (to.path === "/" && authStore.isAuthenticated()){
         next("/dashboard")
     } else {
         next()
