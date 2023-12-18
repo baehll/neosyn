@@ -1,4 +1,4 @@
-from ..web.models import db, Page, Business_Account, Media, Comment, UserTokenPageAssociation
+from ..web.models import db, Page, Business_Account, Media, Comment
 import requests
 
 _URL = "https://graph.facebook.com/v18.0"
