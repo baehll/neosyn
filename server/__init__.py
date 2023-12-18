@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from decouple import config
 from openai import OpenAI
-from .models import db, User
+from .web.models import db, User
 from .utils.env_utils import EnvManager 
 from flask_jwt_extended import JWTManager
 
@@ -61,9 +61,9 @@ def create_app() -> Flask:
             db.session.commit()
             print("Default Users aus ENV_VAR hinzugefügt")
 
-    from .views import views
-    from .api import api
-    from .authenticate import authenticate
+    from .web.views import views
+    from .web.api import api
+    from .web.authenticate import authenticate
 
     app.register_blueprint(views, url_prefix='/')
     app.register_blueprint(api, url_prefix='/api')

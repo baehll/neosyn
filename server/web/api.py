@@ -41,7 +41,9 @@ def long_lived_access():
 def long_lived_client_token():
     #den richtigen Nutzer finden und die Session dafür befüllen
     user = User.query.filter_by(id=get_jwt_identity()).first()
-    if(user):
+    if user is None:
+        return jsonify({"error": "No user found for request"}), 404
+    else:
         session = UserToken.query.filter_by(user_id=user.id).first()
         if(session):
             session.set_data(exp=request.get_json()["expiration"], token=request.get_json()["access_token"], platform=request.get_json()["platform"])
@@ -50,10 +52,27 @@ def long_lived_client_token():
             tokenEntity = UserToken(expiration=request.get_json()["expiration"], client_token=request.get_json()["access_token"], user_id=user.id, platform=request.get_json()["platform"])
             db.session.add(tokenEntity)
             db.session.commit()
-            return jsonify({}), 201 #created http code?
-    else:
-        return jsonify({"error": "No user found for request"})
+            return jsonify({}), 201 
     
+@api.route("/init_acc", methods=["POST"])
+@jwt_required()
+def init_acc():
+    user = User.query.filter_by(id=get_jwt_identity()).first()
+    if user is None:
+        return jsonify({"error": "No user found for request"}), 404
+    else:
+        user_tokens = UserToken.query.filter_by(user_id=user.id).all()
+        
+        for token in user_tokens:
+            if token.platform == "IG_GraphAPI":
+                try:
+                    pass
+                except:
+                    pass
+                
+        
+        
+
 @api.route("/fast_response", methods=["POST"])
 @jwt_required()
 def fast_response():
