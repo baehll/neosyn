@@ -2,11 +2,58 @@ from flask import (
     Blueprint, jsonify, request
 )
 import requests
-from flask_jwt_extended import jwt_required
+from decouple import config
+from flask_jwt_extended import get_jwt_identity, jwt_required, create_access_token
 from . import GPT_MODEL, CLIENT
+from .models import db, User, UserToken
 
 api = Blueprint('api', __name__)
 
+@api.route("/long_lived_access", methods=["POST"])
+@jwt_required()
+def long_lived_access():
+    # Erst einen long lived access token generieren
+    url = 'https://graph.facebook.com/v18.0/oauth/'
+    params = {
+        "client_id": config("FB_APP_ID"),
+        "client_secret": config("FB_CLIENT_SECRET"),
+        "fb_exchange_token": request.get_json()["access_token"],
+        "grant_type": "fb_exchange_token"
+    }
+    res = requests.get(url + "access_token", params=params)
+    
+    # Wenn es einen Token gibt, wird ein long lived client token versucht zu generieren
+    if(res.status_code == 200):
+        params = {
+            "client_id": config("FB_APP_ID"),
+            "client_secret": config("FB_CLIENT_SECRET"),
+            "access_token": res.json()["access_token"],
+            "redirect_uri": "https://quiet-mountain-69143-51eb8184b186.herokuapp.com/"
+        }
+        resp = requests.get(url + "client_code", params=params)
+        
+        #Wenn der Code generiert wurde, wird das ans Frontend geschickt und von dort weiter gemacht
+        if(resp.json()["code"]):
+            return jsonify({"code": resp.json()["code"]})
+          
+@api.route("/long_lived_client_token", methods=["POST"])
+@jwt_required()
+def long_lived_client_token():
+    #den richtigen Nutzer finden und die Session dafür befüllen
+    user = User.query.filter_by(id=get_jwt_identity()).first()
+    if(user):
+        session = UserToken.query.filter_by(user_id=user.id).first()
+        if(session):
+            session.set_data(exp=request.get_json()["expiration"], token=request.get_json()["access_token"], platform=request.get_json()["platform"])
+            return jsonify({}), 202
+        else:
+            tokenEntity = UserToken(expiration=request.get_json()["expiration"], client_token=request.get_json()["access_token"], user_id=user.id, platform=request.get_json()["platform"])
+            db.session.add(tokenEntity)
+            db.session.commit()
+            return jsonify({}), 201 #created http code?
+    else:
+        return jsonify({"error": "No user found for request"})
+    
 @api.route("/fast_response", methods=["POST"])
 @jwt_required()
 def fast_response():

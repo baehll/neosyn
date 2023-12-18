@@ -36,6 +36,44 @@ export const useAPIStore = defineStore("api", () => {
         }
     }
 
+    async function getLongLivedToken(){
+        FB.getLoginStatus(async (res) => {
+            if(res && res.authResponse) {
+                try {
+                    let resp = await axios.post("/api/long_lived_access", {access_token: res.authResponse.accessToken})
+                    //Antwort ist ein Code, um weiter zu querien
+                    if(resp) {
+                        let tokenRes = await axios.get("https://graph.facebook.com/v18.0/oauth/access_token", {
+                            "code": resp.data.code,
+                            "client_id": import.meta.env.VITE_FB_APP_ID,
+                            "redirect_uri": "https://quiet-mountain-69143-51eb8184b186.herokuapp.com/"
+                        })
+
+                        if(tokenRes) {
+                            let body = {
+                                machine_id : tokenRes.data.machine_id,
+                                access_token: tokenRes.data.access_token,
+                                platform: "GraphAPI"
+                            }
+
+                            //Ablaufzeitpunkt des Tokens berechnen, wenn einer mitgegeben wurde
+                            if (tokenRes.data.expires_in != null) {
+                                let expirationDate = new Date(new Date().getTime() + tokenRes.data.expires_in * 1000)
+                                body.expiration = expirationDate
+                            } else {
+                                body.expirationDate = ""
+                            }
+                            let serverRes = await axios.post("/api/long_lived_client_token", body)
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error while sending FB Token to server, " + error)
+                }
+            }
+        })
+        
+    }
+
     async function updateFastReplies(commentText, commentId) {
         try {
             gnStore.showLoadingScreen()
@@ -79,6 +117,7 @@ export const useAPIStore = defineStore("api", () => {
         generatedReply,
         updateFastReplies,
         generateResponseWithContext,
-        setContext
+        setContext,
+        sendFBToken
     }
 })

@@ -51,7 +51,7 @@ def create_app() -> Flask:
     with app.app_context():
         db.create_all()
         
-        # Default Users aus den .env-Vars hinzufügen, wenn die DB 
+        # Default Users aus den .env-Vars hinzufügen, wenn die DB leer ist
         if User.query.count() == 0:
             ENV.init_default_users()
             for user in ENV.DEFAULT_USERS:
