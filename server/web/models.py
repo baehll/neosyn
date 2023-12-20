@@ -1,19 +1,26 @@
 from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import time
-
+from enum import Enum, auto
 db = SQLAlchemy()
 
-class _IGBaseTable(db.Model):
+class _PlatformEnum(Enum):
+    IG = auto()
+    FB = auto()
+
+class _Base(db.Model):
     __abstract__ = True
     
     id = db.Column(db.Integer, primary_key=True)
+
+class _IGBaseTable(_Base):
+    __abstract__ = True
+    
     etag = db.Column(db.String(50), nullable=False)
 
-class User(db.Model):
+class User(_Base):
     __tablename__ = "users"
     
-    id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     
@@ -25,19 +32,17 @@ class User(db.Model):
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
     
-class UserToken(db.Model):
+class UserToken(_Base):
     __tablename__ = "usertokens"
     
-    id = db.Column(db.Integer, primary_key=True)
     expiration = db.Column(db.Integer, nullable=True)
     client_token = db.Column(db.String(200), nullable=False)
-    platform = db.Column(db.String(50), nullable=False)
+    platform = db.Column(db.Emum(_PlatformEnum), nullable=False)
     
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     user = db.relationship("User", back_populates="usertokens")
     
     pages = db.relationship('Pages', back_populates='usertoken')
-
     
     def set_data(self, exp, token, platform):
         self.expiration = exp
@@ -74,7 +79,7 @@ class Page(_IGBaseTable):
         self.can_create_content = create_content
         self.can_manage = manage
     
-class Business_Account(_IGBaseTable):
+class BusinessAccount(_IGBaseTable):
     __tablename__ = "business_accounts"
     
     page = db.relationship("Page", back_populates="business_accounts")

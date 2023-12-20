@@ -43,10 +43,7 @@ def getPages(access_token, usertoken):
             # commit
             db.session.commit()
         except:
-            # Rollback on Error
-            db.session.rollback()
-        finally:
-            db.session.close()
+            db.session.flush()
         
     # return der page_id's
     return page_ids
