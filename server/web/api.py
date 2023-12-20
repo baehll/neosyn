@@ -5,7 +5,7 @@ import requests
 from decouple import config
 from flask_jwt_extended import get_jwt_identity, jwt_required, create_access_token
 from . import GPT_MODEL, CLIENT
-from .models import db, User, UserToken
+from .models import db, User, UserToken, _PlatformEnum
 
 api = Blueprint('api', __name__)
 
@@ -40,38 +40,36 @@ def long_lived_access():
 @jwt_required()
 def long_lived_client_token():
     #den richtigen Nutzer finden und die Session dafür befüllen
-    user = User.query.filter_by(id=get_jwt_identity()).first()
+    user = db.session.execute(db.select(User).filter_by(id=get_jwt_identity())).scalar_one_or_none()
+    
     if user is None:
         return jsonify({"error": "No user found for request"}), 404
     else:
-        session = UserToken.query.filter_by(user_id=user.id).first()
-        if(session):
-            session.set_data(exp=request.get_json()["expiration"], token=request.get_json()["access_token"], platform=request.get_json()["platform"])
-            return jsonify({}), 202
-        else:
-            tokenEntity = UserToken(expiration=request.get_json()["expiration"], client_token=request.get_json()["access_token"], user_id=user.id, platform=request.get_json()["platform"])
+        ut = db.session.execute(db.select(UserToken).filter_by(user_id=get_jwt_identity())).scalar_one_or_none()
+        if ut is None:
+            tokenEntity = UserToken(expiration=request.get_json()["expiration"], client_token=request.get_json()["access_token"], user=user, platform=request.get_json()["platform"])
             db.session.add(tokenEntity)
             db.session.commit()
             return jsonify({}), 201 
+        else:
+            ut.set_data(exp=request.get_json()["expiration"], token=request.get_json()["access_token"], platform=request.get_json()["platform"])
+            return jsonify({}), 202
     
 @api.route("/init_acc", methods=["POST"])
 @jwt_required()
 def init_acc():
-    user = User.query.filter_by(id=get_jwt_identity()).first()
+    user = db.session.execute(db.select(User).filter_by(id=get_jwt_identity())).scalar_one_or_none()
     if user is None:
         return jsonify({"error": "No user found for request"}), 404
     else:
-        user_tokens = UserToken.query.filter_by(user_id=user.id).all()
+        user_tokens = db.session.execute(db.select(UserToken).filter_by(user_id=get_jwt_identity())).scalars()
         
         for token in user_tokens:
-            if token.platform == "IG_GraphAPI":
+            if token.platform == _PlatformEnum.IG:
                 try:
                     pass
                 except:
-                    pass
-                
-        
-        
+                    pass        
 
 @api.route("/fast_response", methods=["POST"])
 @jwt_required()
@@ -118,3 +116,14 @@ def context_response():
     )
 
     return jsonify({"answer": response.choices[0].message.content})
+
+@api.route("/set_pages", methods=["POST"])
+@jwt_required()
+def set_pages():
+    ut = db.session.execute(db.select(UserToken).filter_by(user_id=get_jwt_identity())).scalar()
+    
+    if ut is None:
+        return jsonify({"error": "User has no associated tokens"}), 404
+    else:
+        # Worker starten und Pages befüllen
+        pass
