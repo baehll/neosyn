@@ -17,6 +17,7 @@ export const useFBStore = defineStore('fb', () => {
 
         //Zuerst alle zugehörigen Pages/Accounts finden
         FB.api("/me/accounts", (resp) => {
+            /*
             if(resp.data == null) {
                 if(tries.value > 3) {
                     console.error("Too many attempts accessing account data")
@@ -28,6 +29,7 @@ export const useFBStore = defineStore('fb', () => {
             } else {
                 tries.value = 0;
                 //über jede Page iterieren
+                */
                 resp.data.forEach(e => {
                     let currentPage = { name: e.name }
                     //von jeder gemanagten Page den business account nehmen
@@ -52,7 +54,7 @@ export const useFBStore = defineStore('fb', () => {
                     pages.value.push(currentPage);
                 });
                 initFinished.value = true;
-            }
+            //}
         })
         
     }

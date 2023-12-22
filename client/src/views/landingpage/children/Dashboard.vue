@@ -13,20 +13,20 @@
                 </div>
                 <div class="card-body comment-list-body">
                     <ul class="list-group list-group-flush" v-show="isReady">
-                        <template v-for="page in fbStore.pages">
-                            <template v-for="post in page.media_objs">
-                                <template v-for="comment in post.comments" :key="comment.id">
-                                    <li class="list-group-item border-0" >
+                        <div v-for="page in fbStore.pages">
+                            <div v-for="post in page.media_objs">
+                                <div v-for="comment in post.comments">
+                                    <li class="list-group-item border-0" :key="comment.id">
                                         <Comment :comment="comment" :shallow="true" class="list-group-item rounded-4 p-3 m-1 shadow-lg" />
                                     </li>
-                                    <template v-for="reply in comment.replies?.data" :key="reply.id">
-                                        <li class="list-group-item border-0">
+                                    <div v-for="reply in comment.replies?.data" >
+                                        <li class="list-group-item border-0" :key="reply.id">
                                             <Comment :comment="reply" :shallow="true" class="list-group-item rounded-4 p-3 m-1 shadow-lg" />
                                         </li>
-                                    </template>
-                                </template>
-                            </template>
-                        </template>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </ul>
                 </div>
             </div>
@@ -44,7 +44,7 @@ const fbStore = useFBStore();
 const apiStore = useAPIStore();
 
 function isReady() {
-    return fbStore.initFinished;
+    return fbStore.initFinished.value;
 }
 
 onBeforeMount(() => {
@@ -68,8 +68,15 @@ onBeforeMount(() => {
         // Check the result of the user status and display login button if necessary
         function checkLoginStatus(response) {
             if(response && response.status == 'connected') {
-                if(!fbStore.initFinished) fbStore.populateData();
+                if(!fbStore.initFinished) {
+                    console.log("test1")
+                    console.log(fbStore.pages.length > 0)
+                    fbStore.populateData();
+                } else {
+                    console.log("test3")
+                }
             } else {
+                console.log("test2")
                 authUser();
                 fbStore.populateData();
             }

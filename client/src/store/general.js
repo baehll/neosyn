@@ -15,7 +15,7 @@ export const useGeneralStore = defineStore("gn", () => {
         if(infoModal.value){
             infoModalActive.value = true
             infoModal.value.show()
-            console.log("showing")
+            //console.log("showing")
         }
     }
 
@@ -23,7 +23,7 @@ export const useGeneralStore = defineStore("gn", () => {
         if(infoModal.value) {
             infoModal.value.hide()
             infoModalActive.value = false
-            console.log("hiding")
+            //console.log("hiding")
         }
     }   
 
