@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 import time
 from enum import Enum, auto
+
 db = SQLAlchemy()
 
 class _PlatformEnum(Enum):
@@ -16,7 +17,7 @@ class _Base(db.Model):
 class _IGBaseTable(_Base):
     __abstract__ = True
     
-    etag = db.Column(db.String(50), nullable=False)
+    etag = db.Column(db.String(50), nullable=True)
 
 class User(_Base):
     __tablename__ = "users"

@@ -6,6 +6,7 @@ from decouple import config
 from flask_jwt_extended import get_jwt_identity, jwt_required, create_access_token
 from . import GPT_MODEL, CLIENT
 from .models import db, User, UserToken, _PlatformEnum
+from ..workers import IGApiWorker
 
 api = Blueprint('api', __name__)
 
@@ -117,13 +118,24 @@ def context_response():
 
     return jsonify({"answer": response.choices[0].message.content})
 
-@api.route("/set_pages", methods=["POST"])
+@api.route("/set_ig_data", methods=["POST"])
 @jwt_required()
-def set_pages():
+def set_ig_data():
     ut = db.session.execute(db.select(UserToken).filter_by(user_id=get_jwt_identity())).scalar()
     
     if ut is None:
         return jsonify({"error": "User has no associated tokens"}), 404
     else:
         # Worker starten und Pages befüllen
-        pass
+        page_ids = IGApiWorker.getPages(ut.client_token, ut)
+        for page in page_ids:
+            business_ids = IGApiWorker.getBusinessAccounts(ut.client_token, page)
+            for b_id in business_ids:
+                media = IGApiWorker.getMedia(ut.client_token, b_id)
+                for m in media:
+                    comments = IGApiWorker.getComments(ut.client_token, m)
+                    # wenn ein comment replies hat, müssen die auch hinzugefügt werden
+                    # TODO
+    
+    return jsonify({}), 201
+

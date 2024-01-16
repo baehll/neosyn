@@ -36,10 +36,10 @@ def create_app() -> Flask:
     app.config['JWT_IDENTITY_CLAIM'] = 'sub'
 
     CORS(app, supports_credentials=True)
+    
+    # JWT simple session management
     jwt = JWTManager(app)
-
     jwt.token_in_blocklist_loader(check_jwt_token)
-
     user_logged_out.connect(handle_user_logout, app)
 
     uri = config("DATABASE_URL")
