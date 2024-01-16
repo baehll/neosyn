@@ -1,61 +1,76 @@
 <template>
-        <div class="border border-5 row">
-            <template v-if="post_obj.media_type === 'IMAGE'">
-                <div class="col-8 d-flex justify-content-center align-items-center">
-                    <img :src="post_obj.media_url" class="img-fluid border border-2 "/>
+        <div class="card border border-5 mb-4 p-2">
+            <div class="row no-gutters">
+                <div class="col-md-4 ">
+                    <template v-if="post_obj.media_type === 'IMAGE'">
+                        <div class="center-image">
+                            <img :src="post_obj.media_url" class="img-fluid border border-2 "/>
+                        </div>
+                    </template>
+                    <template v-else-if="post_obj.media_type === 'CAROUSEL_ALBUM'">
+                        <div :id="'id_'+post_obj.id" class="carousel slide">
+                            <div class="carousel-inner">
+                                <template v-for="child, i in post_obj.children.data">
+                                    <div class="carousel-item" :class="(i == 0) ? 'active': ''">
+                                        <div class="center-image">
+                                            <img :src="child.media_url" class="img-fluid border border-2"/>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>  
+                            <button class="carousel-control-prev" type="button" :data-bs-target="'#id_' + post_obj.id" data-bs-slide="prev">
+                                <span class="fa-solid fa-chevron-left bg-light rounded-5 p-2" aria-hidden="true" style="color: black;width: 2em; height: 2em;"></span>
+                                <span class="visually-hidden">Previous</span>
+                            </button>
+                            <button class="carousel-control-next" type="button" :data-bs-target="'#id_' + post_obj.id" data-bs-slide="next">
+                                <span class="fa-solid fa-chevron-right bg-light rounded-5 p-2" aria-hidden="true" style="color: black;width: 2em; height: 2em;"></span>
+                                <span class="visually-hidden">Next</span>
+                            </button>
+                        </div>
+                    </template>
                 </div>
-            </template>
-            <template v-else-if="post_obj.media_type === 'CAROUSEL_ALBUM'">
-                <div :id="'id_'+post_obj.id" class="col-8 carousel slide">
-                    <div class="carousel-inner">
-                        <template v-for="child, i in post_obj.children.data">
-                            <div class="carousel-item" :class="(i == 0) ? 'active': ''">
-                                <div class="d-flex justify-content-center align-items-center">
-                                    <img :src="child.media_url" class="img-fluid border border-2"/>
+                <div class="col-md-8">
+                    <div class="card-body">
+                        <div class="card-text">
+                            <div class="col text-start comment-list ">
+                                <div class="row">
+                                    <div class="card-title">
+                                            <p>
+                                                <i class="fa-solid fa-thumbs-up"></i> {{ post_obj.like_count > 0 ? post_obj.like_count : "0" }}
+                                                <i class="fa-solid fa-comment"></i> {{ post_obj.comments_count }}
+                                            </p>
+                                        <h5>{{ post_obj.caption }}</h5>
+                                        <small>{{ post_obj.username }} - {{ dateFormatter(new Date(post_obj.timestamp)) }} </small>
+                                    </div>
                                 </div>
-                            </div>
-                        </template>
-                    </div>  
-                    <button class="carousel-control-prev" type="button" :data-bs-target="'#id_' + post_obj.id" data-bs-slide="prev">
-                        <span class="fa-solid fa-chevron-left bg-light rounded-5 p-2" aria-hidden="true" style="color: black;width: 2em; height: 2em;"></span>
-                        <span class="visually-hidden">Previous</span>
-                    </button>
-                    <button class="carousel-control-next" type="button" :data-bs-target="'#id_' + post_obj.id" data-bs-slide="next">
-                        <span class="fa-solid fa-chevron-right bg-light rounded-5 p-2" aria-hidden="true" style="color: black;width: 2em; height: 2em;"></span>
-                        <span class="visually-hidden">Next</span>
-                    </button>
-                </div>
-            </template>
-            <div class="col-4 text-start comment-list ">
-                <div class="row">
-                    <p>
-                        <b>{{ post_obj.username }} - {{ dateFormatter(new Date(post_obj.timestamp)) }} </b>
-                            <p>
-                                <i class="fa-solid fa-thumbs-up"></i> {{ post_obj.like_count > 0 ? post_obj.like_count : "0" }}
-                                <i class="fa-solid fa-comment"></i> {{ post_obj.comments_count }}
-                            </p>
-                    </p>
-                    <h3>
-                        {{ post_obj.caption }}
-                    </h3>
-                </div>
-                <div class="row comment-list-body h-100 border border-5" >
-                    <ul class="list-group list-group-flush">
-                        <template v-for="c in post_obj.comments">
-                            <div class="border border-3">
-                                <li  class="list-group-item pb-0">
-                                    <Comment :comment="c" :shallow="false" class="" @generate-reply="generateReplyWithContext"/>
-                                </li>
-                                <template v-if="c?.replies != null">
-                                    <li class="list-group-item pt-0 ms-2">
-                                        <template v-for="r in c.replies.data" :key="r.id">
-                                            <Comment :comment="r" :shallow="false" @generate-reply="generateReplyWithContext"/>
-                                        </template>
-                                    </li>
+                                <template v-if="post_obj.comments_count != 0">
+                                    <div class="card mt-3 p-1 border-1" style="min-height: 200px;">
+                                        <div class="card-body" style="max-height:400px;overflow-y: auto;">
+                                            <template v-for="c in post_obj.comments">
+                                                <div class="card-text">
+                                                    <Comment :comment="c" :shallow="false" class="" @generate-reply="generateReplyWithContext"/>
+                                                    <template v-if="c?.replies != null">
+                                                        <div class="card mt-3 p-1">
+                                                            <div class="card-body">
+                                                                <template v-for="r in c.replies.data" :key="r.id">
+                                                                    <div class="card-text">
+                                                                        <Comment :comment="r" :shallow="false" @generate-reply="generateReplyWithContext"/>
+                                                                    </div>
+                                                                </template>
+                                                            </div>
+                                                        </div>
+                                                    </template>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                                <template v-else>
+                                    <small>Keine Kommentare vorhanden</small>
                                 </template>
                             </div>
-                        </template>
-                    </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -86,13 +101,10 @@ function generateReplyWithContext(commentText, targetId) {
     max-height: 907px;
 }
 
-.comment-list {
-    max-height: 50vh;
-}
-
-.comment-list-body {
-    overflow-y: auto;
-    overflow-x: hidden;
-    max-height: 70%;
-}
+.center-image {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+    }
 </style>
