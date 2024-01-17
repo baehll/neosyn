@@ -1,16 +1,25 @@
-from ..web.models import db, Page, Business_Account, Media, Comment
-import requests
+from ..web.models import db, Page, BusinessAccount, Media, Comment
+import requests, json
 
 _URL = "https://graph.facebook.com/v18.0"
 # TASKS = ["ADVERTISE", "ANALYZE", "CREATE_CONTENT", "MESSAGING", "MODERATE", "MANAGE"]
 
 # request gegen IG Graph API für die IDs (pre Batches)
-def _getIDs(access_token, path):
-    request_url = _URL + path + f"?access_token={access_token}"
+def _getIDs(access_token, path, fields=""):
+    request_url = _URL + path
+    if fields != "":
+        request_url += "?fields=" + fields + f"&access_token={access_token}"
+    else:
+        request_url += f"?access_token={access_token}"
     return requests.get(url=request_url)
     
 # https://developers.facebook.com/docs/graph-api/batch-requests/
-def _batchRequest(access_token, path, json_p, headers=""):
+# batch requests gehen gegen irgendeinen path, da jede request eine eigene relative URL hat
+def _batchRequest(access_token, payload):
+    return requests.post(url=_URL+f"?access_token={access_token}", params={"batch": json.dumps(payload)})
+
+# Baut aus einer Liste von Datenbank objekten den Payload für einen Batchrequest
+def _payloadBuilder(data):
     pass
 
 # commit eine ganze Iterable in DB
@@ -27,19 +36,19 @@ def _commitToDB(data):
 def getPages(access_token, usertoken):
     # in DB nach pages für den usertoken gucken
     pages = db.session.execute(db.select(Page).filter_by(usertoken=usertoken)).scalars().all()
+    new_pages = []
     
     # wenn es keine gibt, dann den Header nicht setzen
     if pages.count() == 0:
         # alle Pages des Users abfragen
-        page_res = _getIDs(access_token, "/me/accounts")
+        page_res = _getIDs(access_token, "/me/accounts", "tasks,starring,id,category,category_list")
         
-        new_pages = []
         if page_res.status_code == 200:
             for p in page_res.json()["data"]:
                 new_page = Page(name=p["name"], category=p["category"], fb_id=p["id"])
                 
                 # Tasks befüllen
-                for pt in page["tasks"]:
+                for pt in p["tasks"]:
                     if pt == "ADVERTISE":
                         new_page.can_advertise = True
                     elif pt == "ANALYZE":
@@ -62,105 +71,90 @@ def getPages(access_token, usertoken):
         pass
         # für jeden Eintrag:
             # wenn status == 304: skip
-            # wenn status == 200: neuen ETAG speichern und permissions updaten
     
-    # DB commits, wenn es welche gibt
-    
-    page_ids = []
-    res = requests.get(url=_URL+f"/me/accounts?access_token={access_token}")
-    if res.status_code == 200:
-        db.session.begin()
-        try:
-            data = res.json()["data"]    
-            # für jede page in der antwort einen db eintrag erstellen
-            for page in data:
-                # neues Page objekt erstellen
-                new_page = Page(name=page["name"], category=page["category"], etag=res.headers["ETag"], fb_id=page["id"])
-                
-                # Tasks befüllen
-                for pt in page["tasks"]:
-                    if pt == "ADVERTISE":
-                        new_page.can_advertise = True
-                    elif pt == "ANALYZE":
-                        new_page.can_analyze = True
-                    elif pt == "CREATE_CONTENT":
-                        new_page.can_create_content = True
-                    elif pt == "MESSAGING":
-                        new_page.can_message = True
-                    elif pt == "MODERATE":
-                        new_page.can_moderate = True
-                    elif pt == "MANAGE":
-                        new_page.can_manage = True
-                        
-                # mit UserToken verknüpfen
-                usertoken.pages.append(new_page)
-                page_ids.append(page["id"])
-                
-                db.session.add(new_page)
-                
-            db.session.add(usertoken)
-            
-            # commit
-            db.session.commit()
-        except:
-            db.session.flush()
-        
     # return der page_id's
-    return page_ids
+    return new_pages
 
 def getBusinessAccounts(access_token, page):
-    bz_accs = []
-    # alle IG User zur Page holen
-    res = requests.get(url=_URL+f"/{page.fb_id}?fields=instagram_business_account,followers_count&access_token={access_token}")
+    bz_accs = db.session.execute(db.select(BusinessAccount).filter_by(page=page)).scalars().all()
+    new_bz_accs = []
     
-    if res.status_code == 200:
-        db.session.begin()
-        try:
-            data = res.json()["data"]
+    if bz_accs.count() == 0:
+        # alle IG User zur Page holen
+        bs_res = _getIDs(access_token, f"/{page.fb_id}", fields="instagram_business_account{{followers_count}},followers_count")
+        if bs_res.status_code == 200:
+            page.etag = bs_res.headers["ETag"]
+            page.followers_count = bs_res.json()["followers_count"]
             
-            # für jeden IG User einen Eintrag erstellen
-            for acc in data:
-                new_bz_acc = Business_Account(followers_count=acc["followers_count"], etag=res.headers["ETag"], fb_id=acc["id"])
-                
-                bz_accs.append(new_bz_acc)
+            # aus der Antwort neue BZ_Accs erstellen
+            for bz in bs_res.json()["instagram_business_account"]:
+                new_bz_acc = BusinessAccount(fb_id=bz["id"], followers_count=bz["followers_count"])
                 page.business_accounts.append(new_bz_acc)
-                
-                db.session.add(new_bz_acc)
-            db.session.commit()
-        except:
-            db.session.flush()
-            
+                new_bz_accs.append(new_bz_acc)
+            _commitToDB(new_bz_accs + [page])
+    else:
+        # Es existieren bereits business accounts, deshalb wird nur geprüft, ob sich etwas geändert hat über ETags
+        payload = []
+        for acc in bz_accs:
+            if acc.etag != "":
+                payload.append({"method" : "GET", "relative_url": f"{acc.fb_id}?fields=followers_count", "headers" : f'["If-None-Match: {acc.etag}"]'})
+            else:
+                payload.append({"method" : "GET", "relative_url": f"{acc.fb_id}?fields=followers_count"})
+        
+        updated_accs = []
+        # Batch Requests für die mehrzahl an bz_accs aus der DB
+        res = _batchRequest(access_token, payload)
+        if res.status_code == 200:
+            old_bz_accs = res.json()
+            for acc in old_bz_accs: 
+                # Wenn Status == 304, dann hat sich nichts geändert oder es gibt einen BZ_ACC, aber er hat keinen ETag
+                if acc["code"] != 304:
+                    updated_accs.append(acc)
+
+        # zu Updatene Einträge finden und aktualisieren
+        entries = BusinessAccount.query.filter(BusinessAccount.fb_id.in_([updated_acc["id"] for updated_acc in updated_accs])).all()
+        for entry in entries:
+            for acc in updated_accs:
+                body = json.load(acc["body"])
+                # den jeweiligen ETag Header aus der Liste der Header extrahieren
+                etag_header = [e for e in acc["headers"] if e.get("name") == "ETag"].pop()
+                if entry.fb_id == body["id"]:
+                    entry.etag = etag_header
+                    entry.followers_count = body["followers_count"]
     # return der business account ids
-    return bz_accs
+    return new_bz_accs
 
 def getMedia(access_token, bz_acc):
-    medias = []
+    medias = db.session.execute(db.select(Media).filter_by(bzacc=bz_acc)).scalars().all()
+    new_medias = []
     
-    # zuerst alle IG Media IDs sammeln
-    res = requests.get(url=_URL+f"/{bz_acc.fb_id}/media?access_token={access_token}")
-    
-    if res.status_code == 200:
-        media_ids = res.json()["data"]
-        for id in media_ids:
-            # TODO Batch Request an Meta API
-            media_res = requests.get(url=_URL+f"/{id}?access_token={access_token}&fields=media_url,timestamp,permalink")
+    if medias.count() > 0:
+        # zuerst alle IG Media IDs sammeln
+        res = _getIDs(access_token, f"/{bz_acc.fb_id}/media")
+        
+        if res.status_code == 200:
+            media_ids = res.json()["data"]
             
-            if media_res.status_code == 200:
-                db.session.begin()
-                try:    
-                    media_data = media_res.json()["data"]
-                    
-                    for m in media_data:
-                        new_media = Media(timestamp=m["timestamp"], permalink=m["permalink"], media_url=m["media_url"], 
-                                        etag=media_res.headers["ETag"], fb_id=m["id"])
+            # Batch Request an Meta API mit allen Media_IDs
+            payload = []
+            for id in media_ids:
+                payload.append({"method" : "GET", "relative_url": f"{id}?fields=media_url,timestamp,permalink"})
+            res = _batchRequest(access_token, payload)
+                
+            if res.status_code == 200:
+                for m in res.json():
+                    if m.status_code == 200:
+                        body = json.loads(res["body"])
+                        etag_header = [e for e in m["headers"] if e.get("name") == "ETag"].pop()
+                        new_media = Media(timestamp=body["timestamp"], permalink=body["permalink"], media_url=body["media_url"], 
+                                        etag=etag_header, fb_id=m["id"])
+                        new_medias.append(new_media)
                         bz_acc.media.append(new_media)
-                        medias.append(new_media)
-                        db.session.add(new_media)
-                    
-                    db.session.commit()
-                except:
-                    db.session.flush()
-    return medias
+                _commitToDB(new_medias + [bz_acc])
+    else:
+        # es gibt bereits Medias, deshalb müssen neue hinzugefügt werden und alte geupdatet werden
+        pass
+    return new_medias
 
 def getComments(access_token, media):
     comments = []
@@ -171,14 +165,14 @@ def getComments(access_token, media):
         try:
             data = res.json()["data"]
             
-            # für jeden IG User einen Eintrag erstellen
+            # für jedes IG Kommentar einen Eintrag erstellen
             for comm in data:
                 new_comm = Comment(timestamp=comm["timestamp"], etag=res.headers["ETag"], fb_id=comm["id"])
                 
-                comments.append(new_bz_acc)
-                media.business_accounts.append(new_bz_acc)
+                comments.append(new_comm)
+                media.business_accounts.append(new_comm)
                 
-                db.session.add(new_bz_acc)
+                db.session.add(new_comm)
             db.session.commit()
         except:
             db.session.flush()

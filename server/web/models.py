@@ -18,6 +18,7 @@ class _IGBaseTable(_Base):
     __abstract__ = True
     
     etag = db.Column(db.String(50), nullable=True)
+    fb_id = db.Column(db.Integer, nullable=False)
 
 class User(_Base):
     __tablename__ = "users"
@@ -62,7 +63,6 @@ class Page(_IGBaseTable):
 
     business_accounts = db.relationship("Business_Account", back_populates="page")
 
-    fb_id = db.Column(db.Integer, nullable=False)
     name = db.Column(db.String(200), nullable=False)
     category = db.Column(db.String(200), nullable=True)
     can_analyze = db.Column(db.Boolean, default=False)
@@ -71,6 +71,7 @@ class Page(_IGBaseTable):
     can_message = db.Column(db.Boolean, default=False)
     can_create_content = db.Column(db.Boolean, default=False)
     can_manage = db.Column(db.Boolean, default=False)
+    followers_count = db.Column(db.Integer, nullable=True)
     
     def setTasks(self, analyze=False, advertise=False, moderate=False, message=False, create_content=False, manage=False):
         self.can_analyze = analyze
@@ -84,9 +85,7 @@ class BusinessAccount(_IGBaseTable):
     __tablename__ = "business_accounts"
     
     page = db.relationship("Page", back_populates="business_accounts")
-    page_id = db.Column(db.Integer, db.ForeignKey("pages.id"))
     
-    fb_id = db.Column(db.Integer, nullable=False)
     followers_count = db.Column(db.Integer)
     
     medias = db.relationship("Media", back_populates="bzacc")
@@ -97,7 +96,6 @@ class Media(_IGBaseTable):
     bzacc_id = db.Column(db.Integer, db.ForeignKey("business_accounts.id"))
     bzacc = db.relationship("Business_Account", back_populates="medias")
     
-    fb_id = db.Column(db.Integer, nullable=False)
     media_url = db.Column(db.String(450), nullable=False)
     permalink = db.Column(db.String(50), nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False)
@@ -113,6 +111,5 @@ class Comment(_IGBaseTable):
     media_id = db.Column(db.Integer, db.ForeignKey("medias.id"))
     media = db.relationship("Media", back_populates="comments")
     
-    fb_id = db.Column(db.Integer, nullable=False)
     sentiment = db.Column(db.Integer)
     timestamp = db.Column(db.DateTime, nullable=False)
