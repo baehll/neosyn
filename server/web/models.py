@@ -44,7 +44,7 @@ class UserToken(_Base):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     user = db.relationship("User", back_populates="usertokens")
     
-    pages = db.relationship('Pages', back_populates='usertoken')
+    pages = db.relationship('Page', back_populates='usertokens')
     
     def set_data(self, exp, token, platform):
         self.expiration = exp
@@ -59,9 +59,9 @@ class Page(_IGBaseTable):
     __tablename__ = "pages"
     
     usertoken_id = db.Column(db.Integer, db.ForeignKey("usertokens.id"))
-    usertoken = db.relationship('UserToken', back_populates='pages')
+    usertokens = db.relationship('UserToken', back_populates='pages')
 
-    business_accounts = db.relationship("Business_Account", back_populates="page")
+    business_accounts = db.relationship("BusinessAccount", back_populates="page")
 
     name = db.Column(db.String(200), nullable=False)
     category = db.Column(db.String(200), nullable=True)
@@ -84,6 +84,7 @@ class Page(_IGBaseTable):
 class BusinessAccount(_IGBaseTable):
     __tablename__ = "business_accounts"
     
+    page_id = db.Column(db.Integer, db.ForeignKey("pages.id"))
     page = db.relationship("Page", back_populates="business_accounts")
     
     followers_count = db.Column(db.Integer)
@@ -94,7 +95,7 @@ class Media(_IGBaseTable):
     __tablename__ = "medias"
     
     bzacc_id = db.Column(db.Integer, db.ForeignKey("business_accounts.id"))
-    bzacc = db.relationship("Business_Account", back_populates="medias")
+    bzacc = db.relationship("BusinessAccount", back_populates="medias")
     
     media_url = db.Column(db.String(450), nullable=False)
     permalink = db.Column(db.String(50), nullable=False)

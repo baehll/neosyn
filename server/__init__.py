@@ -8,13 +8,18 @@ from .web.models import db, User
 from .utils.env_utils import EnvManager 
 from flask_jwt_extended import JWTManager
 
-EMBEDDING_MODEL = "text-embedding-ada-002"
-GPT_MODEL = "gpt-3.5-turbo"
+gptConfig = {
+    "EMBEDDING_MODEL":"text-embedding-ada-002", 
+    "GPT_MODEL":"gpt-3.5-turbo", 
+    "CLIENT":OpenAI(api_key=config("OPENAI_API_KEY"))
+}
+
+def chatGPTModel():
+    return gptConfig
+
 JWT_REVOKED_TOKENS = set()
 
 ENV = EnvManager()
-
-CLIENT = OpenAI(api_key=config("OPENAI_API_KEY"))
 user_logged_out = signal('user-logged-out')
 
 def handle_user_logout(sender, **extra):

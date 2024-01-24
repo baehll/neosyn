@@ -4,15 +4,18 @@ from flask import (
 import requests
 from decouple import config
 from flask_jwt_extended import get_jwt_identity, jwt_required, create_access_token
-from . import GPT_MODEL, CLIENT
+from server import chatGPTModel
 from .models import db, User, UserToken, _PlatformEnum
 from ..workers import IGApiWorker
 
 api = Blueprint('api', __name__)
+CLIENT = chatGPTModel()["CLIENT"]
+GPT_MODEL = chatGPTModel()["GPT_MODEL"]
 
 @api.route("/long_lived_access", methods=["POST"])
 @jwt_required()
 def long_lived_access():
+    print(request.get_json())
     # Erst einen long lived access token generieren
     url = 'https://graph.facebook.com/v18.0/oauth/'
     params = {

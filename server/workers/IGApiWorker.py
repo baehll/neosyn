@@ -24,7 +24,7 @@ def _payloadBuilder(data):
 
 # commit eine ganze Iterable in DB
 def _commitToDB(data):
-    db.session.begin()
+    #db.session.begin()
     try:
         db.session.add_all(data)
         db.session.commit()
@@ -35,11 +35,11 @@ def _commitToDB(data):
 # request mit dem jeweiligen ETag der Pages falls vorhanden. erstellt und updatet Pages für gegebenen Usertoken
 def getPages(access_token, usertoken):
     # in DB nach pages für den usertoken gucken
-    pages = db.session.execute(db.select(Page).filter_by(usertoken=usertoken)).scalars().all()
+    pages = db.session.execute(db.select(Page).filter_by(usertokens=usertoken)).scalars().all()
     new_pages = []
     
     # wenn es keine gibt, dann den Header nicht setzen
-    if pages.count() == 0:
+    if len(pages) == 0:
         # alle Pages des Users abfragen
         page_res = _getIDs(access_token, "/me/accounts", "tasks,starring,id,category,category_list")
         
@@ -67,6 +67,7 @@ def getPages(access_token, usertoken):
         # new_pages erstellen (=> Initialisierung)
         _commitToDB(new_pages + [usertoken])
     else:
+        print("pass pages")
         # ETags für /me/accounts sind nicht beständig und ändern sich, deshalb müssen die ETags der Pages einzeln gezogen werden 
         pass
         # für jeden Eintrag:
