@@ -65,6 +65,9 @@ def create_app() -> Flask:
     from .web.api import api
     from .web.authenticate import authenticate
 
+    from .web.test import test
+    app.register_blueprint(test, url_prefix="/test")
+    
     app.register_blueprint(views, url_prefix='/')
     app.register_blueprint(api, url_prefix='/api')
     app.register_blueprint(authenticate, url_prefix='/auth')

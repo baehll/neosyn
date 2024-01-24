@@ -39,7 +39,7 @@ class UserToken(_Base):
     
     expiration = db.Column(db.Integer, nullable=True)
     client_token = db.Column(db.String(200), nullable=False)
-    platform = db.Column(db.Emum(_PlatformEnum), nullable=False)
+    platform = db.Column(db.Enum(_PlatformEnum), nullable=False)
     
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     user = db.relationship("User", back_populates="usertokens")

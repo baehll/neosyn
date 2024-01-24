@@ -128,7 +128,7 @@ def getMedia(access_token, bz_acc):
     medias = db.session.execute(db.select(Media).filter_by(bzacc=bz_acc)).scalars().all()
     new_medias = []
     
-    if medias.count() > 0:
+    if medias.count() == 0:
         # zuerst alle IG Media IDs sammeln
         res = _getIDs(access_token, f"/{bz_acc.fb_id}/media")
         
@@ -155,28 +155,44 @@ def getMedia(access_token, bz_acc):
         # es gibt bereits Medias, deshalb müssen neue hinzugefügt werden und alte geupdatet werden
         pass
     return new_medias
-
-def getComments(access_token, media):
-    comments = []
-    res = requests.get(url=_URL+f"/{media.fb_id}/comments?fields=replies,id,timestamp&access_token={access_token}")
     
-    if res.status_code == 200:
-        db.session.begin()
-        try:
-            data = res.json()["data"]
-            
-            # für jedes IG Kommentar einen Eintrag erstellen
-            for comm in data:
-                new_comm = Comment(timestamp=comm["timestamp"], etag=res.headers["ETag"], fb_id=comm["id"])
-                
-                comments.append(new_comm)
-                media.business_accounts.append(new_comm)
-                
-                db.session.add(new_comm)
-            db.session.commit()
-        except:
-            db.session.flush()
-            
+def getComments(access_token, media):
+    comments = db.session.execute(db.select(Comment).filter_by(media=media)).scalars().all()
+    new_comments = []
+
+    if comments.count() == 0:
+        res = _getIDs(access_token, f"/{media.fb_id}/comments")
+        if res.status_code == 200:
+            comment_ids = res.json()["data"]
+
+            # Batch Request, um an alle ETags zu kommen
+            payload = []
+            for id in comment_ids:
+                payload.append({"method": "GET", "relative_url": f"{id}?fields=replies,id,timestamp"})
+
+            batchRes = _batchRequest(access_token, payload)
+
+            if batchRes.status_code == 200:
+                for c in batchRes.json():
+                    if c.status_code == 200:
+                        body = json.loads(res["body"])
+                        etag_header = [e for e in c["headers"] if e.get("name") == "ETag"].pop()
+                        new_comm = Comment(timestamp=body["timestamp"], etag=etag_header, fb_id=body["id"])
+                        new_comments.append(new_comm)
+                        media.comments.append(new_comm)
+                _commitToDB(new_comments + [media])
+    else:
+        pass
+
     # return der business account ids
     return comments
     
+def getReplies(access_token, com):
+    # erst prüfen, ob dieses kommentar überhaupt replies auf insta hat
+    replies = db.session.execute(db.select(Comment).filter_by(fb_id=com.fb_id)).scalars.all()
+    new_replies = []
+
+    if replies.count() == 0:
+        res = _getIDs(access_token, )
+    else:
+        pass
