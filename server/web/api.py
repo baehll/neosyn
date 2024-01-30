@@ -57,6 +57,8 @@ def long_lived_client_token():
             return jsonify({}), 201 
         else:
             ut.set_data(exp=request.get_json()["expiration"], token=request.get_json()["access_token"], platform=request.get_json()["platform"])
+            db.session.add(ut)
+            db.session.commit()
             return jsonify({}), 202
     
 @api.route("/init_acc", methods=["POST"])

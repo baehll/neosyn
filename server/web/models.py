@@ -12,7 +12,10 @@ class _PlatformEnum(Enum):
 class _Base(db.Model):
     __abstract__ = True
     
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True) 
+    
+    def to_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 class _IGBaseTable(_Base):
     __abstract__ = True
