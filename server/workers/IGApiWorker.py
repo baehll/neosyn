@@ -1,5 +1,6 @@
 from ..web.models import db, Page, BusinessAccount, Media, Comment
 import requests, json
+from datetime import datetime
 
 _URL = "https://graph.facebook.com/v18.0"
 # TASKS = ["ADVERTISE", "ANALYZE", "CREATE_CONTENT", "MESSAGING", "MODERATE", "MANAGE"]
@@ -25,7 +26,7 @@ def _commitToDB(data):
         db.session.commit()
     except Exception as e:
         print(e)
-        db.session.flush()
+        db.session.rollback()
 
 # Holt alle ETags für die db_objs, die noch nicht in der Datenbank sind
 def _getETagsForNewObjs(access_token, db_objs):
@@ -46,23 +47,21 @@ def _getETagsForNewObjs(access_token, db_objs):
 # 2. antwort von meta nach 304 code filtern
 # 3. alle db einträge mit neuen Meta API daten überschreiben
 def _getETagsForExistingObjs(access_token, fields, db_objs):
-    updated_accs = []
-    
     payload = []
     for o in db_objs:
         payload.append({"method" : "GET", "relative_url": f"{o.fb_id}?fields={fields}", "headers" : f'["If-None-Match: {o.etag}"]'})
     # Batch Requests für die mehrzahl an db_objs aus der DB
     res = _batchRequest(access_token, payload)
     
-    updated_accs = []
+    updated_objs = []
     if res.status_code == 200:
         old_meta_objs = res.json()
         for acc in old_meta_objs: 
             # Wenn Status == 304, dann hat sich nichts geändert 
             if acc["code"] != 304:
-                updated_accs.append(acc)
+                updated_objs.append(acc)
 
-    return updated_accs
+    return updated_objs
 
 # Aktualisiert gegebene Einträge mit neuen Informationen aus den neuen Einträgen
 def _updateExistingEntries(entries, changed_data):
@@ -124,8 +123,8 @@ def getPages(access_token, usertoken):
         entries = db.session.execute(db.select(Page).filter(Page.fb_id.in_(updated_pages))).scalars().all()
         _updateExistingEntries(entries, updated_pages)
         
-        new_pages = entries
-        _commitToDB(new_pages)     
+        _commitToDB(entries) 
+        return entries 
     # return der page_id's
     return new_pages
 
@@ -158,8 +157,8 @@ def getBusinessAccounts(access_token, page):
         entries = db.session.execute(db.select(BusinessAccount).filter(BusinessAccount.fb_id.in_(updated_accs))).scalars().all()
         _updateExistingEntries(entries, updated_accs)
         
-        new_bz_accs = entries
-        _commitToDB(new_bz_accs) 
+        _commitToDB(entries) 
+        return entries
     # return der business account ids
     return new_bz_accs
 
@@ -168,7 +167,7 @@ def getMedia(access_token, bz_acc):
     medias = db.session.execute(db.select(Media).filter(Media.bzacc.has(id=bz_acc.id))).scalars().all()
     new_medias = []
     
-    if len(medias.count()) == 0:
+    if len(medias) == 0:
         # zuerst alle IG Media IDs sammeln
         res = _getIDs(access_token, f"/{bz_acc.fb_id}/media")
         
@@ -177,19 +176,23 @@ def getMedia(access_token, bz_acc):
             
             # Batch Request an Meta API mit allen Media_IDs
             payload = []
-            for id in media_ids:
-                payload.append({"method" : "GET", "relative_url": f"{id}?fields="+_fields})
+            for media in media_ids:
+                payload.append({"method" : "GET", "relative_url": f"{media['id']}?fields="+_fields})
             res = _batchRequest(access_token, payload)
                 
             if res.status_code == 200:
                 for m in res.json():
-                    if m.status_code == 200:
-                        body = json.loads(res["body"])
-                        new_media = Media(timestamp=body["timestamp"], permalink=body["permalink"], media_url=body["media_url"], fb_id=m["id"])
+                    if m["code"] == 200:
+                        body = json.loads(m["body"])
+                        new_media = Media(timestamp=datetime.strptime(body["timestamp"], "%Y-%m-%dT%H:%M:%S%z"), permalink=body["permalink"], media_url=body["media_url"], fb_id=body["id"])
                         new_medias.append(new_media)
-                        bz_acc.media.append(new_media)
+                        bz_acc.medias.append(new_media)
+                    else:
+                        print(m)
                 _getETagsForNewObjs(access_token, new_medias)
                 _commitToDB(new_medias + [bz_acc])
+            else:
+                pass
     else:
         updated_media = _getETagsForExistingObjs(access_token, _fields, medias)
 
@@ -197,13 +200,13 @@ def getMedia(access_token, bz_acc):
         entries = db.session.execute(db.select(Media).filter(Media.fb_id.in_(updated_media))).scalars().all()
         _updateExistingEntries(entries, updated_media)
         
-        new_medias = entries
-        _commitToDB(new_medias) 
+        _commitToDB(entries) 
+        return entries
     return new_medias
     
 def getComments(access_token, media):
-    _fields = "replies,id,timestamp"
-    comments = db.session.execute(db.select(Comment).filter(Comment.media.has(media=media))).scalars().all()
+    _fields = "replies{from, parent, timestamp, username},id,timestamp,from"
+    comments = db.session.execute(db.select(Comment).filter(Comment.media.has(id=media.id))).scalars().all()
     new_comments = []
 
     if len(comments) == 0:
@@ -213,18 +216,26 @@ def getComments(access_token, media):
 
             # Batch Request, um an alle ETags zu kommen
             payload = []
-            for id in comment_ids:
-                payload.append({"method": "GET", "relative_url": f"{id}?fields="+_fields})
+            for com in comment_ids:
+                payload.append({"method": "GET", "relative_url": f"{com['id']}?fields="+_fields})
 
             batchRes = _batchRequest(access_token, payload)
-
             if batchRes.status_code == 200:
                 for c in batchRes.json():
-                    if c.status_code == 200:
-                        body = json.loads(res["body"])
-                        new_comm = Comment(timestamp=body["timestamp"], fb_id=body["id"])
+                    if c["code"] == 200:
+                        body = json.loads(c["body"])
+                        new_comm = Comment(timestamp=datetime.strptime(body["timestamp"], "%Y-%m-%dT%H:%M:%S%z"), fb_id=body["id"], from_user=body["from"]["id"])
                         new_comments.append(new_comm)
                         media.comments.append(new_comm)
+                        print(body)
+                        if "replies" in body:
+                            for r in body["replies"]["data"]:
+                                reply = Comment(timestamp=datetime.strptime(body["timestamp"], "%Y-%m-%dT%H:%M:%S%z"), fb_id=r["id"], from_user=r["from"]["id"])
+                                new_comm.children.append(reply)
+                                new_comments.append(reply)
+                                media.comments.append(reply)
+                    else:
+                        print(c)
                 _getETagsForNewObjs(access_token, new_comments)
                 _commitToDB(new_comments + [media])
     else:        
@@ -234,13 +245,14 @@ def getComments(access_token, media):
         entries = db.session.execute(db.select(Comment).filter(Comment.fb_id.in_(updated_comments))).scalars().all()
         _updateExistingEntries(entries, updated_comments)
         
-        new_comments = entries
-        _commitToDB(new_comments) 
+        _commitToDB(entries) 
+        return entries
     # return der business account ids
-    return comments
+    return new_comments
     
 def getReplies(access_token, com):
-    # erst prüfen, ob dieses kommentar überhaupt replies auf insta hat
+    
+    # erst prüfen, ob dieses kommentar überhaupt replies auf insta hat, danach normal weiter
     replies = db.session.execute(db.select(Comment).filter_by(fb_id=com.fb_id)).scalars.all()
     new_replies = []
 

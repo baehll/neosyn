@@ -117,7 +117,6 @@ export const useAPIStore = defineStore("api", () => {
         generatedReply,
         updateFastReplies,
         generateResponseWithContext,
-        setContext,
-        sendFBToken
+        setContext
     }
 })

@@ -42,3 +42,22 @@
     FLASK_SECRET_KEY=<KEY>
     FB_CLIENT_SECRET=<KEY>
     ```
+
+### DB Migration
+
+1. migrations-folder initialisieren in ./
+    ```bash
+    flask --app main.py db init
+    ```
+
+2. migration scripts generieren
+    ```bash
+    flask --app main.py db migrate -m "WICHTIGE MESSAGE"
+    ```
+
+3. migration script REVIEWEN
+
+4. apply migration changes
+    ```bash
+    flask --app main.py db upgrade
+    ```

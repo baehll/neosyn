@@ -109,6 +109,8 @@ class Media(_IGBaseTable):
 class Comment(_IGBaseTable):
     __tablename__  = "comments"
     
+    from_user = db.Column(db.Integer, nullable=False)
+    
     parent_id = db.Column(db.Integer, db.ForeignKey("comments.id"), nullable=True)
     children = db.relationship("Comment")
     

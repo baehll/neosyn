@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, current_app
-from .models import db, UserToken, Page
+from .models import db, UserToken, Page, Media, BusinessAccount, Comment
 from flask_jwt_extended import get_jwt_identity, jwt_required, create_access_token
 from ..workers.IGApiWorker import getPages, getComments, getBusinessAccounts, getMedia
 
@@ -35,12 +35,38 @@ def bz_acc():
     else:
         return jsonify({"ERROR": "Usertoken returned none"})
 
-@test.route("/medias", methods=["GET"])
+@test.route("/medias", methods=["POST"])
 @jwt_required()
 def medias():
-    return {} 
+    usertoken = db.session.execute(db.select(UserToken).filter_by(user_id=get_jwt_identity())).scalar_one_or_none()
+    
+    if usertoken is not None:
+        bz_acc_ids = request.get_json()["bz_accs"]
+        bz_accs = db.session.execute(db.select(BusinessAccount).filter(BusinessAccount.fb_id.in_(bz_acc_ids))).scalars()
+        results = []
+        for b in bz_accs:
+            results.extend(getMedia(usertoken.client_token, b))
+        print(results)
+        return jsonify({"results": [r.to_dict() for r in results]})
+    else:
+        return jsonify({"ERROR": "Usertoken returned none"}) 
 
-@test.route("/comments", methods=["GET"])
+@test.route("/comments", methods=["POST"])
 @jwt_required()
-def comments():
-    return {} 
+def comments():    
+    usertoken = db.session.execute(db.select(UserToken).filter_by(user_id=get_jwt_identity())).scalar_one_or_none()
+    
+    if usertoken is not None:
+        media_ids = request.get_json()["medias"]
+        medias = db.session.execute(db.select(Media).filter(Media.fb_id.in_(media_ids))).scalars()
+        results = []
+        for b in medias:
+            results.extend(getComments(usertoken.client_token, b))
+        print(results)
+        return jsonify({"results": [r.to_dict() for r in results]})
+    else:
+        return jsonify({"ERROR": "Usertoken returned none"}) 
+    
+@test.route("/r", methods=["GET"])
+def r():
+    return jsonify()

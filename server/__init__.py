@@ -7,6 +7,7 @@ from openai import OpenAI
 from .web.models import db, User
 from .utils.env_utils import EnvManager 
 from flask_jwt_extended import JWTManager
+from flask_migrate import Migrate
 
 gptConfig = {
     "EMBEDDING_MODEL":"text-embedding-ada-002", 
@@ -52,7 +53,7 @@ def create_app() -> Flask:
         uri = uri.replace("postgres://", "postgresql://", 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = uri
     db.init_app(app)
-
+    migrate = Migrate(app, db)
     with app.app_context():
         db.create_all()
         
