@@ -2,6 +2,8 @@ from ..web.models import db, Page, BusinessAccount, Media, Comment
 import requests, json
 from datetime import datetime
 
+# UTILITY FUNCTIONS UND VARIABLEN
+
 _URL = "https://graph.facebook.com/v18.0"
 # TASKS = ["ADVERTISE", "ANALYZE", "CREATE_CONTENT", "MESSAGING", "MODERATE", "MANAGE"]
 
@@ -12,12 +14,70 @@ def _getIDs(access_token, path, fields=""):
         request_url += "?fields=" + fields + f"&access_token={access_token}"
     else:
         request_url += f"?access_token={access_token}"
-    return requests.get(url=request_url)
     
+    req = requests.get(url=request_url)
+    # print(req.json())
+    # print("######")
+    if req.status_code == 200:
+        return req
+    else:
+        print("ID Request GET returned " + req.status_code + f", (URL: {path}, Fields: {fields} )")
+ 
+# Liefert eine Liste an allen Einträgen, die unter dem Path und den Fields vorhanden sind, inkl. paging results (wenn in einer Response > 25 Einträge sind)
+def _getInstagramData(access_token, path, fields=""):
+    ids = _getIDs(access_token, path, fields)
+    results = []
+    if "data" in ids:
+        results = ids.json()["data"]
+        
+        # Paging Results, wenn vorhanden, werden iterativ abgefragt und an results angehängt
+        #print(ids.json()["paging"]["next"])
+        while "paging" in ids.json() and "next" in ids.json()["paging"]:
+            req_url = ids.json()["paging"]["next"]
+            req = requests.get(url=req_url)
+            if req.status_code == 200:
+                results.extend(req.json()["data"])
+                ids = req
+            else:
+                print("Paging Results GET returned " + req.status_code + f", (URL: {req_url})")
+    else:
+        #print(ids.json())
+        results.append(ids.json())
+    #print(results)
+    return results
+            
+
 # https://developers.facebook.com/docs/graph-api/batch-requests/
 # batch requests gehen gegen irgendeinen path, da jede request eine eigene relative URL hat
+# da nur der ETag Header und Body interessant sind, wird der Rest ausgefiltert
+# Wenn es in einem Result Paging Ergebnisse gibt, werden die ebenfalls angehangen
 def _batchRequest(access_token, payload):
-    return requests.post(url=_URL+f"?access_token={access_token}", params={"batch": json.dumps(payload)})
+    results = []
+    req = requests.post(url=_URL+f"?access_token={access_token}", params={"batch": json.dumps(payload)})
+    if req.status_code == 200:
+        for entry in req.json():
+            if entry["code"] == 200:
+                etag = [e for e in entry["headers"] if e.get("name") == "ETag"].pop()["value"]
+                body = json.loads(entry["body"])
+                # Wenn im body Paging Results sind, sollten die auch aufgelöst und hinzugefügt werden
+                if "replies" in body and "paging" in body["replies"] and "next" in body["replies"]["paging"]:
+                    req = requests.get(url=body["replies"]["paging"]["next"])
+                    while True:
+                        if req.status_code == 200:
+                            body["replies"]["data"].extend(req.json()["data"])
+                            if "paging" in req.json() and "next" in req.json()["paging"]:
+                                req = requests.get(url=req.json()["paging"]["next"])
+                            else:
+                                break
+                results.append({
+                        "etag": etag,
+                        "body": body
+                    })
+    elif req.status_code == 304:
+        print("Batch Request POST returned 304, skipping")
+    else:
+        print("Batch Request POST returned " + str(req.status_code) + f", (JSON: {req.json()})")
+    return results
 
 # commit eine ganze Iterable in DB
 def _commitToDB(data):
@@ -30,37 +90,57 @@ def _commitToDB(data):
 
 # Holt alle ETags für die db_objs, die noch nicht in der Datenbank sind
 def _getETagsForNewObjs(access_token, db_objs):
-    payload = []
-    for o in db_objs:
-        payload.append({"method" : "GET", "relative_url": f"{o.fb_id}"})
-    resp = _batchRequest(access_token, payload)
-    for res in resp.json():
-        if res["code"] == 200:
-            etag = [e for e in res["headers"] if e.get("name") == "ETag"].pop()["value"]
-            obj_id = json.loads(res["body"])["id"]
+    position = 0
+    while True:
+        # Max Batch Size für Meta ist 50, deshalb werden in 50er Schritten Batchabfragen geschickt
+        # wenn das Ende der Slice über die Länge des Arrays hinausgeht, wird einfach der ganze Rest iteriert
+        # inkl. Start exkl. Ende
+        payload = []
+        for o in db_objs[position:(position+50)]:
+            payload.append({"method" : "GET", "relative_url": f"{o.fb_id}"})
+        results = _batchRequest(access_token, payload)
+        
+        for res in results:
+            #print(res)
+            obj_id = res["body"]["id"]
             update_obj = next((obj for obj in db_objs if obj.fb_id == obj_id), None)
             if update_obj:
-                update_obj.etag = etag
+                update_obj.etag = res["etag"]
+                    
+        # Wenn das verschieben um 50 Stellen außerhalb des Arrays läge, sind wir fertig, ansonsten an der neuen Stelle weitermachen
+        if position+50 > len(db_objs):
+            break
+        else:
+            position += 50
     return db_objs  
 
-# 1. payload mit db daten bauen + relevanten feldern
-# 2. antwort von meta nach 304 code filtern
-# 3. alle db einträge mit neuen Meta API daten überschreiben
+# Liefert alle veränderten FB-Objekte basierend auf existierenden Objekten und ihren ETags
 def _getETagsForExistingObjs(access_token, fields, db_objs):
-    payload = []
-    for o in db_objs:
-        payload.append({"method" : "GET", "relative_url": f"{o.fb_id}?fields={fields}", "headers" : f'["If-None-Match: {o.etag}"]'})
-    # Batch Requests für die mehrzahl an db_objs aus der DB
-    res = _batchRequest(access_token, payload)
-    
     updated_objs = []
-    if res.status_code == 200:
-        old_meta_objs = res.json()
-        for acc in old_meta_objs: 
-            # Wenn Status == 304, dann hat sich nichts geändert 
-            if acc["code"] != 304:
-                updated_objs.append(acc)
-
+    position = 0
+    while True:
+        # Max Batch Size für Meta ist 50, deshalb werden in 50er Schritten Batchabfragen geschickt
+        # wenn das Ende der Slice über die Länge des Arrays hinausgeht, wird einfach der ganze Rest iteriert
+        # inkl. Start exkl. Ende
+        payload = []    
+        for o in db_objs[position:(position+50)]:
+            payload.append({"method" : "GET", "relative_url": f"{o.fb_id}?fields={fields}", "headers" : [f'If-None-Match: {o.etag}']})
+        # Batch Requests für die mehrzahl an db_objs aus der DB
+        #print("+++")
+        #print(payload)
+        res = _batchRequest(access_token, payload)
+        # print(res)
+        # print("###")
+        for acc in res: 
+            print(acc)
+            print("++++")
+            updated_objs.append(acc)
+                    
+        # Wenn das verschieben um 50 Stellen außerhalb des Arrays läge, sind wir fertig, ansonsten an der neuen Stelle weitermachen
+        if position+50 > len(db_objs):
+            break
+        else:
+            position += 49
     return updated_objs
 
 # Aktualisiert gegebene Einträge mit neuen Informationen aus den neuen Einträgen
@@ -75,6 +155,8 @@ def _updateExistingEntries(entries, changed_data):
                 for key,value in changed_data.items():
                     setattr(entry, key, value)
         
+# FUNCTIONS
+
 # request mit dem jeweiligen ETag der Pages falls vorhanden. erstellt und updatet Pages für gegebenen Usertoken
 def getPages(access_token, usertoken):
     _fields = "name,category,id,followers_count,tasks"
@@ -82,40 +164,31 @@ def getPages(access_token, usertoken):
     pages = db.session.execute(db.select(Page).filter_by(usertokens=usertoken)).scalars().all()
     new_pages = []
     
-    # wenn es keine gibt, dann den Header nicht setzen
     if len(pages) == 0:
         # alle Pages des Users abfragen
-        page_res = _getIDs(access_token, "/me/accounts", _fields)
-        
-        if page_res.status_code == 200:
+        page_res = _getInstagramData(access_token, "/me/accounts", _fields)
+        for p in page_res:
+            new_page = Page(name=p["name"], category=p["category"], fb_id=p["id"], followers_count=p["followers_count"])
+            # Tasks befüllen
+            for pt in p["tasks"]:
+                if pt == "ADVERTISE":
+                    new_page.can_advertise = True
+                elif pt == "ANALYZE":
+                    new_page.can_analyze = True
+                elif pt == "CREATE_CONTENT":
+                    new_page.can_create_content = True
+                elif pt == "MESSAGING":
+                    new_page.can_message = True
+                elif pt == "MODERATE":
+                    new_page.can_moderate = True
+                elif pt == "MANAGE":
+                    new_page.can_manage = True
             
-            for p in page_res.json()["data"]:
-                new_page = Page(name=p["name"], category=p["category"], fb_id=p["id"], followers_count=p["followers_count"])
-                
-                # Tasks befüllen
-                for pt in p["tasks"]:
-                    if pt == "ADVERTISE":
-                        new_page.can_advertise = True
-                    elif pt == "ANALYZE":
-                        new_page.can_analyze = True
-                    elif pt == "CREATE_CONTENT":
-                        new_page.can_create_content = True
-                    elif pt == "MESSAGING":
-                        new_page.can_message = True
-                    elif pt == "MODERATE":
-                        new_page.can_moderate = True
-                    elif pt == "MANAGE":
-                        new_page.can_manage = True
-                
-                usertoken.pages.append(new_page)
-                new_pages.append(new_page)
-                
-            _getETagsForNewObjs(access_token, new_pages)
-            _commitToDB(new_pages + [usertoken])
-        else:
-            #TODO error handling
-            print("Error while fetching data from Meta")
-            print(page_res.json())
+            usertoken.pages.append(new_page)
+            new_pages.append(new_page)
+        
+        _getETagsForNewObjs(access_token, new_pages)
+        _commitToDB(new_pages + [usertoken])    
     else:        
         updated_pages = _getETagsForExistingObjs(access_token, _fields, pages)
 
@@ -134,22 +207,17 @@ def getBusinessAccounts(access_token, page):
     new_bz_accs = []
     
     if len(bz_accs) == 0:
-        # alle IG User zur Page holen
-        bs_res = _getIDs(access_token, f"/{page.fb_id}", fields=_fields)
-        if bs_res.status_code == 200:
-            #page.etag = bs_res.headers["ETag"]
-            page.followers_count = bs_res.json()["followers_count"]
-            
-            # aus der Antwort neue BZ_Accs erstellen
-            bz = bs_res.json()["instagram_business_account"]
-            new_bz_acc = BusinessAccount(fb_id=bz["id"], followers_count=bz["followers_count"])
+        bs_res = _getInstagramData(access_token, f"/{page.fb_id}", fields=_fields)
+        
+        # aus der Antwort neue BZ_Accs erstellen
+        for bz in bs_res:
+            new_bz_acc = BusinessAccount(fb_id=bz["instagram_business_account"]["id"], followers_count=bz["instagram_business_account"]["followers_count"])
             page.business_accounts.append(new_bz_acc)
+            page.followers_count = bz["followers_count"]
             new_bz_accs.append(new_bz_acc)
-            
-            _getETagsForNewObjs(access_token, new_bz_accs)
-            _commitToDB(new_bz_accs + [page])
-        else:
-            print(bs_res.json())
+        
+        _getETagsForNewObjs(access_token, new_bz_accs)
+        _commitToDB(new_bz_accs + [page])
     else:
         updated_accs = _getETagsForExistingObjs(access_token, _fields, bz_accs)
 
@@ -169,30 +237,22 @@ def getMedia(access_token, bz_acc):
     
     if len(medias) == 0:
         # zuerst alle IG Media IDs sammeln
-        res = _getIDs(access_token, f"/{bz_acc.fb_id}/media")
+        res = _getInstagramData(access_token, f"/{bz_acc.fb_id}/media")
         
-        if res.status_code == 200:
-            media_ids = res.json()["data"]
-            
-            # Batch Request an Meta API mit allen Media_IDs
-            payload = []
-            for media in media_ids:
-                payload.append({"method" : "GET", "relative_url": f"{media['id']}?fields="+_fields})
-            res = _batchRequest(access_token, payload)
+        # Batch Request an Meta API mit allen Media_IDs
+        payload = []
+        for medias in res:
+            for m in medias["data"]:
+                payload.append({"method" : "GET", "relative_url": f"{m['id']}?fields="+_fields})
+        mediaRes = _batchRequest(access_token, payload)
                 
-            if res.status_code == 200:
-                for m in res.json():
-                    if m["code"] == 200:
-                        body = json.loads(m["body"])
-                        new_media = Media(timestamp=datetime.strptime(body["timestamp"], "%Y-%m-%dT%H:%M:%S%z"), permalink=body["permalink"], media_url=body["media_url"], fb_id=body["id"])
-                        new_medias.append(new_media)
-                        bz_acc.medias.append(new_media)
-                    else:
-                        print(m)
-                _getETagsForNewObjs(access_token, new_medias)
-                _commitToDB(new_medias + [bz_acc])
-            else:
-                pass
+        for m in mediaRes:
+            body = m["body"]
+            new_media = Media(timestamp=datetime.strptime(body["timestamp"], "%Y-%m-%dT%H:%M:%S%z"), permalink=body["permalink"], media_url=body["media_url"], fb_id=body["id"])
+            new_medias.append(new_media)
+            bz_acc.medias.append(new_media)
+        _getETagsForNewObjs(access_token, new_medias)
+        _commitToDB(new_medias + [bz_acc])
     else:
         updated_media = _getETagsForExistingObjs(access_token, _fields, medias)
 
@@ -210,53 +270,41 @@ def getComments(access_token, media):
     new_comments = []
 
     if len(comments) == 0:
-        res = _getIDs(access_token, f"/{media.fb_id}/comments")
-        if res.status_code == 200:
-            comment_ids = res.json()["data"]
+        res = _getInstagramData(access_token, f"/{media.fb_id}/comments")
+        
+        # Batch Request, um an alle ETags zu kommen
+        payload = []
+        for com in res:
+            for c in com["data"]:
+                payload.append({"method": "GET", "relative_url": f"{c['id']}?fields="+_fields})
+        batchRes = _batchRequest(access_token, payload)
 
-            # Batch Request, um an alle ETags zu kommen
-            payload = []
-            for com in comment_ids:
-                payload.append({"method": "GET", "relative_url": f"{com['id']}?fields="+_fields})
-
-            batchRes = _batchRequest(access_token, payload)
-            if batchRes.status_code == 200:
-                for c in batchRes.json():
-                    if c["code"] == 200:
-                        body = json.loads(c["body"])
-                        new_comm = Comment(timestamp=datetime.strptime(body["timestamp"], "%Y-%m-%dT%H:%M:%S%z"), fb_id=body["id"], from_user=body["from"]["id"])
-                        new_comments.append(new_comm)
-                        media.comments.append(new_comm)
-                        print(body)
-                        if "replies" in body:
-                            for r in body["replies"]["data"]:
-                                reply = Comment(timestamp=datetime.strptime(body["timestamp"], "%Y-%m-%dT%H:%M:%S%z"), fb_id=r["id"], from_user=r["from"]["id"])
-                                new_comm.children.append(reply)
-                                new_comments.append(reply)
-                                media.comments.append(reply)
-                    else:
-                        print(c)
-                _getETagsForNewObjs(access_token, new_comments)
-                _commitToDB(new_comments + [media])
+        #print("BATCH RES SIZE: " + str(len(batchRes)))
+        for c in batchRes:
+            body = c["body"]
+            new_comm = Comment(timestamp=datetime.strptime(body["timestamp"], "%Y-%m-%dT%H:%M:%S%z"), fb_id=body["id"], from_user=body["from"]["id"])
+            new_comments.append(new_comm)
+            media.comments.append(new_comm)
+            #print(body)
+            if "replies" in body:
+                #print("REPLY SIZE: " + str(len(body["replies"]["data"])))
+                for r in body["replies"]["data"]:
+                    #print(r)
+                    reply = Comment(timestamp=datetime.strptime(r["timestamp"], "%Y-%m-%dT%H:%M:%S%z"), fb_id=r["id"], from_user=r["from"]["id"])
+                    new_comm.children.append(reply)
+                    new_comments.append(reply)
+                    media.comments.append(reply)
+        _getETagsForNewObjs(access_token, new_comments)
+        _commitToDB(new_comments + [media])
     else:        
         updated_comments = _getETagsForExistingObjs(access_token, _fields, comments)
-
+        
         # zu Updatene Einträge finden und aktualisieren
         entries = db.session.execute(db.select(Comment).filter(Comment.fb_id.in_(updated_comments))).scalars().all()
         _updateExistingEntries(entries, updated_comments)
         
         _commitToDB(entries) 
         return entries
-    # return der business account ids
+    # return der neuen comment 
     return new_comments
     
-def getReplies(access_token, com):
-    
-    # erst prüfen, ob dieses kommentar überhaupt replies auf insta hat, danach normal weiter
-    replies = db.session.execute(db.select(Comment).filter_by(fb_id=com.fb_id)).scalars.all()
-    new_replies = []
-
-    if replies.count() == 0:
-        res = _getIDs(access_token, )
-    else:
-        pass

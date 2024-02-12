@@ -30,7 +30,6 @@ def bz_acc():
         results = []
         for p in pages:
             results.extend(getBusinessAccounts(usertoken.client_token, p))
-        print(results)
         return jsonify({"results": [r.to_dict() for r in results]})
     else:
         return jsonify({"ERROR": "Usertoken returned none"})
@@ -46,7 +45,6 @@ def medias():
         results = []
         for b in bz_accs:
             results.extend(getMedia(usertoken.client_token, b))
-        print(results)
         return jsonify({"results": [r.to_dict() for r in results]})
     else:
         return jsonify({"ERROR": "Usertoken returned none"}) 
@@ -62,7 +60,6 @@ def comments():
         results = []
         for b in medias:
             results.extend(getComments(usertoken.client_token, b))
-        print(results)
         return jsonify({"results": [r.to_dict() for r in results]})
     else:
         return jsonify({"ERROR": "Usertoken returned none"}) 

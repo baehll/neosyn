@@ -19,7 +19,7 @@
 
 1. Create a virtual environment with
     ```bash
-    python -m venv dks-venv
+    python -m venv neosyn-venv
     ```
 
 2. Activate the virtual environment with
