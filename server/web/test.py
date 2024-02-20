@@ -64,6 +64,3 @@ def comments():
     else:
         return jsonify({"ERROR": "Usertoken returned none"}) 
     
-@test.route("/r", methods=["GET"])
-def r():
-    return jsonify()
