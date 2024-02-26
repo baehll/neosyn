@@ -168,3 +168,5 @@ cython_debug/
 # Ignore contents of server/static
 /server/static/*
 !/server/static/.gitkeep
+
+/.vscode/

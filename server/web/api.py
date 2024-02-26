@@ -1,19 +1,16 @@
 from flask import (
-    Blueprint, jsonify, request
+    Blueprint, jsonify, request, session
 )
 import requests
 from decouple import config
-from flask_jwt_extended import get_jwt_identity, jwt_required, create_access_token
 from server import chatGPTModel
 from .models import db, User, UserToken, _PlatformEnum
-from ..workers import IGApiWorker
 
 api = Blueprint('api', __name__)
 CLIENT = chatGPTModel()["CLIENT"]
 GPT_MODEL = chatGPTModel()["GPT_MODEL"]
 
 @api.route("/long_lived_access", methods=["POST"])
-@jwt_required()
 def long_lived_access():
     print(request.get_json())
     # Erst einen long lived access token generieren
@@ -41,7 +38,6 @@ def long_lived_access():
             return jsonify({"code": resp.json()["code"]})
           
 @api.route("/long_lived_client_token", methods=["POST"])
-@jwt_required()
 def long_lived_client_token():
     #den richtigen Nutzer finden und die Session dafür befüllen
     user = db.session.execute(db.select(User).filter_by(id=get_jwt_identity())).scalar_one_or_none()
@@ -61,24 +57,8 @@ def long_lived_client_token():
             db.session.commit()
             return jsonify({}), 202
     
-@api.route("/init_acc", methods=["POST"])
-@jwt_required()
-def init_acc():
-    user = db.session.execute(db.select(User).filter_by(id=get_jwt_identity())).scalar_one_or_none()
-    if user is None:
-        return jsonify({"error": "No user found for request"}), 404
-    else:
-        user_tokens = db.session.execute(db.select(UserToken).filter_by(user_id=get_jwt_identity())).scalars()
-        
-        for token in user_tokens:
-            if token.platform == _PlatformEnum.IG:
-                try:
-                    pass
-                except:
-                    pass        
 
 @api.route("/fast_response", methods=["POST"])
-@jwt_required()
 def fast_response():
     print(request.get_json())
     comment = request.get_json()["comment"]
@@ -98,9 +78,7 @@ def fast_response():
     return jsonify({"answers": output})
 
 @api.route("/context_response", methods=["POST"])
-@jwt_required()
 def context_response():
-    print(request.get_json())
     comment_line = ""
     if(request.get_json()["comment"] != ""):
         comment_line = f'Kommentar: {request.get_json()["comment"]}'
@@ -123,24 +101,46 @@ def context_response():
 
     return jsonify({"answer": response.choices[0].message.content})
 
-@api.route("/set_ig_data", methods=["POST"])
-@jwt_required()
-def set_ig_data():
-    ut = db.session.execute(db.select(UserToken).filter_by(user_id=get_jwt_identity())).scalar()
-    
-    if ut is None:
-        return jsonify({"error": "User has no associated tokens"}), 404
-    else:
-        # Worker starten und Pages befüllen
-        page_ids = IGApiWorker.getPages(ut.client_token, ut)
-        for page in page_ids:
-            business_ids = IGApiWorker.getBusinessAccounts(ut.client_token, page)
-            for b_id in business_ids:
-                media = IGApiWorker.getMedia(ut.client_token, b_id)
-                for m in media:
-                    comments = IGApiWorker.getComments(ut.client_token, m)
-                    # wenn ein comment replies hat, müssen die auch hinzugefügt werden
-                    # TODO
-    
-    return jsonify({}), 201
+# @api.route("/set_ig_data", methods=["POST"])
+# @jwt_required()
+# def set_ig_data():
+#     ut = db.session.execute(db.select(UserToken).filter_by(user_id=get_jwt_identity())).scalar()
+#     if ut is None:
+#         return jsonify({"error": "User has no associated tokens"}), 404
+#     else:
+#         # Worker starten und Pages befüllen
+#         page_ids = IGApiWorker.getPages(ut.client_token, ut)
+#         for page in page_ids:
+#             business_ids = IGApiWorker.getBusinessAccounts(ut.client_token, page)
+#             for b_id in business_ids:
+#                 media = IGApiWorker.getMedia(ut.client_token, b_id)
+#                 for m in media:
+#                     comments = IGApiWorker.getComments(ut.client_token, m)
+#                     # wenn ein comment replies hat, müssen die auch hinzugefügt werden
+#                     # TODO
+#     return jsonify({}), 201
 
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in {"txt", "pdf"}
+
+# @api.route("/company_files", methods=["POST"])
+# @jwt_required()
+# def company_files():
+#     ut = db.session.execute(db.select(UserToken).filter_by(user_id=get_jwt_identity())).scalar()
+    
+#     if ut is None:
+#         return jsonify({"error": "User has no associated tokens"}), 404
+#     else:
+#         form = request.form.to_dict()
+#         print(form)
+        
+#         if "file" not in request.files:
+#             return jsonify({"error": "No file uploaded"}), 400
+
+@api.route("/", methods=["GET"])
+def test():
+    response = (
+        "Hello from a private endpoint! You need to be"
+        " authenticated to see this."
+    )
+    return jsonify(message=response)

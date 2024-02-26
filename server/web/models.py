@@ -1,5 +1,4 @@
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
 import time
 from enum import Enum, auto
 
@@ -26,16 +25,7 @@ class _IGBaseTable(_Base):
 class User(_Base):
     __tablename__ = "users"
     
-    username = db.Column(db.String(50), unique=True, nullable=False)
-    password_hash = db.Column(db.String(200), nullable=False)
-    
     usertokens = db.relationship("UserToken", back_populates="user")
-
-    def set_password(self, password):
-        self.password_hash = generate_password_hash(password)
-
-    def check_password(self, password):
-        return check_password_hash(self.password_hash, password)
     
 class UserToken(_Base):
     __tablename__ = "usertokens"

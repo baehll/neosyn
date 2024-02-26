@@ -6,7 +6,6 @@ from decouple import config
 from openai import OpenAI
 from .web.models import db, User
 from .utils.env_utils import EnvManager 
-from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
 
 gptConfig = {
@@ -18,20 +17,7 @@ gptConfig = {
 def chatGPTModel():
     return gptConfig
 
-JWT_REVOKED_TOKENS = set()
-
 ENV = EnvManager()
-user_logged_out = signal('user-logged-out')
-
-def handle_user_logout(sender, **extra):
-    jti = extra['jwt_payload']['jti']
-    JWT_REVOKED_TOKENS.add(jti)
-
-def check_jwt_token(*sender, **extra):
-    jti = sender[1]['jti']
-    if jti in JWT_REVOKED_TOKENS:
-        return True
-    return False
 
 def create_app() -> Flask:
     
@@ -42,18 +28,16 @@ def create_app() -> Flask:
     app.config['JWT_IDENTITY_CLAIM'] = 'sub'
 
     CORS(app, supports_credentials=True)
-    
-    # JWT simple session management
-    jwt = JWTManager(app)
-    jwt.token_in_blocklist_loader(check_jwt_token)
-    user_logged_out.connect(handle_user_logout, app)
 
     uri = config("DATABASE_URL")
     if uri.startswith("postgres://"):
         uri = uri.replace("postgres://", "postgresql://", 1)
     app.config['SQLALCHEMY_DATABASE_URI'] = uri
     db.init_app(app)
+    
+    # Migration Script for DB
     migrate = Migrate(app, db)
+    
     with app.app_context():
         db.create_all()
         

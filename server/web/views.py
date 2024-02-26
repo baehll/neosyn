@@ -23,19 +23,4 @@ def index():
 def serve_static_assets(filename):
     return send_from_directory('static/assets', filename)
 
-def get(media_id, access_token):
-    url = "https://graph.facebook.com/v18.0/" + str(media_id)
-    params = {
-        "fields": "comments_count,comments{text, username, replies{username, text}}",
-        "transport": "cors",
-        "access_token": access_token
-    }
-
-    response = requests.get(url, params=params)
-    return response.json()
-
-@views.route('/token', methods=["POST"])
-def token():
-    #print(value)
-    return jsonify({})
  
