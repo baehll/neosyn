@@ -1,10 +1,10 @@
-# neosyn
+# neosyn Dev Environment
 
 ## Setup Client
-
+**SUBJECT TO CHANGE**
 .env.local file in /client/
 
-    ```
+    ```bash
     VITE_FB_APP_ID=175537112285037
     VITE_BASE_URL=http://localhost:5000
     ```
@@ -43,7 +43,7 @@
     FACEBOOK_OAUTH_CLIENT_SECRET=<KEY>
     ```
 
-5. For local testing, run the following command to start flask as HTTPS and self signed cert
+5. For local testing, run the following command to start flask as HTTPS and self signed cert in DEBUG mode
     ```
     flask run --cert=adhoc --debug
     ```
@@ -59,7 +59,7 @@
     flask --app main.py db migrate -m "WICHTIGE MESSAGE"
     ```
 
-3. migration script REVIEWEN
+3. migration script **REVIEWEN**
 
 4. apply migration changes
     ```bash
