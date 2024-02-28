@@ -2,15 +2,17 @@ from flask import (
     Blueprint, jsonify, request, session
 )
 import requests
+from flask_login import login_required
 from decouple import config
 from server import chatGPTModel
-from .models import db, User, UserToken, _PlatformEnum
+from .models import db, User , _PlatformEnum
 
 api = Blueprint('api', __name__)
 CLIENT = chatGPTModel()["CLIENT"]
 GPT_MODEL = chatGPTModel()["GPT_MODEL"]
 
 @api.route("/long_lived_access", methods=["POST"])
+@login_required
 def long_lived_access():
     print(request.get_json())
     # Erst einen long lived access token generieren
@@ -37,28 +39,29 @@ def long_lived_access():
         if(resp.json()["code"]):
             return jsonify({"code": resp.json()["code"]})
           
-@api.route("/long_lived_client_token", methods=["POST"])
-def long_lived_client_token():
-    #den richtigen Nutzer finden und die Session dafür befüllen
-    user = db.session.execute(db.select(User).filter_by(id=get_jwt_identity())).scalar_one_or_none()
+# @api.route("/long_lived_client_token", methods=["POST"])
+# def long_lived_client_token():
+#     #den richtigen Nutzer finden und die Session dafür befüllen
+#     user = db.session.execute(db.select(User).filter_by(id=get_jwt_identity())).scalar_one_or_none()
     
-    if user is None:
-        return jsonify({"error": "No user found for request"}), 404
-    else:
-        ut = db.session.execute(db.select(UserToken).filter_by(user_id=get_jwt_identity())).scalar_one_or_none()
-        if ut is None:
-            tokenEntity = UserToken(expiration=request.get_json()["expiration"], client_token=request.get_json()["access_token"], user=user, platform=request.get_json()["platform"])
-            db.session.add(tokenEntity)
-            db.session.commit()
-            return jsonify({}), 201 
-        else:
-            ut.set_data(exp=request.get_json()["expiration"], token=request.get_json()["access_token"], platform=request.get_json()["platform"])
-            db.session.add(ut)
-            db.session.commit()
-            return jsonify({}), 202
+#     if user is None:
+#         return jsonify({"error": "No user found for request"}), 404
+#     else:
+#         ut = db.session.execute(db.select(UserToken).filter_by(user_id=get_jwt_identity())).scalar_one_or_none()
+#         if ut is None:
+#             tokenEntity = UserToken(expiration=request.get_json()["expiration"], client_token=request.get_json()["access_token"], user=user, platform=request.get_json()["platform"])
+#             db.session.add(tokenEntity)
+#             db.session.commit()
+#             return jsonify({}), 201 
+#         else:
+#             ut.set_data(exp=request.get_json()["expiration"], token=request.get_json()["access_token"], platform=request.get_json()["platform"])
+#             db.session.add(ut)
+#             db.session.commit()
+#             return jsonify({}), 202
     
 
 @api.route("/fast_response", methods=["POST"])
+@login_required
 def fast_response():
     print(request.get_json())
     comment = request.get_json()["comment"]
@@ -78,6 +81,7 @@ def fast_response():
     return jsonify({"answers": output})
 
 @api.route("/context_response", methods=["POST"])
+@login_required
 def context_response():
     comment_line = ""
     if(request.get_json()["comment"] != ""):
@@ -138,6 +142,7 @@ def allowed_file(filename):
 #             return jsonify({"error": "No file uploaded"}), 400
 
 @api.route("/", methods=["GET"])
+@login_required
 def test():
     response = (
         "Hello from a private endpoint! You need to be"

@@ -35,14 +35,18 @@
 4. .env.local file with 
     ```
     DATABASE_URL=sqlite:///database.db
-    FB_APP_ID=175537112285037
     OPENAI_API_KEY=<KEY>
     DEFAULT_USERS=<username>:<password>//<username>:<password>//...
     JWT_SECRET_TOKEN=<KEY>
     FLASK_SECRET_KEY=<KEY>
-    FB_CLIENT_SECRET=<KEY>
+    FACEBOOK_OAUTH_CLIENT_ID=175537112285037
+    FACEBOOK_OAUTH_CLIENT_SECRET=<KEY>
     ```
 
+5. For local testing, run the following command to start flask as HTTPS and self signed cert
+    ```
+    flask run --cert=adhoc --debug
+    ```
 ### DB Migration
 
 1. migrations-folder initialisieren in ./

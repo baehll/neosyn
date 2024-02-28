@@ -1,12 +1,12 @@
 from flask_sqlalchemy import SQLAlchemy
-import time
+from flask_login import LoginManager, UserMixin
+from flask_dance.consumer.storage.sqla import OAuthConsumerMixin
 from enum import Enum, auto
 
 db = SQLAlchemy()
 
 class _PlatformEnum(Enum):
-    IG = auto()
-    FB = auto()
+    Meta = auto()
 
 class _Base(db.Model):
     __abstract__ = True
@@ -22,37 +22,22 @@ class _IGBaseTable(_Base):
     etag = db.Column(db.String(50), nullable=True)
     fb_id = db.Column(db.Integer, nullable=False)
 
-class User(_Base):
+class User(_Base, UserMixin):
     __tablename__ = "users"
+    name = db.Column(db.String(256))
+    pages = db.relationship("Page", back_populates="user")
+    platform = db.Column(db.Enum(_PlatformEnum))
     
-    usertokens = db.relationship("UserToken", back_populates="user")
-    
-class UserToken(_Base):
-    __tablename__ = "usertokens"
-    
-    expiration = db.Column(db.Integer, nullable=True)
-    client_token = db.Column(db.String(200), nullable=False)
-    platform = db.Column(db.Enum(_PlatformEnum), nullable=False)
-    
-    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
-    user = db.relationship("User", back_populates="usertokens")
-    
-    pages = db.relationship('Page', back_populates='usertokens')
-    
-    def set_data(self, exp, token, platform):
-        self.expiration = exp
-        self.client_token = token
-        self.platform = platform
-    
-    def is_expired(self):
-        now = int(time.time() * 1000)
-        return (now > self.expiration)
+class OAuth(OAuthConsumerMixin, _Base):
+    provider_user_id = db.Column(db.String(256), unique=True, nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)
+    user = db.relationship(User)
 
 class Page(_IGBaseTable):
     __tablename__ = "pages"
     
-    usertoken_id = db.Column(db.Integer, db.ForeignKey("usertokens.id"))
-    usertokens = db.relationship('UserToken', back_populates='pages')
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    user = db.relationship('User', back_populates='pages')
 
     business_accounts = db.relationship("BusinessAccount", back_populates="page")
 
@@ -109,3 +94,11 @@ class Comment(_IGBaseTable):
     
     sentiment = db.Column(db.Integer)
     timestamp = db.Column(db.DateTime, nullable=False)
+
+
+login_manager = LoginManager()
+login_manager.login_view = "facebook.login"
+
+@login_manager.user_loader
+def load_user(user_id):
+    return User.query.get(int(user_id))
