@@ -2,6 +2,7 @@ from flask import (
     Blueprint, jsonify, request, session
 )
 import requests
+from flask_login import login_required
 from decouple import config
 from server import chatGPTModel
 from .models import db, User , _PlatformEnum
@@ -11,6 +12,7 @@ CLIENT = chatGPTModel()["CLIENT"]
 GPT_MODEL = chatGPTModel()["GPT_MODEL"]
 
 @api.route("/long_lived_access", methods=["POST"])
+@login_required
 def long_lived_access():
     print(request.get_json())
     # Erst einen long lived access token generieren
@@ -59,6 +61,7 @@ def long_lived_access():
     
 
 @api.route("/fast_response", methods=["POST"])
+@login_required
 def fast_response():
     print(request.get_json())
     comment = request.get_json()["comment"]
@@ -78,6 +81,7 @@ def fast_response():
     return jsonify({"answers": output})
 
 @api.route("/context_response", methods=["POST"])
+@login_required
 def context_response():
     comment_line = ""
     if(request.get_json()["comment"] != ""):
@@ -138,6 +142,7 @@ def allowed_file(filename):
 #             return jsonify({"error": "No file uploaded"}), 400
 
 @api.route("/", methods=["GET"])
+@login_required
 def test():
     response = (
         "Hello from a private endpoint! You need to be"
