@@ -1,4 +1,4 @@
-from ..web.models import db, Page, BusinessAccount, Media, Comment
+from ..models import db, Page, BusinessAccount, Media, Comment
 import requests, json
 from datetime import datetime
 

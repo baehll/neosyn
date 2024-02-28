@@ -4,12 +4,13 @@ from flask import (
 import requests
 from flask_login import login_required
 from decouple import config
-from server import chatGPTModel
-from .models import db, User , _PlatformEnum
+from ..models import db, User , _PlatformEnum
 
 api = Blueprint('api', __name__)
-CLIENT = chatGPTModel()["CLIENT"]
-GPT_MODEL = chatGPTModel()["GPT_MODEL"]
+
+def GPTModel():
+    from server import chatGPTModel
+    return chatGPTModel()
 
 @api.route("/long_lived_access", methods=["POST"])
 @login_required
@@ -72,8 +73,8 @@ def fast_response():
         user: {comment}
         bot:
     '''
-    response = CLIENT.chat.completions.create(
-        model = GPT_MODEL,
+    response = GPTModel()["CLIENT"].chat.completions.create(
+        model = GPTModel()["GPT_MODEL"],
         messages=[{'role': 'user', 'content': prompt}]
     )
     output = response.choices[0].message.content.split("\"")[1::2]
@@ -98,8 +99,8 @@ def context_response():
         Antworte mit einem unformatierten String 
     '''
 
-    response = CLIENT.chat.completions.create(
-        model = GPT_MODEL,
+    response = GPTModel()["CLIENT"].chat.completions.create(
+        model = GPTModel()["GPT_MODEL"],
         messages=[{'role': 'user', 'content': prompt}]
     )
 

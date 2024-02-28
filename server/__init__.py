@@ -7,7 +7,6 @@ from openai import OpenAI
 from .web.models import db, User, login_manager
 from .utils.env_utils import EnvManager 
 from flask_migrate import Migrate
-from flask_dance.contrib.facebook import make_facebook_blueprint, facebook
 
 ENV = EnvManager()
 
@@ -17,14 +16,8 @@ gptConfig = {
     "CLIENT":OpenAI(api_key=config("OPENAI_API_KEY"))
 }
 
-# blueprint = make_facebook_blueprint(
-#     client_id=config("FB_APP_ID"),
-#     client_secret=config("FB_CLIENT_SECRET")
-# )
-
 def chatGPTModel():
     return gptConfig
-
 
 def create_app() -> Flask:
     
@@ -50,7 +43,7 @@ def create_app() -> Flask:
 
     from .web.views import views
     from .web.api import api
-    from .web.authenticate import authenticate
+    from .web.auth import authenticate
 
     #from .web.test import test
     #app.register_blueprint(test, url_prefix="/test")
