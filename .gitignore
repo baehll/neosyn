@@ -168,3 +168,14 @@ cython_debug/
 # Ignore contents of server/static
 /server/static/*
 !/server/static/.gitkeep
+/.idea/inspectionProfiles/Project_Default.xml
+/.idea/.gitignore
+/.idea/ai-tool.iml
+/.idea/cody_history.xml
+/.idea/encodings.xml
+/.idea/GitlabLint.xml
+/.idea/jsLibraryMappings.xml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/php.xml
+/.idea/vcs.xml
