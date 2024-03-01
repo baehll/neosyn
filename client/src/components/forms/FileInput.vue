@@ -1,19 +1,10 @@
 <template>
-  <div>
-<ProgressBar
 
-/>
-  </div>
 </template>
 <script>
 
-import ProgressBar from '../components/global/ProgressBar.vue';
-
 export default {
-  name: 'Registration',
-  components: {
-    ProgressBar
-  },
+  name: 'FileInput',
   data: () => {
     return {
 
