@@ -10,6 +10,7 @@
         </div>
       </div>
     </div>
+
   </div>
 </template>
 <script>
@@ -22,7 +23,10 @@ export default {
   data: () => {
     return {
       progress: 10,
+      percentage: 100,
     }
+
+
   },
   computed: {},
   methods: {
