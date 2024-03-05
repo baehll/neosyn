@@ -1,6 +1,7 @@
 <template>
 <Logo/>
   <instagram/>
+  <a href="#">Login</a>
   <div>
     <video src="/assets/videos/coming-soon.mp4"
       autoplay
@@ -38,7 +39,7 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 svg {
   path {
     fill: #ACED84;
