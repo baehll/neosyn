@@ -1,25 +1,19 @@
 <template>
-  <div class="container">
-    <div class="grid">
-      <div class="col-span-6">
-        <div class="p-4">
-          <ProgressBar
-            :percentage="progress"
-          />
-          <button @click="increaseProgress">Increase</button>
-        </div>
-      </div>
-    </div>
+  <section class="h-full">
+    <sidebar-navigation/>
+    <div class="content">
 
-  </div>
+    </div>
+  </section>
 </template>
 <script>
 
 import ProgressBar from '../components/global/ProgressBar.vue';
+import SidebarNavigation from '../components/navigation/SidebarNavigation.vue';
 
 export default {
   name: 'Home',
-  components: {ProgressBar},
+  components: {SidebarNavigation, ProgressBar},
   data: () => {
     return {
       progress: 10,
