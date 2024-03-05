@@ -1,4 +1,6 @@
 <template>
+<Logo/>
+  <instagram/>
   <div>
     <video src="/assets/videos/coming-soon.mp4"
       autoplay
@@ -13,8 +15,12 @@
 </template>
 <script>
 
+import Logo from '../components/global/logo.vue';
+import Instagram from '../components/global/instagram.vue';
+
 export default {
   name: 'ComingSoon',
+  components: {Instagram, Logo},
   data: () => {
     return {
 
@@ -33,6 +39,11 @@ export default {
 </script>
 
 <style lang="scss">
+svg {
+  path {
+    fill: #ACED84;
+  }
+}
 video {
   width: 100dvw;
   height: 100dvh;
