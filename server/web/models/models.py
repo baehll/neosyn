@@ -2,6 +2,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin
 from flask_dance.consumer.storage.sqla import OAuthConsumerMixin
 from enum import Enum, auto
+from werkzeug.security import generate_password_hash, check_password_hash
 
 db = SQLAlchemy()
 
@@ -22,8 +23,29 @@ class _IGBaseTable(_Base):
     etag = db.Column(db.String(50), nullable=True)
     fb_id = db.Column(db.Integer, nullable=False)
 
+class Early_Access_Keys(_Base):
+    hashed_key = db.Column(db.String(200), nullable=False)
+
+    def set_key(self, key):
+        self.hashed_key = generate_password_hash(key)
+    
+    def check_key(self, key):
+        return check_password_hash(self.hashed_key, key)
+
+class Organization(_Base):
+    __tablename__ = "organizations"
+    name = db.Column(db.String(256))
+    users = db.relationship("User", back_populates="")
+
+    assistant_id = db.Column(db.String(256))
+    file_path = db.Column(db.String(256))
+
 class User(_Base, UserMixin):
     __tablename__ = "users"
+    
+    orga_id = db.Column(db.Integer, db.ForeignKey("organizations.id"))
+    organization = db.relationship("Organization", back_populates="users")
+    
     name = db.Column(db.String(256))
     pages = db.relationship("Page", back_populates="user")
     platform = db.Column(db.Enum(_PlatformEnum))

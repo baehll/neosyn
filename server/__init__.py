@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from decouple import config
 from openai import OpenAI
-from .web.models import db, User, login_manager
+from .web.models import db, User, login_manager, Early_Access_Keys
 from .utils.env_utils import EnvManager 
 from flask_migrate import Migrate
 
@@ -40,7 +40,18 @@ def create_app() -> Flask:
     
     with app.app_context():
         db.create_all()
-
+        
+        if Early_Access_Keys.query.count() == 0:
+            key_string = config("EARLY_ACCESS_KEYS")
+            if key_string != "":
+                for k in key_string.split("//"):
+                    ea_key = Early_Access_Keys()
+                    ea_key.set_key(k)
+                    db.session.add(ea_key)
+                db.session.commit()
+                print("Early Access Keys zur DB hinzugefügt")
+            else:
+                print("Keine Early Access Keys in ENV oder DB gefunden")
     from .web.views import views
     from .web.api import api
     from .web.auth import authenticate

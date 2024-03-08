@@ -12,6 +12,12 @@ authenticate = make_facebook_blueprint(
     storage=SQLAlchemyStorage(OAuth, db.session, user=current_user)
 )
 
+@authenticate.route("/early_access")
+def early_access():
+    # Abgleich von Key mit Einträgen in Secret_Access Tabelle
+    # Bei richtigen Key: OK
+    return jsonify({})
+
 @authenticate.route("/logout")
 @login_required
 def logout():
@@ -20,7 +26,6 @@ def logout():
 
 @oauth_authorized.connect_via(authenticate)
 def facebook_logged_in(blueprint, token):
-    #print("hello world")
     if not token:
         print("Failed to log in.")
         return False

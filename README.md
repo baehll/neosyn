@@ -36,7 +36,7 @@
     ```
     DATABASE_URL=sqlite:///database.db
     OPENAI_API_KEY=<KEY>
-    DEFAULT_USERS=<username>:<password>//<username>:<password>//...
+    EARLY_ACCESS_KEYS=<KEY>;<KEY>;...
     JWT_SECRET_TOKEN=<KEY>
     FLASK_SECRET_KEY=<KEY>
     FACEBOOK_OAUTH_CLIENT_ID=175537112285037
@@ -51,17 +51,17 @@
 
 1. migrations-folder initialisieren in ./
     ```bash
-    flask --app main.py db init
+    flask --app app.py db init
     ```
 
 2. migration scripts generieren
     ```bash
-    flask --app main.py db migrate -m "WICHTIGE MESSAGE"
+    flask --app app.py db migrate -m "WICHTIGE MESSAGE"
     ```
 
 3. migration script **REVIEWEN**
 
 4. apply migration changes
     ```bash
-    flask --app main.py db upgrade
+    flask --app app.py db upgrade
     ```

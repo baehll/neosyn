@@ -12,6 +12,27 @@ def GPTModel():
     from server import chatGPTModel
     return chatGPTModel()
 
+def allowed_file(filename):
+    return "." in filename and filename.rsplit(".", 1)[1].lower() in {"txt", "pdf"}
+
+@api.route("/init_user", methods=["POST"])
+@login_required
+def init_user():
+    # Neues Organization DB Objekt initialisieren
+    # Neuen User initialisieren, verknüpft mit Orga und flask_dance_oauth Objekt
+    # upload ordner für Orga erstellen, Pfad für Orga speichern
+    # Logo im upload ordner abspeichern
+    return jsonify({}) 
+
+@api.route("/company_files", methods=["POST"])
+@login_required
+def company_files():
+    # für jeweilige Organisation von User Upload Ordner laden
+    # alle angehängten Files auf richtiges Dateiformat überprüfen
+    # abspeichern im Upload Ordner
+    
+    return jsonify({}) 
+
 @api.route("/long_lived_access", methods=["POST"])
 @login_required
 def long_lived_access():
@@ -105,48 +126,3 @@ def context_response():
     )
 
     return jsonify({"answer": response.choices[0].message.content})
-
-# @api.route("/set_ig_data", methods=["POST"])
-# @jwt_required()
-# def set_ig_data():
-#     ut = db.session.execute(db.select(UserToken).filter_by(user_id=get_jwt_identity())).scalar()
-#     if ut is None:
-#         return jsonify({"error": "User has no associated tokens"}), 404
-#     else:
-#         # Worker starten und Pages befüllen
-#         page_ids = IGApiWorker.getPages(ut.client_token, ut)
-#         for page in page_ids:
-#             business_ids = IGApiWorker.getBusinessAccounts(ut.client_token, page)
-#             for b_id in business_ids:
-#                 media = IGApiWorker.getMedia(ut.client_token, b_id)
-#                 for m in media:
-#                     comments = IGApiWorker.getComments(ut.client_token, m)
-#                     # wenn ein comment replies hat, müssen die auch hinzugefügt werden
-#                     # TODO
-#     return jsonify({}), 201
-
-def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in {"txt", "pdf"}
-
-# @api.route("/company_files", methods=["POST"])
-# @jwt_required()
-# def company_files():
-#     ut = db.session.execute(db.select(UserToken).filter_by(user_id=get_jwt_identity())).scalar()
-    
-#     if ut is None:
-#         return jsonify({"error": "User has no associated tokens"}), 404
-#     else:
-#         form = request.form.to_dict()
-#         print(form)
-        
-#         if "file" not in request.files:
-#             return jsonify({"error": "No file uploaded"}), 400
-
-@api.route("/", methods=["GET"])
-@login_required
-def test():
-    response = (
-        "Hello from a private endpoint! You need to be"
-        " authenticated to see this."
-    )
-    return jsonify(message=response)
