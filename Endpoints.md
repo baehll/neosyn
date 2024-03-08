@@ -11,8 +11,13 @@ Sample Request:
 ```
 
 Sample Response:
+
 **200**, wenn der Key authentifiziert werden kann
+
+**400**, wenn kein Key gegeben wurde
+
 **403**, wenn der Key nicht authentifiziert werden kann
+
 
 ## S1
 Meta Auth Redirect für Login

@@ -6,18 +6,30 @@ from flask_dance.contrib.facebook import make_facebook_blueprint
 from flask_dance.consumer import oauth_authorized, oauth_error
 from flask_dance.consumer.storage.sqla import SQLAlchemyStorage
 from sqlalchemy.orm.exc import NoResultFound
-from ..models import db, User, OAuth
+from ..models import db, User, OAuth, Early_Access_Keys
 
 authenticate = make_facebook_blueprint(
     storage=SQLAlchemyStorage(OAuth, db.session, user=current_user)
 )
 
-@authenticate.route("/early_access")
+@authenticate.route("/early_access", methods=["POST"])
 def early_access():
-    # Abgleich von Key mit Einträgen in Secret_Access Tabelle
-    # Bei richtigen Key: OK
-    return jsonify({})
-
+    try:
+        access_key = request.get_json()["access_key"]
+        
+        if access_key is None or access_key == "":
+            return jsonify({"error": "No access_key specified or missing in request"}), 400
+        
+        keys = db.session.execute(db.select(Early_Access_Keys)).scalars()
+        
+        for saved_key in keys:
+        # Abgleich von Key mit Einträgen in Secret_Access Tabelle
+            if saved_key.check_key(access_key):
+            # Bei richtigen Key: OK
+                return jsonify({}), 200
+    except Exception as e:
+        return jsonify({"error": f"{e} missing in Request"}), 500
+    return jsonify({}), 400
 @authenticate.route("/logout")
 @login_required
 def logout():
