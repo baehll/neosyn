@@ -1,10 +1,14 @@
 from flask import (
-    Blueprint, jsonify, request, session
+    Blueprint, jsonify, request, session, current_app
 )
+import os
 import requests
-from flask_login import login_required
+from flask_login import login_required, current_user
 from decouple import config
-from ..models import db, User , _PlatformEnum
+from ..models import db, User , _PlatformEnum, Organization
+from pathvalidate import sanitize_filename, replace_symbol
+from ...utils import file_utils
+from werkzeug.utils import secure_filename
 
 api = Blueprint('api', __name__)
 
@@ -18,11 +22,53 @@ def allowed_file(filename):
 @api.route("/init_user", methods=["POST"])
 @login_required
 def init_user():
-    # Neues Organization DB Objekt initialisieren
-    # Neuen User initialisieren, verknüpft mit Orga und flask_dance_oauth Objekt
-    # upload ordner für Orga erstellen, Pfad für Orga speichern
-    # Logo im upload ordner abspeichern
-    return jsonify({}) 
+    try:
+        payload = request.get_json()
+        print(payload)
+        if "username" not in payload or payload["username"] == "":
+            return jsonify({"error": "No username specified"}), 400
+        
+        if "companyname" not in payload or payload["companyname"] == "":
+            return jsonify({"error": "No companyname specified"}), 400
+        
+        # Neues Organization DB Objekt initialisieren
+        new_orga = Organization(name=payload["companyname"])
+        
+        # User updaten, verknüpft mit Orga
+        new_orga.users.append(current_user)
+        current_user.name = payload["username"]
+        # aus companyname einen ordner ableiten
+        new_folder = replace_symbol(payload["companyname"].upper() + "/")
+        
+        upload_folder_path = os.path.join(current_app.config["UPLOAD_FOLDER"], new_folder)
+        
+        # Upload Ordner Name sollte abhängig von Orga ID in DB sein ??
+        # upload ordner für Orga erstellen, Pfad für Orga speichern
+        if os.path.exists(upload_folder_path):
+            return jsonify({"error": f"Folder already exists for companyname {payload['companyname']}, path: '{new_folder}'"}), 500
+        else:
+            os.makedirs(upload_folder_path)
+            new_orga.folder_path = new_folder
+        
+        # Logo im upload ordner abspeichern
+        if 'file' in request.files:
+            file = request.files["file"]
+            if file.filename == "":
+                return jsonify({"error":"File attached, but no filename specified"}), 500
+            if  not file_utils.allowed_logo_extensions(file.filename):
+                return jsonify({"error": f"File Extension not allowed, must be {', '.join(file_utils.ALLOWED_LOGO_EXTENSIONS)}"})
+            
+            filename = secure_filename(file.filename)
+            file.save(os.path.join(upload_folder_path, filename))
+            
+        db.session.add(new_orga)
+        db.session.add(current_user)
+        db.session.commit()
+    except Exception as e:
+        print(e)
+        
+    
+    return jsonify({}), 200
 
 @api.route("/company_files", methods=["POST"])
 @login_required

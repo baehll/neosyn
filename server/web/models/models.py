@@ -23,7 +23,7 @@ class _IGBaseTable(_Base):
     etag = db.Column(db.String(50), nullable=True)
     fb_id = db.Column(db.Integer, nullable=False)
 
-class Early_Access_Keys(_Base):
+class EarlyAccessKeys(_Base):
     hashed_key = db.Column(db.String(200), nullable=False)
 
     def set_key(self, key):
@@ -38,7 +38,7 @@ class Organization(_Base):
     users = db.relationship("User", back_populates="")
 
     assistant_id = db.Column(db.String(256))
-    file_path = db.Column(db.String(256))
+    folder_path = db.Column(db.String(256), unique=True)
 
 class User(_Base, UserMixin):
     __tablename__ = "users"

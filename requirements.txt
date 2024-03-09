@@ -18,3 +18,4 @@ scipy
 gunicorn
 PyJWT
 psycopg2
+pathvalidate

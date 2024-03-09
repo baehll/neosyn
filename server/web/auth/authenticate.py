@@ -6,7 +6,7 @@ from flask_dance.contrib.facebook import make_facebook_blueprint
 from flask_dance.consumer import oauth_authorized, oauth_error
 from flask_dance.consumer.storage.sqla import SQLAlchemyStorage
 from sqlalchemy.orm.exc import NoResultFound
-from ..models import db, User, OAuth, Early_Access_Keys
+from ..models import db, User, OAuth, EarlyAccessKeys
 
 authenticate = make_facebook_blueprint(
     storage=SQLAlchemyStorage(OAuth, db.session, user=current_user)
@@ -20,7 +20,7 @@ def early_access():
         if access_key is None or access_key == "":
             return jsonify({"error": "No access_key specified or missing in request"}), 400
         
-        keys = db.session.execute(db.select(Early_Access_Keys)).scalars()
+        keys = db.session.execute(db.select(EarlyAccessKeys)).scalars()
         
         for saved_key in keys:
         # Abgleich von Key mit Einträgen in Secret_Access Tabelle
@@ -30,6 +30,7 @@ def early_access():
     except Exception as e:
         return jsonify({"error": f"{e} missing in Request"}), 500
     return jsonify({}), 400
+
 @authenticate.route("/logout")
 @login_required
 def logout():
@@ -64,7 +65,7 @@ def facebook_logged_in(blueprint, token):
 
     else:
         # Create a new local user account for this user
-        user = User(name=info["name"])
+        user = User()
         # Associate the new local user account with the OAuth token
         oauth.user = user
         # Save and commit our database models
@@ -72,7 +73,7 @@ def facebook_logged_in(blueprint, token):
         db.session.commit()
         # Log in the new local user account
         login_user(user)
-        print("Successfully signed in.")
+        print("New User created and successfully signed in.")
 
     # Disable Flask-Dance's default behavior for saving the OAuth token
     return False

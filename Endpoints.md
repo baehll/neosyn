@@ -30,12 +30,14 @@ Meta Auth Redirect für Login
 
 ### POST /api/init_user
 
+Für das initiale Anlegen eines Users + Organisation und evtl. Company Logo
+
 Sample Request:
 
 ```bash
     {
         "username": "...",
-        "company_name": "..."
+        "companyname": "..."
     }
 ```
 **UND** Logo File, wenn angegeben
@@ -44,7 +46,9 @@ Sample Response:
 
 **200**, wenn erfolgreich User und Orga angelegt wurden (+ Files gespeichert wurden)
 
-**500**, wenn Fehler aufgetreten ist mit
+**400**, wenn Username/Companyname fehlt
+
+**500**, wenn Fehler aufgetreten ist mit (zB wenn kein Ordner angelegt werden kann)
 ```bash
     {
         "error": "error_message"

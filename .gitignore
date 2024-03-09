@@ -170,3 +170,4 @@ cython_debug/
 !/server/static/.gitkeep
 
 /.vscode/
+/.UPLOADS/*
