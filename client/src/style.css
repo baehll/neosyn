@@ -1,3 +1,66 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@font-face {
+    font-family: 'Nimbus';
+    src: url('/assets/fonts/Nimbus-Sans-D-OT_32758.woff2') format('woff2'),
+    url('/assets/fonts/Nimbus-Sans-D-OT_32758.woff2') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+@font-face {
+    font-family: 'PP NeueBit';
+    src: url('/assets/fonts/PPNeueBit-Bold.woff2') format('woff2'),
+    url('/assets/fonts/PPNeueBit-Bold.woff') format('woff');
+    font-weight: bold;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Archimoto V01';
+    src: url('/assets/fonts/ArchimotoV01-Thin.woff2') format('woff2'),
+    url('/assets/fonts/ArchimotoV01-Thin.woff') format('woff');
+    font-weight: 100;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Archimoto V01';
+    src: url('/assets/fonts/ArchimotoV01-Regular.woff2') format('woff2'),
+    url('/assets/fonts/ArchimotoV01-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Archimoto V01';
+    src: url('/assets/fonts/ArchimotoV01-Medium.woff2') format('woff2'),
+    url('/assets/fonts/ArchimotoV01-Medium.woff') format('woff');
+    font-weight: 500;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Archimoto V01';
+    src: url('/assets/fonts/ArchimotoV01-Black.woff2') format('woff2'),
+    url('/assets/fonts/ArchimotoV01-Black.woff') format('woff');
+    font-weight: 900;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'PP Mondwest';
+    src: url('/assets/fonts/PPMondwest-Regular.woff2') format('woff2'),
+    url('/assets/fonts/PPMondwest-Regular.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+

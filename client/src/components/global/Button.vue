@@ -1,21 +1,23 @@
 <template>
+  <button v-text="cta">
+  </button>
 
 </template>
 <script>
 
 export default {
-  name: 'Button',
-  data: () => {
-    return {
-
+  props: {
+    cta: {
+      type: String,
+      default: ''
     }
   },
-  computed: {
-
+  name: 'Button',
+  data: () => {
+    return {}
   },
-  methods: {
-
-  },
+  computed: {},
+  methods: {},
   created: () => {
 
   }
