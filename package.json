@@ -7,9 +7,6 @@
     "heroku-logs": "heroku logs --tail",
     "clean": "rm ../server/static/assets/*"
   },
-  "dependencies": {
-    "pinia": "^2.1.7"
-  },
   "cacheDirectories": [
     "client/node_modules"
   ]

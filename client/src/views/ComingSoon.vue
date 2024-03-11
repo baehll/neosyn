@@ -14,8 +14,8 @@
             <p class="font-nimbus">Follow us on <a href="#" class="underline">Instagram</a> for the latest updates.</p>
             <ul class="flex flex-row gap-6 text-lightgray-10">
               <li><a href="#login">Login</a></li>
-              <li><a href="#privacy">Privacy Policy</a></li>
-              <li><a href="#imprint">Imprint</a></li>
+              <li><router-link to="/privacy-policy">Privacy Policy</router-link></li>
+              <li><router-link to="/imprint">Imprint</router-link></li>
             </ul>
           </div>
         </div>
