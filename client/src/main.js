@@ -1,7 +1,7 @@
 import {createApp} from 'vue'
+import {createPinia} from 'pinia';
 import App from './App.vue'
 import router from "./router"
-import store from "./store"
 import {library} from '@fortawesome/fontawesome-svg-core'
 import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
 import {faUserSecret} from '@fortawesome/free-solid-svg-icons'
@@ -13,7 +13,7 @@ let modules = import.meta.glob('./languages/*.json', {eager: true});
 const messages = modules[`./languages/${locale}.json`];
 const app = createApp(App);
 app.use(router)
-app.use(store)
+app.use(createPinia())
 library.add(faUserSecret)
 app.component('font-awesome-icon', FontAwesomeIcon);
 

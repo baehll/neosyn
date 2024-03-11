@@ -1,16 +1,25 @@
 <template>
-<Logo/>
-  <instagram/>
-  <a href="#">Login</a>
-  <div>
+  <div class="coming-soon">
     <video src="/assets/videos/coming-soon.mp4"
-      autoplay
-      loop
-      muted
+           autoplay
+           loop
+           muted
     />
-    <div class="wrap">
-      <h1>Coming Soon</h1>
-      <p>Follow us on Instagram for the latest updates.</p>
+    <div class="wrap pt-20 px-20 pb-16">
+      <div class="flex flex-col h-full justify-between">
+        <Logo/>
+        <div class="flex flex-col justify-between">
+          <h1 class="font-mondwest mb-64">coming soon</h1>
+          <div class="flex flex-row justify-between items-center">
+            <p class="font-nimbus">Follow us on <a href="#" class="underline">Instagram</a> for the latest updates.</p>
+            <ul class="flex flex-row gap-6 text-lightgray-10">
+              <li><a href="#login">Login</a></li>
+              <li><a href="#privacy">Privacy Policy</a></li>
+              <li><a href="#imprint">Imprint</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -23,31 +32,45 @@ export default {
   name: 'ComingSoon',
   components: {Instagram, Logo},
   data: () => {
-    return {
-
-    }
+    return {}
   },
-  computed: {
-
-  },
-  methods: {
-
-  },
+  computed: {},
+  methods: {},
   created: () => {
 
   }
 }
 </script>
 
-<style lang="scss" scoped>
+<style lang="scss">
+.coming-soon {
+  @apply relative;
+  height: 100dvh;
+  width: 100dvw;
+}
+
+h1 {
+  font-weight: 100;
+  font-size: 8.75rem !important;
+}
+
+p {
+  font-size: 1.5rem !important;
+}
+
 svg {
+  width: 99px;
+  height: 61px;
+
   path {
     fill: #ACED84;
   }
 }
+
 video {
-  width: 100dvw;
-  height: 100dvh;
+  width: 100%;
+  height: 100% !important;
+  max-width: none !important;
   object-fit: cover;
   position: fixed;
   top: 0;
@@ -57,14 +80,10 @@ video {
 
 .wrap {
   position: absolute;
-  bottom: 10%;
-  left: 5%;
-
+  width: 100%;
+  height: 100%;
   color: #ACED84;
-  font-family: "PP NeueBit";
-  font-size: 80px;
-  font-style: normal;
-  font-weight: 700;
-  line-height: normal;
+  @apply top-0 left-0;
+
 }
 </style>

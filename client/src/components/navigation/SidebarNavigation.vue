@@ -6,25 +6,25 @@
     <div class="flex flex-col justify-between h-full">
       <ul class="flex flex-col items-center gap-4">
         <li>
-          <inbox/>
+          <router-link to="inbox"><inbox/></router-link>
         </li>
         <li>
-          <notifications/>
+          <router-link to="notifications"><notifications/></router-link>
         </li>
         <li>
-          <analytics/>
+          <router-link to="analytics"><analytics/></router-link>
         </li>
         <li class="separator"></li>
         <li>
-          <audience/>
+          <router-link to="audience"><audience/></router-link>
         </li>
         <li>
-          <bookmarks/>
+          <router-link to="bookmarks"><bookmarks/></router-link>
         </li>
       </ul>
       <ul class="flex flex-col items-center gap-4">
         <li class="separator"></li>
-        <li>User image</li>
+        <li>🙆‍♂️</li>
         <li><settings/></li>
       </ul>
     </div>
@@ -32,7 +32,6 @@
 
 </template>
 <script>
-
 import Logo from '../global/logo.vue';
 import Inbox from '../global/inbox.vue';
 import Notifications from '../global/notifications.vue';
@@ -43,6 +42,7 @@ import Settings from '../global/settings.vue';
 
 export default {
   name: 'SidebarNavigation',
+
   components: {Settings, Bookmarks, Audience, Analytics, Notifications, Inbox, Logo},
   data: () => {
     return {}
