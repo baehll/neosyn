@@ -13,7 +13,7 @@
           <div class="flex flex-row justify-between items-center">
             <p class="font-nimbus">Follow us on <a href="#" class="underline">Instagram</a> for the latest updates.</p>
             <ul class="flex flex-row gap-6 text-lightgray-10">
-              <li><a href="#login">Login</a></li>
+              <li><a @click="toggleLogin">Login</a></li>
               <li><router-link to="/privacy-policy">Privacy Policy</router-link></li>
               <li><router-link to="/imprint">Imprint</router-link></li>
             </ul>
@@ -21,21 +21,37 @@
         </div>
       </div>
     </div>
+    <LoginLayer
+      :login-visible="loginVisible"
+      @hide="loginVisible = false"
+    />
   </div>
 </template>
 <script>
 
 import Logo from '../components/global/logo.vue';
 import Instagram from '../components/global/instagram.vue';
+import LoginLayer from '../components/LoginLayer.vue';
+import login from './Login.vue';
 
 export default {
   name: 'ComingSoon',
-  components: {Instagram, Logo},
+  components: {LoginLayer, Instagram, Logo},
   data: () => {
-    return {}
+    return {
+      loginVisible: false,
+    }
   },
-  computed: {},
-  methods: {},
+  computed: {
+    login() {
+      return login
+    }
+  },
+  methods: {
+    toggleLogin() {
+      this.loginVisible = !this.loginVisible;
+    }
+  },
   created: () => {
 
   }
@@ -85,5 +101,8 @@ video {
   color: #ACED84;
   @apply top-0 left-0;
 
+}
+close {
+  @apply absolute top-0 right-0;
 }
 </style>
