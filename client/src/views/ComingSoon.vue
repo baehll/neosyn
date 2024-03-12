@@ -7,15 +7,19 @@
     />
     <div class="wrap pt-20 px-20 pb-16">
       <div class="flex flex-col h-full justify-between">
-        <Logo/>
+        <Logo class="text-primary logo"/>
         <div class="flex flex-col justify-between">
           <h1 class="font-mondwest mb-64">coming soon</h1>
           <div class="flex flex-row justify-between items-center">
             <p class="font-nimbus">Follow us on <a href="#" class="underline">Instagram</a> for the latest updates.</p>
             <ul class="flex flex-row gap-6 text-lightgray-10">
               <li><a @click="toggleLogin">Login</a></li>
-              <li><router-link to="/privacy-policy">Privacy Policy</router-link></li>
-              <li><router-link to="/imprint">Imprint</router-link></li>
+              <li>
+                <router-link to="/privacy-policy">Privacy Policy</router-link>
+              </li>
+              <li>
+                <router-link to="/imprint">Imprint</router-link>
+              </li>
             </ul>
           </div>
         </div>
@@ -63,6 +67,11 @@ export default {
   @apply relative;
   height: 100dvh;
   width: 100dvw;
+
+  .logo {
+    width: 99px;
+    height: 61px;
+  }
 }
 
 h1 {
@@ -72,15 +81,6 @@ h1 {
 
 p {
   font-size: 1.5rem !important;
-}
-
-svg {
-  width: 99px;
-  height: 61px;
-
-  path {
-    fill: #ACED84;
-  }
 }
 
 video {
@@ -101,8 +101,5 @@ video {
   color: #ACED84;
   @apply top-0 left-0;
 
-}
-close {
-  @apply absolute top-0 right-0;
 }
 </style>

@@ -6,6 +6,9 @@ body {
     @apply bg-darkgray;
 }
 
+svg path {
+    fill: currentColor;
+}
 @font-face {
     font-family: 'Nimbus';
     src: url('/assets/fonts/Nimbus-Sans-D-OT_32758.woff2') format('woff2'),
