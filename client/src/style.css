@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 body {
-    @apply bg-darkgray;
+    background-color: #0D0D0D;
 }
 
 svg path {

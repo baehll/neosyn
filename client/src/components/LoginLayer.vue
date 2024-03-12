@@ -2,7 +2,7 @@
   <div
     :class="{'transition-opacity backdrop-blur-xl bg-darkgray/40 h-full w-full': true, 'opacity-0 pointer-events-none': !loginVisible, 'opacity-100 pointer-events-all': loginVisible}">
     <div
-      class="absolute top-1/2 left-1/2 transform -translate-y-1/2 -translate-x-1/2 px-16 py-12 w-96 bg-darkgray/40 rounded-lg border border-lightgray">
+      class="absolute top-1/2 left-1/2 transform -translate-y-1/2 -translate-x-1/2 px-16 py-12 bg-darkgray/40 rounded-lg border border-lightgray wrapper">
       <strong class="text-white text-center uppercase block mb-6 font-neuebit text-xl">
         Early Access
       </strong>
@@ -62,6 +62,9 @@ export default {
 </script>
 
 <style lang="scss" scoped>
+.wrapper {
+  width: 680px;
+}
 input {
   @apply bg-lightgray rounded-lg px-6 py-3 text-lightgray-10 text-sm;
 }

@@ -33,7 +33,7 @@
 </template>
 <script>
 
-import Logo from '../components/global/logo.vue';
+import Logo from '../components/global/Logo.vue';
 import Instagram from '../components/global/instagram.vue';
 import LoginLayer from '../components/LoginLayer.vue';
 import login from './Login.vue';
@@ -62,11 +62,16 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 .coming-soon {
   @apply relative;
   height: 100dvh;
   width: 100dvw;
+
+  h1 {
+    font-weight: 100;
+    font-size: 8.75rem !important;
+  }
 
   .logo {
     width: 99px;
@@ -74,10 +79,6 @@ export default {
   }
 }
 
-h1 {
-  font-weight: 100;
-  font-size: 8.75rem !important;
-}
 
 p {
   font-size: 1.5rem !important;
