@@ -9,16 +9,16 @@
       <div class="flex flex-col h-full justify-between">
         <Logo class="text-primary logo"/>
         <div class="flex flex-col justify-between">
-          <h1 class="font-mondwest mb-64">coming soon</h1>
+          <h1 class="font-mondwest mb-64" v-text="$i18n.t('coming soon')"></h1>
           <div class="flex flex-row justify-between items-center">
-            <p class="font-nimbus">Follow us on <a href="#" class="underline">Instagram</a> for the latest updates.</p>
+            <p class="font-nimbus" v-html="translation.instagram"></p>
             <ul class="flex flex-row gap-6 text-lightgray-10">
-              <li><a @click="toggleLogin">Login</a></li>
+              <li><a @click="toggleLogin" v-text="$t('Login')"></a></li>
               <li>
-                <router-link to="/privacy-policy">Privacy Policy</router-link>
+                <router-link to="/privacy-policy" v-text="$t('Privacy Policy')"></router-link>
               </li>
               <li>
-                <router-link to="/imprint">Imprint</router-link>
+                <router-link to="/imprint" v-text="$t('Imprint')"></router-link>
               </li>
             </ul>
           </div>
@@ -33,7 +33,7 @@
 </template>
 <script>
 
-import Logo from '../components/global/Logo.vue';
+import Logo from '../components/global/logo.vue';
 import Instagram from '../components/global/instagram.vue';
 import LoginLayer from '../components/LoginLayer.vue';
 import login from './Login.vue';
@@ -41,8 +41,11 @@ import login from './Login.vue';
 export default {
   name: 'ComingSoon',
   components: {LoginLayer, Instagram, Logo},
-  data: () => {
+  data: function() {
     return {
+      translation: {
+        instagram: this.$t('Follow us on <a href="https://www.instagram.com/neosyn.ai" class="underline">Instagram</a> for the latest updates.')
+      },
       loginVisible: false,
     }
   },

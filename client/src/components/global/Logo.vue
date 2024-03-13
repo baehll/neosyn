@@ -6,3 +6,9 @@
 <script>
 export default {};
 </script>
+<style lang="scss" scoped>
+.footer {
+  width: 56px;
+  height: 34px;
+}
+</style>
