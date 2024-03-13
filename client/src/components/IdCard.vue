@@ -1,15 +1,16 @@
 <template>
-<div class="bg-lightgray-10 rounded-lg p-4 w-1/5">
-  <div class="bg-darkgray rounded-lg h-72 flex items-end justify-center">
-    <user/>
+<div class="bg-lightgray-60 rounded-lg p-4 w-2/5">
+  <div class="mb-2 bg-darkgray rounded-lg h-64 flex items-end justify-center">
+    <user
+      class="text-lightgray-60"
+    />
   </div>
-  <div class="flex justify-between flex-col">
+  <div class="text-white flex justify-between flex-col">
     <div>
-      <h3 v-text="name"></h3>
-      <h5 v-text="company"></h5>
-
+      <h2 class="text-4xl font-bold" v-text="name"></h2>
+      <h5 class="text-sm mb-24" v-text="company"></h5>
     </div>
-    <small>Registered 23.04.2024</small>
+    <small class="text-xs">Registered 23.04.2024</small>
   </div>
 
 </div>
@@ -36,6 +37,8 @@ export default {
   }
 }
 </script>
-<style scoped>
-
+<style lang="scss" scoped>
+:root {
+  @apply text-white;
+}
 </style>

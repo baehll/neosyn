@@ -1,9 +1,8 @@
 <template>
   <div>
-    <h2 v-text="$t('What is your name?')"></h2>
+    <h2 v-text="$t('What is your company\'s name?')"></h2>
     <p class="mb-3">Lorem ipsum dolor sit amet.</p>
-    <input @keyup="type" type="text" v-model="userStore.name"
-           class="border border-lightgray rounded-lg w-full bg-transparent">
+    <input @keyup="type" type="text" v-model="userStore.company" class="border border-lightgray rounded-lg w-full bg-transparent">
   </div>
 </template>
 <script>
@@ -14,12 +13,12 @@ import {mapStores} from 'pinia';
 import {useUserStore} from '../../stores/user.js';
 
 export default {
-  emits: ['nextStep', 'prevStep', 'turnedValid', 'turnedInvalid'],
-  name: 'Registration Step 1',
+  emits: ['nextStep', 'prevStep'],
+  name: 'Registration Step 2',
   components: {IdCard, Button},
   data: () => {
     return {
-      name: ''
+      company: ''
     }
   },
   computed: {
@@ -30,8 +29,7 @@ export default {
       this.$emit('nextStep')
     },
     type() {
-
-      this.userStore.name = this.name
+      this.userStore.company = this.company
     }
   },
   created: () => {
