@@ -7,6 +7,35 @@
     "heroku-logs": "heroku logs --tail",
     "clean": "rm ../server/static/assets/*"
   },
+  "dependencies": {
+    "@fortawesome/fontawesome-svg-core": "^6.5.1",
+    "@fortawesome/free-brands-svg-icons": "^6.5.1",
+    "@fortawesome/free-regular-svg-icons": "^6.5.1",
+    "@fortawesome/free-solid-svg-icons": "^6.5.1",
+    "@fortawesome/vue-fontawesome": "^3.0.6",
+    "axios": "^1.6.7",
+    "dotenv": "^16.4.5",
+    "moment": "^2.30.1",
+    "pinia": "^2.1.7",
+    "vue": "^3.4.21",
+    "vue-i18n": "^9.10.1",
+    "vue-router": "^4.3.0"
+  },
+  "devDependencies": {
+    "@rushstack/eslint-patch": "^1.7.2",
+    "@vitejs/plugin-basic-ssl": "^1.1.0",
+    "@vitejs/plugin-vue": "^4.6.2",
+    "@vue/eslint-config-prettier": "^7.1.0",
+    "autoprefixer": "^10.4.18",
+    "eslint": "^8.57.0",
+    "eslint-plugin-vue": "^9.23.0",
+    "postcss": "^8.4.35",
+    "prettier": "^2.8.8",
+    "sass": "^1.71.1",
+    "tailwindcss": "^3.4.1",
+    "vite": "^4.5.2",
+    "volar-service-vetur": "latest"
+  },
   "cacheDirectories": [
     "client/node_modules"
   ]
