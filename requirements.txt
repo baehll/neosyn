@@ -19,3 +19,4 @@ gunicorn
 PyJWT
 psycopg2
 pathvalidate
+flask-talisman

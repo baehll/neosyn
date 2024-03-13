@@ -7,6 +7,7 @@ from openai import OpenAI
 from .web.models import db, User, login_manager, EarlyAccessKeys
 from .utils.env_utils import EnvManager 
 from flask_migrate import Migrate
+from flask_talisman import Talisman
 import os
 
 ENV = EnvManager()
@@ -23,7 +24,7 @@ def chatGPTModel():
 def create_app() -> Flask:
     
     app = Flask(__name__)
-
+    Talisman(app)
     app.config['SECRET_KEY'] = config("FLASK_SECRET_KEY")
     app.config['FACEBOOK_OAUTH_CLIENT_ID'] = config("FACEBOOK_OAUTH_CLIENT_ID")
     app.config["FACEBOOK_OAUTH_CLIENT_SECRET"] = config("FACEBOOK_OAUTH_CLIENT_SECRET")
