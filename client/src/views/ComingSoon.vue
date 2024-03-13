@@ -29,6 +29,7 @@
       :login-visible="loginVisible"
       @hide="loginVisible = false"
     />
+
   </div>
 </template>
 <script>
