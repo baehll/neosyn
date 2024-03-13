@@ -16,8 +16,7 @@
             :key="currentStep"
             v-if="currentStepComponent"
             :is="currentStepComponent"
-            @turned-valid="turnStepValid"
-            @turned-invalid="turnStepInvalid"
+            @nextStep="nextStep"
           />
         </transition>
       </div>
@@ -28,6 +27,7 @@
         />
         <Button
           class="basis-1/4 bg-lightgray-60 text-darkgray"
+          :disabled="!isValid"
           v-if="currentStep < steps.length - 1"
           @click="nextStep"
         >
@@ -50,6 +50,9 @@ import IdCard from '../components/IdCard.vue';
 import Step2 from '../components/registration/Step2.vue';
 import ChevronLeft from '../components/global/chevron-left.vue';
 import Step3 from '../components/registration/Step3.vue';
+import {mapStores} from 'pinia';
+import {useUserStore} from '../stores/user.js';
+import Step4 from '../components/registration/Step4.vue';
 
 export default {
   name: 'Registration',
@@ -62,36 +65,55 @@ export default {
   data: () => {
     return {
       steps: [
-        Step1,
-        Step2,
-        Step3
+        {
+          component: Step1,
+          validation: (store) => {
+            return store.name.trim() !== ''
+          }
+        },
+        {
+          component: Step2,
+          validation: (store) => {
+            return store.company.trim() !== ''
+          }
+        },
+        {
+          component: Step3,
+          validation: () => {
+            return true
+          }
+        },
+        {
+          component: Step4,
+          validation: () => {
+            return true
+          }
+        },
       ],
-      validSteps:{},
       currentStepComponent: Step1,
       currentStep: 0
     }
   },
-  computed: {},
+  computed: {
+    ...mapStores(useUserStore),
+    isValid() {
+      return this.steps[this.currentStep].validation(this.userStore)
+    },
+  },
   methods: {
     nextStep() {
       if (this.currentStep === this.steps.length - 1) {
         return
       }
       this.currentStep++;
-      this.currentStepComponent = this.steps[this.currentStep];
+      this.currentStepComponent = this.steps[this.currentStep].component;
     },
     previousStep() {
       if (this.currentStep === 0) {
         return
       }
       this.currentStep--;
-      this.currentStepComponent = this.steps[this.currentStep];
-    },
-    turnStepValid() {
-      this.validSteps[this.currentStep] = true
-    },
-    turnStepInvalid() {
-      this.validSteps[this.currentStep] = false
+      this.currentStepComponent = this.steps[this.currentStep].component;
     }
   },
   created: () => {

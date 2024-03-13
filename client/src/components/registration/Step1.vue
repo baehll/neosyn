@@ -2,7 +2,7 @@
   <div>
     <h2 v-text="$t('What is your name?')"></h2>
     <p class="mb-3">Lorem ipsum dolor sit amet.</p>
-    <input @keyup="type" type="text" v-model="userStore.name"
+    <input @keyup="type" type="text" v-model="name" @keyup.enter="$emit('nextStep')" autofocus
            class="border border-lightgray rounded-lg w-full bg-transparent">
   </div>
 </template>
@@ -14,7 +14,7 @@ import {mapStores} from 'pinia';
 import {useUserStore} from '../../stores/user.js';
 
 export default {
-  emits: ['nextStep', 'prevStep', 'turnedValid', 'turnedInvalid'],
+  emits: ['nextStep'],
   name: 'Registration Step 1',
   components: {IdCard, Button},
   data: () => {
@@ -23,14 +23,13 @@ export default {
     }
   },
   computed: {
-    ...mapStores(useUserStore)
+    ...mapStores(useUserStore),
   },
   methods: {
     nextStep() {
       this.$emit('nextStep')
     },
     type() {
-
       this.userStore.name = this.name
     }
   },

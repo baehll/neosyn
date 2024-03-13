@@ -26,10 +26,14 @@ export default {
   computed: {
     ...mapStores(useUserStore),
     name(){
-      return this.userStore.name
+      return this.userStore.name.trim() !== '' ?
+        this.userStore.name :
+        'Name'
     },
     company(){
-      return this.userStore.company
+      return this.userStore.company.trim() !== '' ?
+        this.userStore.company :
+        'Company'
     },
     image(){
       return this.userstore.image

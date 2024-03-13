@@ -26,7 +26,7 @@ export default {
 
 <style lang="scss" scoped>
 button {
-  @apply bg-primary text-darkgray px-4 py-2 rounded;
+  @apply bg-primary text-darkgray px-4 py-2 rounded transition-all;
 
   &.icon-only {
     @apply bg-transparent text-lightgray-10 px-0 py-0;
