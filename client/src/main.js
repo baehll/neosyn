@@ -1,62 +1,27 @@
-import { createApp } from 'vue'
-import './style.css'
+import {createApp} from 'vue'
+import {createPinia} from 'pinia';
 import App from './App.vue'
 import router from "./router"
-import VueCookies from 'vue-cookies'
-import axios from 'axios'
-import { createPinia } from 'pinia'
-import { parseJwt } from "./utils"
+import {library} from '@fortawesome/fontawesome-svg-core'
+import {FontAwesomeIcon} from '@fortawesome/vue-fontawesome'
+import {faUserSecret} from '@fortawesome/free-solid-svg-icons'
+import {createI18n} from 'vue-i18n';
+import './style.css'
+const locale = document.querySelector('html').dataset.locale || 'en_US';
 
-import { library } from '@fortawesome/fontawesome-svg-core'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { faUserSecret } from '@fortawesome/free-solid-svg-icons'
+let modules = import.meta.glob('./languages/*.json', {eager: true});
+const messages = modules[`./languages/${locale}.json`];
+const app = createApp(App);
+app.use(router)
+app.use(createPinia())
+library.add(faUserSecret)
+app.component('font-awesome-icon', FontAwesomeIcon);
 
-import VueSidebarMenu from "vue-sidebar-menu"
-import 'vue-sidebar-menu/dist/vue-sidebar-menu.css'
+const i18n = createI18n({
+    locale,
+    defaultLocale: 'en_US',
+})
 
-function startApp() {
-    const app = createApp(App);
-
-    setupIconLibrary(app);
-    setupUseCalls(app);
-
-    app.mount('#app')
-}
-
-
-function setupIconLibrary(app) {
-    library.add(faUserSecret)
-    app.component('font-awesome-icon', FontAwesomeIcon);
-
-}
-
-function setupUseCalls(app) {
-    //
-    let axiosConfig = {
-        withCredentials: true,
-        baseURL: import.meta.env.VITE_BASE_URL
-    };
-
-    // Initialisiert den Authorization header, falls einer bereits vorliegt und nicht abgelaufen ist
-    if(sessionStorage.getItem("token") != null) {
-        const jwtPayload = parseJwt(sessionStorage.getItem("token"))
-        if(jwtPayload.exp > Date.now()) {
-            sessionStorage.removeItem("token")
-        } else {
-            axiosConfig["headers"] = {"Authorization" : "Bearer " + sessionStorage.getItem("token")}
-        }
-    }
-
-    const axiosInstance = axios.create(axiosConfig);
-    const pinia = createPinia();
-    app.use(pinia);
-
-    // Stellt Konstanten für die ganze App bereit
-    app.provide('AXIOS_INSTANCE', axiosInstance);
-
-    app.use(VueCookies, {});
-    app.use(router);
-    app.use(VueSidebarMenu);
-}
-
-startApp()
+i18n.global.setLocaleMessage(locale, messages.default)
+app.use(i18n)
+app.mount('#app')

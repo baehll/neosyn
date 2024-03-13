@@ -1,89 +1,56 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import LandingPage from "../views/landingpage/LandingPage.vue"
-import Login from "../views/Login.vue"
-import Dashboard from "../views/landingpage/children/Dashboard.vue"
-import InteractionsPage from "../views/interactions/InteractionsPage.vue"
-import { useAuthStore } from '../store/auth'
-import { parseJwt } from "../utils"
+import Home from '../views/Home.vue';
+import Login from '../views/Login.vue';
+import Registration from '../views/Registration.vue';
+import ComingSoon from '../views/ComingSoon.vue';
+import Imprint from '../views/Imprint.vue';
+import PrivacyPolicy from '../views/PrivacyPolicy.vue';
 
 const routes = [
     {
         path: "/",
-        name: "Login",
-        component: Login
+        name: "Home",
+        component: ComingSoon
     },
     {
-        path: "/dashboard",
-        name: "Dashboard",
-        component: Dashboard,
-        meta: { requiresAuth: true}
+        path: "/imprint",
+        name: "Imprint",
+        component: Imprint
     },
     {
-        path: "/landingpage",
-        name: "landingpage",
-        component: LandingPage,
-        meta: { requiresAuth: true},
-        children: [
-            {
-                path: "/explore",
-                name: "explore"
-            },
-            {
-                path: "/inbox",
-                name: "inbox"
-            },
-            {
-                path: "/analyze",
-                name: "analyze"
-            },
-            {
-                path: "/share",
-                name: "share"
-            },
-            {
-                path: "/report",
-                name: "report"
-            },
-            {
-                path: "/content",
-                name: "content"
-            },
-        ]
+        path: "/privacy-policy",
+        name: "Privacy Policy",
+        component: PrivacyPolicy
     },
-    {
-        path: "/interactions",
-        name: "interactions",
-        meta: { requiresAuth: true},
-        component: InteractionsPage,
-        children: [
-            {
-                path: "chat",
-                name: "chat"
-            }
-        ]
-    }
+    //    path: "/index",
+    //    name: "Index",
+    //    component: Home
+    //},
+    //{
+    //    path: "/login",
+    //    name: "Login",
+    //    component: Login
+    //},
+    //{
+    //    path: "/register",
+    //    name: "Registration",
+    //    component: Registration
+    //},
+    //{
+    //    path: "/dashboard",
+    //    name: "Dashboard",
+    //    component: Login
+    //},
+    //{
+    //    path: "/login",
+    //    name: "Login",
+    //    component: Login
+    //},
 ]
 
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
-    routes 
-})
-
-// Hiermit wird sichergestellt, dass nur authentifizierte Nutzer auf die wichtigen Seiten zugreifen können
-router.beforeEach((to, from, next) => {
-    
-    const authStore = useAuthStore();
-    if(to.matched.some(r =>  r.meta.requiresAuth)) {
-        if(!authStore.isAuthenticated()) {
-            next("/");
-        } else {
-            next()
-        }
-    } else if (to.path === "/" && authStore.isAuthenticated()){
-        next("/dashboard")
-    } else {
-        next()
-    }
+    routes
 })
 
 export default router
