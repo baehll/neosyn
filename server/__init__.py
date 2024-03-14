@@ -30,7 +30,16 @@ def create_app() -> Flask:
     
     CORS(app, supports_credentials=True)
     csp = {
-        'default-src': ['\'self\'', '*.quiet-mountain-69143-51eb8184b186.herokuapp.com', 'quiet-mountain-69143-51eb8184b186.herokuapp.com']        
+        'default-src': [
+            '\'self\'', 
+            '*.quiet-mountain-69143-51eb8184b186.herokuapp.com', 
+            'quiet-mountain-69143-51eb8184b186.herokuapp.com'
+            ],
+        'img-src': '*',
+        'script-src': [
+            'unsafe-inline',
+            'unsafe-eval'
+            ]        
     }
     
     Talisman(app, content_security_policy=csp)
