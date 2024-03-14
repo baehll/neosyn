@@ -22,14 +22,18 @@ def chatGPTModel():
     return gptConfig
 
 def create_app() -> Flask:
-    
     app = Flask(__name__)
-    Talisman(app)
+    
     app.config['SECRET_KEY'] = config("FLASK_SECRET_KEY")
     app.config['FACEBOOK_OAUTH_CLIENT_ID'] = config("FACEBOOK_OAUTH_CLIENT_ID")
     app.config["FACEBOOK_OAUTH_CLIENT_SECRET"] = config("FACEBOOK_OAUTH_CLIENT_SECRET")
-    CORS(app, supports_credentials=True)
     
+    CORS(app, supports_credentials=True)
+    csp = {
+        'default-src': ['\'self\'', '*.quiet-mountain-69143-51eb8184b186.herokuapp.com', 'quiet-mountain-69143-51eb8184b186.herokuapp.com']        
+    }
+    
+    Talisman(app, content_security_policy=csp)
     app.config["UPLOAD_FOLDER"] = config("COMPANY_FILE_UPLOAD_FOLDER")
     if not os.path.exists(app.config["UPLOAD_FOLDER"]):
         os.makedirs(app.config["UPLOAD_FOLDER"])
