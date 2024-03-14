@@ -37,9 +37,13 @@ def create_app() -> Flask:
             ],
         'img-src': '*',
         'script-src': [
-            'unsafe-inline',
-            'unsafe-eval'
-            ]        
+            '\'self\'',
+            '\'unsafe-eval\''
+            ],
+        'style-src': [
+            '\'self\'',
+            '\'unsafe-inline\''
+        ]        
     }
     
     Talisman(app, content_security_policy=csp)
