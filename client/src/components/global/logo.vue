@@ -11,4 +11,9 @@ export default {};
   width: 56px;
   height: 34px;
 }
+
+.header-left {
+  width: 65px;
+  height: 40px;
+}
 </style>

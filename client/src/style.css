@@ -4,11 +4,19 @@
 
 body {
     background-color: #0D0D0D;
+    min-width: 1440px;
 }
 
 svg path {
     fill: currentColor;
 }
+
+input {
+    &[type="text"] {
+        @apply bg-lightgray rounded-lg px-6 py-3 text-lightgray-10 text-sm;
+    }
+}
+
 @font-face {
     font-family: 'Nimbus';
     src: url('/assets/fonts/Nimbus-Sans-D-OT_32758.woff2') format('woff2'),

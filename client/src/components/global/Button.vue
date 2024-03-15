@@ -1,15 +1,15 @@
 <template>
-  <button v-text="cta">
+  <button class="" :disabled="disabled">
+    <slot></slot>
   </button>
-
 </template>
 <script>
 
 export default {
   props: {
-    cta: {
-      type: String,
-      default: ''
+    disabled: {
+      type: Boolean,
+      default: false
     }
   },
   name: 'Button',
@@ -24,6 +24,21 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
+button {
+  @apply bg-primary text-darkgray px-4 py-2 rounded transition-all;
+
+  &.icon-only {
+    @apply bg-transparent text-lightgray-10 px-0 py-0;
+  }
+
+  &.ghost {
+    @apply bg-transparent text-lightgray-10;
+  }
+
+  &[disabled] {
+    @apply bg-lightgray-60;
+  }
+}
 
 </style>
