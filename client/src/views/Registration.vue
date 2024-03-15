@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-row h-full">
+  <div class="registration flex flex-row h-full">
     <div class="flex flex-col justify-between basis-1/3 bg-darkgray p-8 text-white">
       <div>
         <Button
@@ -7,7 +7,7 @@
           @click="previousStep"
         >
           <chevron-left
-            class=""
+            class="w-5 mb-10"
           />
         </Button>
 
@@ -25,20 +25,32 @@
           class="basis-1/4"
           :percentage="(currentStep+1)/((steps.length)/100)"
         />
-        <Button
-          class="basis-1/4 bg-lightgray-60 text-darkgray"
-          :disabled="!isValid"
-          v-if="currentStep < steps.length - 1"
-          @click="nextStep"
-        >
-          {{ $t('Continue') }}
-        </Button>
+        <div>
+          <Button
+            class="ghost"
+            @click="nextStep"
+            v-if="steps[currentStep].hasSkipOption"
+          >
+            {{ $t('Skip') }}
+          </Button>
+          <Button
+            class="basis-1/4 bg-lightgray-60 text-darkgray"
+            :disabled="!isValid"
+            v-if="currentStep < steps.length - 1"
+            @click="nextStep"
+          >
+            {{ $t('Continue') }}
+          </Button>
+        </div>
       </div>
     </div>
 
     <div class="basis-2/3 bg-lightgray flex items-center justify-center">
       <IdCard/>
     </div>
+    <Logo
+      class="absolute top-8 right-8 w-6 header-left text-lightgray-10"
+      />
   </div>
 </template>
 <script>
@@ -53,10 +65,12 @@ import Step3 from '../components/registration/Step3.vue';
 import {mapStores} from 'pinia';
 import {useUserStore} from '../stores/user.js';
 import Step4 from '../components/registration/Step4.vue';
+import Logo from '../components/global/logo.vue';
 
 export default {
   name: 'Registration',
   components: {
+    Logo,
     ChevronLeft,
     IdCard,
     Button,
@@ -79,6 +93,7 @@ export default {
         },
         {
           component: Step3,
+          hasSkipOption: true,
           validation: () => {
             return true
           }
@@ -123,6 +138,27 @@ export default {
 </script>
 
 <style lang="scss">
+.registration {
+  p {
+    @apply mb-8;
+  }
+
+  h2 {
+    @apply mb-4;
+    font-size: 42px;
+  }
+
+  input {
+    @apply border border-lightgray focus:border-primary ring-0 focus:outline-0 outline-0 focus:ring-0 focus:ring-offset-0 rounded-lg w-full bg-transparent;
+  }
+
+  label {
+    p {
+      @apply mb-0;
+    }
+  }
+}
+
 .fade-left-enter-active,
 .fade-left-leave-active {
   transition: opacity 0.5s ease;

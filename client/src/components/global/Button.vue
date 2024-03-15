@@ -32,6 +32,9 @@ button {
     @apply bg-transparent text-lightgray-10 px-0 py-0;
   }
 
+  &.ghost {
+    @apply bg-transparent text-lightgray-10;
+  }
 
   &[disabled] {
     @apply bg-lightgray-60;

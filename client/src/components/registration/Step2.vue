@@ -1,9 +1,8 @@
 <template>
   <div>
     <h2 v-text="$t('What is your company\'s name?')"></h2>
-    <p class="mb-3">Lorem ipsum dolor sit amet.</p>
-    <input ref="input" @keyup.enter="$emit('nextStep')" @keyup="type" type="text" v-model="company" autofocus
-           class="border border-lightgray rounded-lg w-full bg-transparent">
+    <p>Lorem ipsum dolor sit amet.</p>
+    <input ref="input" @keyup.enter="$emit('nextStep')" @keyup="type" type="text" v-model="company">
   </div>
 </template>
 <script>

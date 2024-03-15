@@ -1,9 +1,8 @@
 <template>
   <div>
     <h2 v-text="$t('What is your name?')"></h2>
-    <p class="mb-3">Lorem ipsum dolor sit amet.</p>
-    <input @keyup="type" type="text" v-model="name" @keyup.enter="$emit('nextStep')" autofocus
-           class="border border-lightgray rounded-lg w-full bg-transparent">
+    <p>Lorem ipsum dolor sit amet.</p>
+    <input @keyup="type" type="text" v-model="name" @keyup.enter="$emit('nextStep')" autofocus>
   </div>
 </template>
 <script>

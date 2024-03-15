@@ -7,13 +7,13 @@
     />
     <div class="wrap pt-20 px-20 pb-16">
       <div class="flex flex-col h-full justify-between">
-        <Logo class="text-primary logo"/>
+        <logo-big class="text-primary logo"/>
         <div class="flex flex-col justify-between">
           <h1 class="font-mondwest mb-64" v-text="$i18n.t('coming soon')"></h1>
           <div class="flex flex-row justify-between items-center">
             <p class="font-nimbus" v-html="translation.instagram"></p>
             <ul class="flex flex-row gap-6 text-lightgray-10">
-              <li><a @click="toggleLogin" v-text="$t('Login')"></a></li>
+              <li><a class="cursor-pointer" @click="toggleLogin" v-text="$t('Login')"></a></li>
               <li>
                 <router-link to="/privacy-policy" v-text="$t('Privacy Policy')"></router-link>
               </li>
@@ -38,10 +38,11 @@ import Logo from '../components/global/logo.vue';
 import Instagram from '../components/global/instagram.vue';
 import LoginLayer from '../components/LoginLayer.vue';
 import login from './Login.vue';
+import LogoBig from '../components/global/logo-big.vue';
 
 export default {
   name: 'ComingSoon',
-  components: {LoginLayer, Instagram, Logo},
+  components: {LogoBig, LoginLayer, Instagram, Logo},
   data: function() {
     return {
       translation: {
