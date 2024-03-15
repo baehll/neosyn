@@ -9,7 +9,7 @@
       <div class="flex flex-col h-full justify-between">
         <logo-big class="text-primary logo"/>
         <div class="flex flex-col justify-between">
-          <h1 class="font-mondwest mb-64" v-text="$i18n.t('coming soon')"></h1>
+          <h1 class="font-mondwest mb-80" v-text="$i18n.t('coming soon')"></h1>
           <div class="flex flex-row justify-between items-center">
             <p class="font-nimbus" v-html="translation.instagram"></p>
             <ul class="flex flex-row gap-6 text-lightgray-10">
@@ -75,7 +75,7 @@ export default {
 
   h1 {
     font-weight: 100;
-    font-size: 8.75rem !important;
+    font-size: 6.75rem !important;
   }
 
   .logo {

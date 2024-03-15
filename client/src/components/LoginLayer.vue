@@ -99,7 +99,7 @@ input {
         transform: translateX(0);
       }
     }
-    @apply border-red-600 bg-red-100;
+    border-color: #F52300;
   }
 }
 </style>
