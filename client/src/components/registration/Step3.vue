@@ -2,7 +2,34 @@
   <div>
     <h2 v-text="$t('Upload your Company\'s Logo')"></h2>
     <p>Lorem ipsum dolor sit amet.</p>
-    <FileUpload>
+    <div v-if="userStore.companyImageData" class="flex justify-center flex-col items-center">
+      <uploaded-image-preview
+        class="mb-2"
+        :image="userStore.companyImageData"
+      />
+      <div class="w-64 flex justify-between items-center">
+        <FileUpload
+          @file-added="companyImageAdded"
+        >
+          <Button
+            tag="a"
+            class="outlined"
+          >
+            {{ $t('Replace') }}
+          </Button>
+        </FileUpload>
+        <Button
+          class="outlined"
+          @click="deleteImage"
+        >
+          {{ $t('Delete') }}
+        </Button>
+      </div>
+    </div>
+    <FileUpload
+      @file-added="companyImageAdded"
+      v-if="!userStore.companyImageData"
+    >
       <template v-slot:drop-info>
         <div class="border border-lightgray rounded py-36 w-full flex justify-center items-center flex-col">
           <div class="flex flex-col items-center justify-center">
@@ -26,22 +53,43 @@
 </template>
 <script>
 
-import Button from '../global/Button.vue';
+import Button from '../global/CustomButton.vue';
 import IdCard from '../IdCard.vue';
 import UploadFiles from '../global/upload-files.vue';
 import FileUpload from '../global/FileUpload.vue';
+import UploadedImagePreview from './UploadedImagePreview.vue';
+import {mapStores} from 'pinia';
+import {useUserStore} from '../../stores/user.js';
 
 export default {
   emits: ['nextStep', 'prevStep'],
   name: 'Registration Step 1',
-  components: {UploadFiles, IdCard, Button, FileUpload},
+  components: {UploadedImagePreview, UploadFiles, IdCard, Button, FileUpload},
   data: () => {
-    return {}
+    return {
+      imageData: null
+    }
   },
-  computed: {},
+  computed: {
+    ...mapStores(useUserStore)
+  },
   methods: {
     nextStep() {
       this.$emit('nextStep')
+    },
+    deleteImage(){
+      this.userStore.companyImage = ''
+      this.userStore.companyImageData = ''
+    },
+    companyImageAdded(imageArray) {
+      const image = imageArray[0];
+      this.userStore.companyImage = image
+      const reader = new FileReader
+      reader.onload = e => {
+        this.imageData = e.target.result
+        this.userStore.companyImageData = this.imageData;
+      }
+      reader.readAsDataURL(image)
     }
   },
   created: () => {

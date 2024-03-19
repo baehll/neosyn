@@ -22,28 +22,27 @@ const routes = [
         name: "Privacy Policy",
         component: PrivacyPolicy
     },
-//    {
-//        path: "/index",
-//        name: "Index",
-//        component: Home
-//    },
-//    {
-//        path: "/login",
-//        name: "Login",
-//        component: Login
-//    },
-//    {
-//        path: "/register",
-//        name: "Registration",
-//        component: Registration
-//    },
-//    {
-//        path: "/dashboard",
-//        name: "Dashboard",
-//        component: Login
-//    },
+    {
+        path: "/index",
+        name: "Index",
+        component: Home
+    },
+    {
+        path: "/login",
+        name: "Login",
+        component: Login
+    },
+    {
+        path: "/register",
+        name: "Registration",
+        component: Registration
+    },
+    {
+        path: "/dashboard",
+        name: "Dashboard",
+        component: Login
+    },
 ]
-
 const router = createRouter({
     history: createWebHistory(import.meta.env.BASE_URL),
     routes

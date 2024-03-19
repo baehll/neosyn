@@ -41,23 +41,33 @@
           >
             {{ $t('Continue') }}
           </Button>
+          <Button
+            class="basis-1/4"
+            v-if="currentStep === steps.length - 1"
+            @click="finishRegistration"
+          >
+            {{ $t('Continue') }}
+          </Button>
         </div>
       </div>
     </div>
 
-    <div class="basis-2/3 bg-lightgray flex items-center justify-center">
+    <div class="relative basis-2/3 bg-lightgray flex items-center justify-center">
+      <div class="absolute w-full h-full top-0 left-0">
+
+      </div>
       <IdCard/>
     </div>
     <Logo
       class="absolute top-8 right-8 w-6 header-left text-lightgray-10"
-      />
+    />
   </div>
 </template>
 <script>
 
 import ProgressBar from '../components/global/ProgressBar.vue';
 import Step1 from '../components/registration/Step1.vue';
-import Button from '../components/global/Button.vue';
+import Button from '../components/global/CustomButton.vue';
 import IdCard from '../components/IdCard.vue';
 import Step2 from '../components/registration/Step2.vue';
 import ChevronLeft from '../components/global/chevron-left.vue';
@@ -129,6 +139,9 @@ export default {
       }
       this.currentStep--;
       this.currentStepComponent = this.steps[this.currentStep].component;
+    },
+    finishRegistration() {
+      console.log('finish it');
     }
   },
   created: () => {
