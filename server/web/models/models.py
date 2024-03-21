@@ -39,6 +39,7 @@ class Organization(_Base):
 
     assistant_id = db.Column(db.String(256))
     folder_path = db.Column(db.String(256), unique=True)
+    logo_file = db.Column(db.String(256))
 
 class User(_Base, UserMixin):
     __tablename__ = "users"
