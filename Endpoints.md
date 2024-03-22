@@ -32,15 +32,13 @@ Meta Auth Redirect für Login
 
 Für das initiale Anlegen eines Users + Organisation und evtl. Company Logo
 
-Sample Request:
+Sample Request als multipart/form-data:
 
 ```bash
-    {
-        "username": "...",
-        "companyname": "..."
-    }
+username: ...
+companyname: ...
 ```
-**UND** Logo File, wenn angegeben
+**Optional** *file*, wenn ein Logo File hochgeladen wurde
 
 Sample Response:
 
@@ -59,10 +57,13 @@ Sample Response:
 Company Styleguides mit File Upload
 
 ### POST /api/company_files
+**Nicht implementiert**
 Request mit allen Company Files (Styleguides, Product Information etc.)
 
 Sample Response:
+
 **200**, wenn alle Dateien das richtige Format hatten und abgespeichert wurden
+
 **500**, wenn Fehler aufgetreten ist mit
 ```bash
     {
@@ -72,12 +73,15 @@ Sample Response:
 
 ## S5
 ### GET /api/data/all_interactions
+**Nicht implementiert**
 Alle Interaktionen zu einer Organisation (mit Chunks)
 
 ### GET /api/data/bookmarks
+**Nicht implementiert**
 Bookmarks zu Interaktionen mit bestimmten Kunden
 
 ### GET /api/data/search_interactions
+**Nicht implementiert**
 Suche nach bestimmten Interaktionen mit Filtereinstellungen
 
 - Generate Responses zu einem Posting

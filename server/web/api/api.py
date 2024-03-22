@@ -20,29 +20,29 @@ def GPTModel():
 @login_required
 def init_user():
     try:
-        payload = request.get_json()
-        print(payload)
-        if "username" not in payload or payload["username"] == "":
+        form_data = request.form
+        print(form_data)
+        if "username" not in form_data or form_data["username"] == "":
             return jsonify({"error": "No username specified"}), 400
         
-        if "companyname" not in payload or payload["companyname"] == "":
+        if "companyname" not in form_data or form_data["companyname"] == "":
             return jsonify({"error": "No companyname specified"}), 400
         
         # Neues Organization DB Objekt initialisieren
-        new_orga = Organization(name=payload["companyname"])
+        new_orga = Organization(name=form_data["companyname"])
         
         # User updaten, verknüpft mit Orga
         new_orga.users.append(current_user)
-        current_user.name = payload["username"]
+        current_user.name = form_data["username"]
         # aus companyname einen ordner ableiten
-        new_folder = replace_symbol(payload["companyname"].upper() + "/")
+        new_folder = replace_symbol(form_data["companyname"].upper() + "/")
         
         upload_folder_path = os.path.join(current_app.config["UPLOAD_FOLDER"], new_folder)
         
         # Upload Ordner Name sollte abhängig von Orga ID in DB sein ??
         # upload ordner für Orga erstellen, Pfad für Orga speichern
         if os.path.exists(upload_folder_path):
-            return jsonify({"error": f"Folder already exists for companyname {payload['companyname']}, path: '{new_folder}'"}), 500
+            return jsonify({"error": f"Folder already exists for companyname {form_data['companyname']}, path: '{new_folder}'"}), 500
         else:
             os.makedirs(upload_folder_path)
             new_orga.folder_path = new_folder
