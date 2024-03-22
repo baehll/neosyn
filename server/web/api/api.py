@@ -52,7 +52,7 @@ def init_user():
             file = request.files["file"]
             if file.filename == "":
                 return jsonify({"error":"File attached, but no filename specified"}), 500
-            if  not file_utils.allowed_logo_extensions(file.filename):
+            if not file_utils.allowed_logo_extensions(file.filename):
                 return jsonify({"error": f"File Extension not allowed, must be {', '.join(file_utils.ALLOWED_LOGO_EXTENSIONS)}"})
             
             filename = secure_filename(file.filename)
@@ -73,11 +73,49 @@ def init_user():
 @api.route("/company_files", methods=["POST"])
 @login_required
 def company_files():
-    # für jeweilige Organisation von User Upload Ordner laden
-    # alle angehängten Files auf richtiges Dateiformat überprüfen
-    # abspeichern im Upload Ordner
-    
-    return jsonify({}) 
+    try:
+        # für jeweilige Organisation von User Upload Ordner laden
+        orga = db.session.execute(db.select(Organization).filter(Organization.users.any(id=current_user.id))).scalar_one_or_none()
+        if orga is None:
+            return jsonify({"error":"No Organization for User found"}), 500
+        elif orga.folder_path == "":
+            return jsonify({"error":"No Organization Folder defined"}), 500  
+        
+        upload_folder_path = os.path.join(current_app.config["UPLOAD_FOLDER"], orga.folder_path)
+        
+        if request.files:
+            errors = []
+            successful = []
+            if len(request.files.getlist("files[]")) > 8:
+                return jsonify({"error":"Too many files, only 8 allowed"}), 500
+            
+            for file in request.files.getlist("files[]"):
+                filename = secure_filename(file.filename)
+                # alle angehängten Files auf richtiges Dateiformat, Dateiname, Dateigröße überprüfen
+                if filename == "":
+                    errors.append(f"Invalid filename, {file.filename}")
+                    continue
+                
+                if not file_utils.allowed_company_file_extensions(filename):
+                    errors.append(f"File Extension not allowed, {file.filename}")
+                    continue
+                
+                filesize = file_utils.get_file_size(file)
+                if filesize > current_app.config["MAX_FILE_SIZE"]:
+                    errors.append(f"File {file.filename} too big, only {current_app.config['MAX_FILE_SIZE']} allowed ({filesize})")
+                    continue
+                
+                # abspeichern im Upload Ordner
+                file.save(os.path.join(upload_folder_path, filename))
+                successful.append(file.filename)
+            if len(errors) > 0:
+                return jsonify({"error": errors, "successful":", ".join(successful) }), 422
+            else:
+                return jsonify({"successful":", ".join(successful)}), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"error":"An exception has occoured"}), 500
+    return jsonify({}), 200
 
 @api.route("/long_lived_access", methods=["POST"])
 @login_required
