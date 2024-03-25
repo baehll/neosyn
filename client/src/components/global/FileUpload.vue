@@ -12,7 +12,7 @@
       class="opacity-0 overflow-hidden absolute w-0.5 h-0.5"
       @change="onChange"
       ref="file"
-      accept=".pdf,.jpg,.jpeg,.png"
+      :accept="acceptedFiles"
     />
     <label
       class="hover:cursor-pointer"
@@ -59,6 +59,9 @@ export default {
   name: 'FileUpload',
   emits: ['file-added'],
   props: {
+    acceptedFiles: {
+      type: String,
+    },
     multiple: {
       type: Boolean,
       default: false

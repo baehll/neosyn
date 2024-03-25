@@ -1,10 +1,10 @@
 <template>
-  <nav class="h-full py-4 px-3 bg-lightgray sidebar flex flex-col ">
+  <nav class="h-full py-6 px-3 bg-black sidebar flex flex-col ">
     <logo
-      class="mb-6"
+      class="mb-12 self-end text-lightgray-10"
     />
     <div class="flex flex-col justify-between h-full">
-      <ul class="flex flex-col items-center gap-4">
+      <ul class="flex flex-col items-center gap-8 text-lightgray-10">
         <li>
           <router-link to="inbox"><inbox/></router-link>
         </li>
@@ -22,7 +22,7 @@
           <router-link to="bookmarks"><bookmarks/></router-link>
         </li>
       </ul>
-      <ul class="flex flex-col items-center gap-4">
+      <ul class="flex flex-col items-center gap-4 text-lightgray-10">
         <li class="separator"></li>
         <li>🙆‍♂️</li>
         <li><settings/></li>
@@ -59,7 +59,7 @@ export default {
 .separator {
   height: 1px;
   width: 100%;
-  background-color: theme('colors.primary');
+  @apply bg-lightgray-10;
 }
 .sidebar {
   width: 70px;

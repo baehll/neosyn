@@ -19,7 +19,7 @@
             {{ $t('Skip') }}
           </Button>
           <Button class="basis-1/4 bg-lightgray-60 text-darkgray" :disabled="!isValid"
-            v-if="currentStep < steps.length - 1" @click="nextStep">
+                  v-if="currentStep < steps.length - 1" @click="nextStep">
             {{ $t('Continue') }}
           </Button>
           <Button class="basis-1/4" v-if="currentStep === steps.length - 1" @click="finishRegistration">
@@ -40,18 +40,18 @@
 </template>
 <script>
 
-import ProgressBar from '../components/global/ProgressBar.vue';
-import Step1 from '../components/registration/Step1.vue';
-import Button from '../components/global/CustomButton.vue';
-import IdCard from '../components/IdCard.vue';
-import Step2 from '../components/registration/Step2.vue';
-import ChevronLeft from '../components/global/chevron-left.vue';
-import Step3 from '../components/registration/Step3.vue';
+import ProgressBar from './components/global/ProgressBar.vue';
+import Step1 from './components/registration/Step1.vue';
+import Button from './components/global/CustomButton.vue';
+import IdCard from './components/IdCard.vue';
+import Step2 from './components/registration/Step2.vue';
+import ChevronLeft from './components/global/chevron-left.vue';
+import Step3 from './components/registration/Step3.vue';
 import { mapStores } from 'pinia';
-import { useUserStore } from '../stores/user.js';
-import Step4 from '../components/registration/Step4.vue';
-import Logo from '../components/global/logo.vue';
-import Step5 from '../components/registration/Step5.vue';
+import { useUserStore } from './stores/user.js';
+import Step4 from './components/registration/Step4.vue';
+import Logo from './components/global/logo.vue';
+import Step5 from './components/registration/Step5.vue';
 
 export default {
   name: 'Registration',

@@ -1,13 +1,15 @@
 <template>
-  APP
   <transition name="fade">
     <router-view></router-view>
   </transition>
 </template>
 <script>
+import ComingSoon from './views/ComingSoon.vue';
+
 export default {
-  name: "App",
+  name: "Site",
   components: {
+    ComingSoon
   },
 }
 </script>

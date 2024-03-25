@@ -1,36 +1,19 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHistory } from 'vue-router';
 import Home from '../views/Home.vue';
 import Login from '../views/Login.vue';
 import Registration from '../views/Registration.vue';
-import ComingSoon from '../views/ComingSoon.vue';
-import Imprint from '../views/Imprint.vue';
-import PrivacyPolicy from '../views/PrivacyPolicy.vue';
+import InboxView from '../views/InboxView.vue';
 
 const routes = [
     {
         path: "/",
-        name: "Home",
-        component: ComingSoon
-    },
-    {
-        path: "/imprint",
-        name: "Imprint",
-        component: Imprint
-    },
-    {
-        path: "/privacy-policy",
-        name: "Privacy Policy",
-        component: PrivacyPolicy
-    },
-    {
-        path: "/index",
         name: "Index",
-        component: Home
+        component: Home,
     },
     {
-        path: "/login",
-        name: "Login",
-        component: Login
+        path: "/inbox",
+        name: "Inbox",
+        component: InboxView
     },
     {
         path: "/register",

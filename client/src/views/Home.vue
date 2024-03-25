@@ -2,7 +2,7 @@
   <section class="h-full">
     <sidebar-navigation/>
     <div class="content">
-
+      <router-view></router-view>
     </div>
   </section>
 </template>
