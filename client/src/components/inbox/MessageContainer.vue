@@ -7,8 +7,8 @@
           class="text-darkgray-80"
         />
       </div>
-      <div class="messages">
-        <div class="messages flex flex-col h-full overflow-scroll" ref="messageScroller">
+      <div class="messages grow">
+        <div class="messages items-start flex flex-col h-full overflow-scroll" ref="messageScroller">
           <!--CustomButton
             :cta="$t('Mehr laden')"
             v-if="hasMoreMessages"
@@ -17,15 +17,12 @@
             type="x-btn--primary"
             class-name="flex-shrink-0"
           /-->
-          {{msg}}
           <Message
-            v-for="message in messageStore.messages[threadId]"
-            :body="message.body"
+            v-for="message in messageStore.messages[1]"
+            :message="message.message"
             :from="message.from"
+            :id="message.id"
             :date="message.date"
-            :logo="message.logo"
-            :show-logo="message.showLogo"
-            :from_id="message.from_id"
           />
         </div>
       </div>

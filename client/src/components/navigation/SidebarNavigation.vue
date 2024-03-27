@@ -6,7 +6,9 @@
     <div class="flex flex-col justify-between h-full">
       <ul class="flex flex-col items-center gap-8 text-lightgray-10">
         <li>
-          <router-link to="inbox"><inbox/></router-link>
+          <router-link to="inbox"><inbox
+         :class="{'text-primary': $route.name === 'Inbox'}"
+          /></router-link>
         </li>
         <li>
           <router-link to="notifications"><notifications/></router-link>

@@ -1,9 +1,9 @@
 <template>
   <ThreadContainer
-@selected-thread="setSelectedThread"
+    @selected-thread="setSelectedThread"
   />
   <MessageContainer
-:thread-id="currentThread"
+    :thread-id="currentThread"
   />
 </template>
 <script>
@@ -12,6 +12,8 @@ import Inbox from '../components/inbox/Inbox.vue';
 import Message from '../components/inbox/MessageContainer.vue';
 import ThreadContainer from '../components/inbox/ThreadContainer.vue';
 import MessageContainer from '../components/inbox/MessageContainer.vue';
+import {mapStores} from 'pinia';
+import {useThreadStore} from '../stores/thread.js';
 
 export default {
   name: 'InboxView',
@@ -22,10 +24,13 @@ export default {
 
     }
   },
-  computed: {},
+  computed: {
+    ...mapStores(useThreadStore)
+  },
   methods: {
     setSelectedThread(id) {
       this.currentThread = id
+      this.threadStore.markThreadAsRead(id)
     }
   },
   created: () => {

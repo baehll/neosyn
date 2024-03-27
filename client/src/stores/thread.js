@@ -32,6 +32,10 @@ export const useThreadStore = defineStore('thread', {
         }
     },
     actions: {
+        async markThreadAsRead(id){
+            this.threads.find(t => t.id === id).unread = false
+
+        },
         async setSetSortingAndFetch() {
 
         },

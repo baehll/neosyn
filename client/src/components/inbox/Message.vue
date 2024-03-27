@@ -1,29 +1,31 @@
 <template>
-  <div :class="{'my-1': true, 'text-primary': from_id !== id, 'text-light': from_id === id}">
-    <small class="block w-full text-center font-teko-light text-light mb-1" v-text="date"></small>
-    <template v-if="showLogo && logo">
-      <div class="flex gap-x-1 items-center">
-        <div class="logo">
-          <img :src="logo" width="26" height="26"/>
+  <div :class="{'w-full flex': true, 'justify-begin': from !== 0, 'justify-end': from === 0}">
+    <div class="w-5/12 flex gap-4 justify-end">
+      <div class="flex flex-col ">
+        <div class="flex items-end gap-4 mb-2">
+          <div
+            v-if="from !== 0"
+            class="bg-primary rounded-full w-8 h-8 shrink-0">
+          </div>
+          <p class="p-4 border border-lightgray text-lightgray-90 rounded-lg" v-text="message"></p>
         </div>
-        <p v-text="body" class="leading-relaxed font-ubuntu-regular"></p>
+        <small :class="{'text-lightgray-90': true, 'self-end': from !== 0, 'self-begin': from === 0}" v-text="getFormattedDate"></small>
       </div>
-    </template>
-    <template v-else>
-      <p class="body font-ubuntu-regular leading-relaxed" v-text="body"></p>
-    </template>
+    </div>
   </div>
 </template>
 <script>
 
+import moment from 'moment';
+
 export default {
   components: {},
   props: {
-    body: {
+    message: {
       type: String
     },
     from: {
-      type: String
+      type: Number,
     },
     logo: {
       type: String,
@@ -38,14 +40,17 @@ export default {
       type: Boolean,
       default: false
     },
-    from_id: {
-      type: String
+    id: {
+      type: Number,
     }
   },
   data: () => {
     return {}
   },
   computed: {
+    getFormattedDate() {
+      return moment(this.date).format(this.$i18n.t('dateFormat'))
+    },
     getThreads() {
 
     },
