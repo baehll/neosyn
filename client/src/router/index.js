@@ -1,24 +1,20 @@
-import { createRouter, createWebHistory } from 'vue-router';
+import {createRouter, createWebHashHistory, createWebHistory} from 'vue-router';
 import Home from '../views/Home.vue';
 import Login from '../views/Login.vue';
 import Registration from '../views/Registration.vue';
 import InboxView from '../views/InboxView.vue';
+import Dashboard from '../views/Dashboard.vue';
 
 const routes = [
     {
         path: "/",
         name: "Index",
-        component: Home,
+        component: Dashboard,
     },
     {
         path: "/inbox",
         name: "Inbox",
         component: InboxView
-    },
-    {
-        path: "/register",
-        name: "Registration",
-        component: Registration
     },
     {
         path: "/dashboard",
@@ -27,8 +23,9 @@ const routes = [
     },
 ]
 const router = createRouter({
-    history: createWebHistory(import.meta.env.BASE_URL),
-    routes
+    history:createWebHashHistory(import.meta.env.BASE_URL + 'app.html'),
+    routes,
+
 })
 
 export default router

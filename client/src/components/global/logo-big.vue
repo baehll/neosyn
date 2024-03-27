@@ -7,11 +7,3 @@
 <script>
 export default {};
 </script>
-<style lang="scss" scoped>
-svg {
-  &.footer {
-    width: 52px;
-
-  }
-}
-</style>

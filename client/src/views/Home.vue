@@ -1,7 +1,7 @@
 <template>
-  <section class="h-full">
+  <section class="flex flex-row h-full">
     <sidebar-navigation/>
-    <div class="content">
+    <div class="overflow-y-scroll px-4 py-4">
       <router-view></router-view>
     </div>
   </section>

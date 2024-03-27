@@ -19,6 +19,7 @@ export default {
 
             },
             fontFamily: {
+                'roboto': ['Roboto', 'sans-serif'],
                 'neuebit': ['PP NeueBit', 'sans-serif'],
                 'archimoto': ['Archimoto V01', 'sans-serif'],
                 'mondwest': ['PP Mondwest', 'sans-serif'],

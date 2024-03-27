@@ -1,7 +1,7 @@
 <template>
-  <nav class="h-full py-6 px-3 bg-black sidebar flex flex-col ">
-    <logo
-      class="mb-12 self-end text-lightgray-10"
+  <nav class="h-full py-6 px-3 bg-black sidebar flex flex-col">
+    <logo-big
+      class="mb-12 self-end text-white sidebar"
     />
     <div class="flex flex-col justify-between h-full">
       <ul class="flex flex-col items-center gap-8 text-lightgray-10">
@@ -39,11 +39,12 @@ import Analytics from '../global/analytics.vue';
 import Audience from '../global/audience.vue';
 import Bookmarks from '../global/bookmarks.vue';
 import Settings from '../global/settings.vue';
+import LogoBig from '../global/logo-big.vue';
 
 export default {
   name: 'SidebarNavigation',
 
-  components: {Settings, Bookmarks, Audience, Analytics, Notifications, Inbox, Logo},
+  components: {LogoBig, Settings, Bookmarks, Audience, Analytics, Notifications, Inbox, Logo},
   data: () => {
     return {}
   },

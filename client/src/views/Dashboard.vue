@@ -1,16 +1,11 @@
 <template>
-  <Inbox
-  @selectedThread="selectedThread"
-  />
+  <h1>Dashboard</h1>
 
 </template>
 <script>
 
-import Inbox from '../components/inbox/Inbox.vue';
-
 export default {
-  name: 'InboxView',
-  components: {Inbox},
+  name: 'Dashboard',
   data: () => {
     return {
 
@@ -20,8 +15,7 @@ export default {
 
   },
   methods: {
-    selectedThread() {
-    }
+
   },
   created: () => {
 
