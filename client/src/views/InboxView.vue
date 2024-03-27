@@ -1,8 +1,10 @@
 <template>
   <Inbox
-  @selectedThread="selectedThread"
+    @selectedThread="selectedThread"
   />
+ <div class="w-full h-full px-6 py-6 bg-lightgray">
 
+ </div>
 </template>
 <script>
 
@@ -12,13 +14,9 @@ export default {
   name: 'InboxView',
   components: {Inbox},
   data: () => {
-    return {
-
-    }
+    return {}
   },
-  computed: {
-
-  },
+  computed: {},
   methods: {
     selectedThread() {
     }

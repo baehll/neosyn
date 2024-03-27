@@ -1,18 +1,24 @@
 <template>
-  <ThreadTopBar
-    @triggeredSearch="updateSearchTermAndFetch"
-    @changedFilter="updateFilterAndFetch"
-    @changeSorting="updateSortingAndFetch"
-  />
-  <Thread
-    v-for="thread in threadStore.threads"
-    :key="thread.id"
-    :username="thread.username"
-    :message="thread.last_message"
-    :lastUpdated="thread.last_updated"
-    :platform="thread.platform"
-    @selected="fetchMessage"
-  />
+  <div class="flex flex-col">
+    <ThreadTopBar
+      @triggeredSearch="updateSearchTermAndFetch"
+      @changedFilter="updateFilterAndFetch"
+      @changeSorting="updateSortingAndFetch"
+    />
+    <div class="overflow-y-scroll py-4">
+      <Thread
+        v-for="thread in threadStore.threads"
+        :key="thread.id"
+        :id="thread.id"
+        :is-selected="selectedThreadId === thread.id"
+        :username="thread.username"
+        :message="thread.last_message"
+        :lastUpdated="thread.last_updated"
+        :platform="thread.platform"
+        @selected="fetchMessage"
+      />
+    </div>
+  </div>
 </template>
 <script>
 
@@ -26,6 +32,7 @@ export default {
   components: {Thread, ThreadTopBar},
   data: () => {
     return {
+      selectedThreadId: null,
       filters: [],
       searchTerm: '',
       sorting: 'asc',
@@ -48,10 +55,11 @@ export default {
     async updateSearchTermAndFetch() {
       return this.fetchThreads()
     },
-    async fetchMessage() {
+    async fetchMessage(id) {
+      this.selectedThreadId = id
     }
   },
-  async created (){
+  async created() {
     this.fetchThreads()
   }
 }

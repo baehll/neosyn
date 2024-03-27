@@ -1,7 +1,7 @@
 <template>
-  <nav class="h-full py-6 px-3 bg-black sidebar flex flex-col">
+  <nav class="h-full pt-4 pb-6 px-3 bg-black sidebar flex flex-col">
     <logo-big
-      class="mb-12 self-end text-white sidebar"
+      class="mb-12 self-end text-white logo-sidebar"
     />
     <div class="flex flex-col justify-between h-full">
       <ul class="flex flex-col items-center gap-8 text-lightgray-10">
@@ -61,6 +61,9 @@ export default {
   height: 1px;
   width: 100%;
   @apply bg-lightgray-10;
+}
+.logo-sidebar {
+  width: 40px;
 }
 .sidebar {
   width: 70px;

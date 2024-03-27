@@ -24,7 +24,7 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="scss">
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.5s ease;
@@ -35,5 +35,10 @@ export default {
   opacity: 0;
 }
 
+input {
+  &[type="text"] {
+    @apply bg-transparent rounded-lg px-6 py-3 text-lightgray-10 text-sm;
+  }
+}
 
 </style>

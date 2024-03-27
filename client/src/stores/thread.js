@@ -76,7 +76,7 @@ export const useThreadStore = defineStore('thread', {
                     },
                     {
                         "id": 7,
-                        "platform": "whatsapp",
+                        "platform": "facebook",
                         "last_updated": 1680258925702,
                         "username": "StormChaser",
                         "last_message": "I have a dream."
@@ -97,14 +97,14 @@ export const useThreadStore = defineStore('thread', {
                     },
                     {
                         "id": 11,
-                        "platform": "whatsapp",
+                        "platform": "facebook",
                         "last_updated": 1702120952687,
                         "username": "NovaBlast",
                         "last_message": "Where there is love there is life."
                     },
                     {
                         "id": 12,
-                        "platform": "whatsapp",
+                        "platform": "facebook",
                         "last_updated": 1693554049721,
                         "username": "LunarEclipse",
                         "last_message": "A man is but what he knows."
@@ -118,7 +118,7 @@ export const useThreadStore = defineStore('thread', {
                     },
                     {
                         "id": 18,
-                        "platform": "whatsapp",
+                        "platform": "facebook",
                         "last_updated": 1666447369148,
                         "username": "OliveBranch",
                         "last_message": "To be or not to be."

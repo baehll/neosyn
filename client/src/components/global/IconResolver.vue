@@ -3,19 +3,34 @@
 </template>
 <script>
 
+import Instagram from './instagram.vue';
+import Facebook from './facebook.vue';
+import X from './x.vue';
+import Linkedin from './linkedin.vue';
+
 export default {
   name: 'IconResolver',
   emits: [],
   props: ['iconName'],
   computed: {
     iconComponent() {
-      // Dynamically import the icon component based on the iconName prop
-      return import('./' + this.iconName.charAt(0).toUpperCase() + this.iconName.slice(1) + '.vue')
-        .then(res => res.data)
-        .catch(err => {
-          console.error('Icon not found: ', this.iconName);
-          return Promise.resolve({template: '<span>Icon not found</span>'});
-        })
+      let icon = ''
+      switch (this.iconName) {
+        case 'instagram':
+          icon = Instagram
+          break;
+        case 'facebook':
+          icon = Facebook
+              break;
+        case 'twitter':
+        case 'x':
+          icon = X
+              break;
+        case 'linkedin':
+          icon = Linkedin
+              break;
+      }
+      return icon
     },
   },
 }

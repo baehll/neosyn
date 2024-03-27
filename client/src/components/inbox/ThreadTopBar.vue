@@ -1,10 +1,10 @@
 <template>
-  <div class="flex flex-col justify-between relative">
+  <div class="py-2 px-3 flex flex-col justify-between relative">
     <div class="relative w-8/12 mb-4">
       <Searchglass
         class="text-lightgray-10 absolute left-4 top-1/2 transform -translate-y-1/2 pointer-events-none"
       />
-      <input type="text" class="border border-lightgray-10 py-0 px-4 w-full" @keyup.enter="commitSearch">
+      <input type="text" class="bg-transparent border border-lightgray-10 py-0 px-24 w-full" @keyup.enter="commitSearch">
     </div>
     <div class="justify-between relative flex flex-row">
       <div class="flex items-center gap-2 w-8/12">
@@ -44,7 +44,6 @@
             </label>
           </li>
         </ul>
-
       </div>
     </div>
   </div>
@@ -97,5 +96,9 @@ export default {
 </script>
 
 <style lang="scss">
-
+input {
+  &[type="text"] {
+    @apply py-2 px-10 rounded-xl outline-0;
+  }
+}
 </style>

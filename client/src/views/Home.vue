@@ -1,9 +1,7 @@
 <template>
   <section class="flex flex-row h-full">
     <sidebar-navigation/>
-    <div class="overflow-y-scroll px-4 py-4">
-      <router-view></router-view>
-    </div>
+    <router-view></router-view>
   </section>
 </template>
 <script>
