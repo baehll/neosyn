@@ -50,7 +50,7 @@
 </template>
 <script>
 
-import ThreadFilter from '../../lib/threadFilter.js';
+import ThreadFilter from '../../lib/ThreadFilter.js';
 import CustomButton from '../global/CustomButton.vue';
 import Filter from '../global/filter.vue';
 import Sorting from '../global/sorting.vue';
@@ -98,7 +98,7 @@ export default {
 <style lang="scss">
 input {
   &[type="text"] {
-    @apply py-2 px-10 rounded-xl outline-0;
+    @apply py-2 px-10 rounded-xl outline-0 bg-transparent;
   }
 }
 </style>

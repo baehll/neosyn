@@ -145,7 +145,12 @@ export default {
   }
 
   input {
-    @apply border border-lightgray focus:border-primary ring-0 focus:outline-0 outline-0 focus:ring-0 focus:ring-offset-0 rounded-lg w-full bg-transparent;
+    &[type="text"] {
+      @apply bg-lightgray rounded-lg px-6 py-3 text-lightgray-10 text-sm;
+    }
+  }
+  input {
+    @apply text-sm border border-lightgray focus:border-primary ring-0 focus:outline-0 outline-0 focus:ring-0 focus:ring-offset-0 rounded-lg w-full bg-transparent;
   }
 
   label {

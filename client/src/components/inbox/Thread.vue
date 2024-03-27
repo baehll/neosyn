@@ -1,13 +1,49 @@
 <template>
-  <div :class="'cursor-pointer transition-colors hover:bg-lightgray-20 text-lightgray-10 thread py-4 px-3 border-b border-lightgray relative ' + getInteractiveClasses" @click="selectThread">
+  <div
+    :class="'cursor-pointer transition-colors hover:bg-lightgray-20 text-lightgray-10 thread py-4 px-5 border-b border-lightgray relative ' + getInteractiveClasses"
+    @click="selectThread"
+  >
+    <span
+      class="absolute left-2 top-6 rounded-full bg-primary w-2 h-2"
+      v-if="unread === true"
+    >
+
+    </span>
     <strong v-text="username" class="font-roboto block mb-2"></strong>
     <p class="roboto font-light mb-3" v-text="message"></p>
-    <TimeDifferenceDisplay
-      class="text-darkgray-80 absolute top-4 right-3 text-xs"
-      :point-in-time="lastUpdated"
-    />
+    <div
+      @mouseenter="showThreadActions"
+      @mouseleave="hideThreadActions"
+      class="absolute top-4 right-3 leading-none w-32 h-4"
+    >
+      <TimeDifferenceDisplay
+        class=""
+        :class="{'text-darkgray-80 text-xs absolute right-0': true, 'opacity-0 pointer-events-none': threadActionVisible}"
+        :point-in-time="lastUpdated"
+      />
+      <div
+        class=""
+        :class="{'items-center justify-end flex flex-row gap-4 absolute right-0': true, 'opacity-0 pointer-events-none': !threadActionVisible}"
+      >
+        <button
+       @click="markAsUnread"
+        >
+          <EnvelopeOpen
+            class="text-darkgray-80"
+          />
+        </button>
+        <button
+          @click="deleteMessage"
+        >
+          <Trash
+            class="text-darkgray-80"
+          />
+        </button>
+      </div>
+    </div>
+
     <IconResolver
-      class="text-lightgray-10 absolute right-3 bottom-4"
+      :class="{'text-lightgray-10 absolute right-3 bottom-4 transition-all opacity-100': true, }"
       :icon-name="platform"
     />
   </div>
@@ -19,14 +55,20 @@ import {useThreadStore} from '../../stores/thread.js';
 import IconResolver from '../global/IconResolver.vue';
 import {useTimerStore} from '../../stores/timer.js';
 import TimeDifferenceDisplay from '../global/TimeDifferenceDisplay.vue';
+import EnvelopeOpen from '../global/envelope-open.vue';
+import Trash from '../global/trash.vue';
 
 export default {
   name: 'Thread',
-  components: {TimeDifferenceDisplay, IconResolver},
+  components: {Trash, EnvelopeOpen, TimeDifferenceDisplay, IconResolver},
   emits: ['selected'],
   props: {
-    id:{
+    id: {
       type: Number,
+    },
+    unread: {
+     type: Boolean,
+     default: true
     },
     username: {
       type: String,
@@ -46,10 +88,12 @@ export default {
     },
   },
   data: () => {
-    return {}
+    return {
+      threadActionVisible: false,
+    }
   },
   computed: {
-    getInteractiveClasses(){
+    getInteractiveClasses() {
       return this.isSelected ?
         'bg-lightgray' :
         'bg-transparent'
@@ -57,6 +101,18 @@ export default {
     ...mapStores(useThreadStore, useTimerStore),
   },
   methods: {
+    markAsUnread(){
+
+    },
+    deleteMessage(){
+
+    },
+    showThreadActions() {
+      this.threadActionVisible = true
+    },
+    hideThreadActions() {
+      this.threadActionVisible = false
+    },
     selectThread() {
       this.$emit('selected', this.id)
     }

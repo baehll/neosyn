@@ -1,24 +1,31 @@
 <template>
-  <Inbox
-    @selectedThread="selectedThread"
+  <ThreadContainer
+@selected-thread="setSelectedThread"
   />
- <div class="w-full h-full px-6 py-6 bg-lightgray">
-
- </div>
+  <MessageContainer
+:thread-id="currentThread"
+  />
 </template>
 <script>
 
 import Inbox from '../components/inbox/Inbox.vue';
+import Message from '../components/inbox/MessageContainer.vue';
+import ThreadContainer from '../components/inbox/ThreadContainer.vue';
+import MessageContainer from '../components/inbox/MessageContainer.vue';
 
 export default {
   name: 'InboxView',
-  components: {Inbox},
+  components: {MessageContainer, ThreadContainer, Message, Inbox},
   data: () => {
-    return {}
+    return {
+      currentThread: null,
+
+    }
   },
   computed: {},
   methods: {
-    selectedThread() {
+    setSelectedThread(id) {
+      this.currentThread = id
     }
   },
   created: () => {

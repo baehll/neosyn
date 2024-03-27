@@ -1,5 +1,5 @@
 import {defineStore} from 'pinia'
-import TimeDifference from '../lib/TimeDifference.js';
+
 
 export const useThreadStore = defineStore('thread', {
     state: () => ({
@@ -40,91 +40,91 @@ export const useThreadStore = defineStore('thread', {
             this.threads =
                 [
                     {
-                        "id": 1,
+                        "unread": true, "id": 1,
                         "platform": "instagram",
                         "last_updated": 1682826686651,
                         "username": "RubyRed",
                         "last_message": "The early bird catches the worm."
                     },
                     {
-                        "id": 2,
+                        "unread": true, "id": 2,
                         "platform": "facebook",
                         "last_updated": 1649898184408,
                         "username": "MysticFalls",
                         "last_message": "I have a dream."
                     },
                     {
-                        "id": 3,
+                        "unread": true, "id": 3,
                         "platform": "linkedin",
                         "last_updated": 1707560891353,
                         "username": "AlexTheGreat",
                         "last_message": "Elementary, my dear Watson."
                     },
                     {
-                        "id": 4,
+                        "unread": true, "id": 4,
                         "platform": "facebook",
                         "last_updated": 1664902126410,
                         "username": "TwilightZone",
                         "last_message": "The early bird catches the worm."
                     },
                     {
-                        "id": 5,
+                        "unread": true, "id": 5,
                         "platform": "linkedin",
                         "last_updated": 1676615099687,
                         "username": "DaisySunflower",
                         "last_message": "Keep calm and carry on."
                     },
                     {
-                        "id": 7,
+                        "unread": false, "id": 7,
                         "platform": "facebook",
                         "last_updated": 1680258925702,
                         "username": "StormChaser",
                         "last_message": "I have a dream."
                     },
                     {
-                        "id": 8,
+                        "unread": false, "id": 8,
                         "platform": "instagram",
                         "last_updated": 1656011433474,
                         "username": "FrostByte",
                         "last_message": "Life is like a box of chocolates."
                     },
                     {
-                        "id": 10,
+                        "unread": false, "id": 10,
                         "platform": "facebook",
                         "last_updated": 1710045369044,
                         "username": "GlimmerStar",
                         "last_message": "I am the master of my fate: I am the captain of my soul."
                     },
                     {
-                        "id": 11,
+                        "unread": true, "id": 11,
                         "platform": "facebook",
                         "last_updated": 1702120952687,
                         "username": "NovaBlast",
                         "last_message": "Where there is love there is life."
                     },
                     {
-                        "id": 12,
+                        "unread": true, "id": 12,
                         "platform": "facebook",
                         "last_updated": 1693554049721,
                         "username": "LunarEclipse",
                         "last_message": "A man is but what he knows."
                     },
                     {
-                        "id": 14,
+                        "unread": false, "id": 14,
                         "platform": "facebook",
                         "last_updated": 1688692437411,
                         "username": "QuasarLight",
                         "last_message": "Where there is love there is life."
                     },
                     {
-                        "id": 18,
+                        "unread": false, "id": 18,
                         "platform": "facebook",
                         "last_updated": 1666447369148,
                         "username": "OliveBranch",
                         "last_message": "To be or not to be."
                     },
                     {
-                        "id": 19,
+                        "unread": true, "id": 19,
                         "platform": "instagram",
                         "last_updated": 1708495446264,
                         "username": "EchoBravo",
