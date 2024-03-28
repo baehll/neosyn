@@ -1,14 +1,14 @@
 <template>
-  <div class="w-full h-full px-5 py-5 bg-lightgray">
-    <div class="flex flex-col justify-between w-full h-full bg-darkgray rounded-xl message p-4">
+  <div class="overflow-hidden w-full h-full px-5 py-5 bg-lightgray">
+    <div class="overflow-hidden flex flex-col justify-between w-full h-full bg-darkgray rounded-xl message p-4">
       <div class="flex justify-between p-6">
         <span class="rounded-3xl border border-white px-4 text-white py-1" v-text="$t('Interaction')"></span>
         <BookmarkOutline
           class="text-darkgray-80"
         />
       </div>
-      <div class="messages grow">
-        <div class="messages items-start flex flex-col h-full overflow-scroll" ref="messageScroller">
+      <div class="messages flex-grow relative">
+        <div class="pl-2 pr-5 pt-4 pb-6 messages items-start flex flex-col h-full overflow-scroll absolute top-0 left-0 " ref="messageScroller">
           <!--CustomButton
             :cta="$t('Mehr laden')"
             v-if="hasMoreMessages"
@@ -26,7 +26,7 @@
           />
         </div>
       </div>
-      <div class="actions">
+      <div class="actions shrink-0">
         <div class="quick-responses"></div>
         <div class="generate-responses p-4 border border-lightgray rounded-xl flex justify-between">
           <CustomButton
@@ -74,6 +74,9 @@ export default {
   watch: {
     threadId(oldVal, newVal) {
       this.messageStore.getMessagesForThread(newVal)
+      setTimeout(() => {
+        this.$refs.messageScroller.scrollTo({top: this.$refs.messageScroller.scrollHeight, behavior: 'smooth'})
+      }, 250)
     }
   },
   computed: {

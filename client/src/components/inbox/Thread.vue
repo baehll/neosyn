@@ -29,14 +29,14 @@
        @click="markAsUnread"
         >
           <EnvelopeOpen
-            class="text-darkgray-80"
+            class="hover:text-primary text-darkgray-80"
           />
         </button>
         <button
           @click="deleteMessage"
         >
           <Trash
-            class="text-darkgray-80"
+            class="hover:text-primary text-darkgray-80"
           />
         </button>
       </div>

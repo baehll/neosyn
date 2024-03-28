@@ -13,6 +13,7 @@ export default {
                 'lightgray-90': '#6f6f6f',
                 'lightgray-80': '#494949',
                 'lightgray-60': '#BFBFBF',
+                'lightgray-30': '#3c3c3c',
                 'lightgray-20': '#3a3a3a',
                 'lightgray-10': '#BBBBBB',
                 darkgray: '#2C2C2C',

@@ -7,9 +7,9 @@
             v-if="from !== 0"
             class="bg-primary rounded-full w-8 h-8 shrink-0">
           </div>
-          <p class="p-4 border border-lightgray text-lightgray-90 rounded-lg" v-text="message"></p>
+          <p :class="{'p-4 border border-lightgray-80 text-white font-roboto text-xs rounded-lg': true, 'bg-lightgray-30': from === 0}" v-text="message"></p>
         </div>
-        <small :class="{'text-lightgray-90': true, 'self-end': from !== 0, 'self-begin': from === 0}" v-text="getFormattedDate"></small>
+        <small :class="{'text-xs text-lightgray-90': true, 'self-end': from !== 0, 'self-begin': from === 0}" v-text="getFormattedDate"></small>
       </div>
     </div>
   </div>
@@ -49,7 +49,7 @@ export default {
   },
   computed: {
     getFormattedDate() {
-      return moment(this.date).format(this.$i18n.t('dateFormat'))
+      return moment(this.date).format(this.$i18n.t('dateTimeFormat'))
     },
     getThreads() {
 
@@ -71,11 +71,7 @@ export default {
 }
 
 small {
-  font-size: 14px;
-}
-
-p {
-  font-size: 14px;
+  font-size: 10px;
 }
 
 .logo {
