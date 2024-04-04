@@ -28,7 +28,9 @@ def create_app() -> Flask:
     app.config['FACEBOOK_OAUTH_CLIENT_ID'] = config("FACEBOOK_OAUTH_CLIENT_ID")
     app.config["FACEBOOK_OAUTH_CLIENT_SECRET"] = config("FACEBOOK_OAUTH_CLIENT_SECRET")
     
-    CORS(app, supports_credentials=True)
+    app.config["MAX_FILE_SIZE"] = 8 * 64 * 1024 * 1024 # 8 Dateien mit jeweils 64MB = 512 MB
+    
+    CORS(app)
     csp = {
         'default-src': [
             '\'self\'', 
@@ -46,6 +48,10 @@ def create_app() -> Flask:
         ]        
     }
     
+    if app.debug == True:
+        csp["default-src"].append("https://localhost:5000")
+        csp["default-src"].append("http://localhost:5000")
+        
     Talisman(app, content_security_policy=csp)
     app.config["UPLOAD_FOLDER"] = config("COMPANY_FILE_UPLOAD_FOLDER")
     if not os.path.exists(app.config["UPLOAD_FOLDER"]):

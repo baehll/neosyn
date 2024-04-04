@@ -10,7 +10,7 @@ services:
     environment:
       FLASK_ENV: development
       FLASK_APP: app.py
-    command: flask run --host=0.0.0.0
+    command: flask run --host=0.0.0.0 --cert=adhoc --debug
     depends_on:
       - redis
 

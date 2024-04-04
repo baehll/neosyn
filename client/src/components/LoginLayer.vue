@@ -46,7 +46,7 @@ export default {
       try {
         const response = await EarlyAccess.login(this.password)
         if (response.status === 200) {
-          this.$router.push('/login')
+          window.location = '/app.html'
         } else {
           throw new Error(response.statusText)
         }

@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col">
+  <div class="shrink-0 thread-container flex flex-col">
     <ThreadTopBar
       @triggeredSearch="updateSearchTermAndFetch"
       @changedFilter="updateFilterAndFetch"
@@ -78,5 +78,8 @@ export default {
   &.selected {
     @apply bg-lightgray;
   }
+}
+.thread-container {
+  width: 370px;
 }
 </style>

@@ -20,29 +20,29 @@ def GPTModel():
 @login_required
 def init_user():
     try:
-        payload = request.get_json()
-        print(payload)
-        if "username" not in payload or payload["username"] == "":
+        form_data = request.form
+        print(form_data)
+        if "username" not in form_data or form_data["username"] == "":
             return jsonify({"error": "No username specified"}), 400
         
-        if "companyname" not in payload or payload["companyname"] == "":
+        if "companyname" not in form_data or form_data["companyname"] == "":
             return jsonify({"error": "No companyname specified"}), 400
         
         # Neues Organization DB Objekt initialisieren
-        new_orga = Organization(name=payload["companyname"])
+        new_orga = Organization(name=form_data["companyname"])
         
         # User updaten, verknüpft mit Orga
         new_orga.users.append(current_user)
-        current_user.name = payload["username"]
+        current_user.name = form_data["username"]
         # aus companyname einen ordner ableiten
-        new_folder = replace_symbol(payload["companyname"].upper() + "/")
+        new_folder = replace_symbol(form_data["companyname"].upper() + "/")
         
         upload_folder_path = os.path.join(current_app.config["UPLOAD_FOLDER"], new_folder)
         
         # Upload Ordner Name sollte abhängig von Orga ID in DB sein ??
         # upload ordner für Orga erstellen, Pfad für Orga speichern
         if os.path.exists(upload_folder_path):
-            return jsonify({"error": f"Folder already exists for companyname {payload['companyname']}, path: '{new_folder}'"}), 500
+            return jsonify({"error": f"Folder already exists for companyname {form_data['companyname']}, path: '{new_folder}'"}), 500
         else:
             os.makedirs(upload_folder_path)
             new_orga.folder_path = new_folder
@@ -52,7 +52,7 @@ def init_user():
             file = request.files["file"]
             if file.filename == "":
                 return jsonify({"error":"File attached, but no filename specified"}), 500
-            if  not file_utils.allowed_logo_extensions(file.filename):
+            if not file_utils.allowed_logo_extensions(file.filename):
                 return jsonify({"error": f"File Extension not allowed, must be {', '.join(file_utils.ALLOWED_LOGO_EXTENSIONS)}"})
             
             filename = secure_filename(file.filename)
@@ -73,11 +73,49 @@ def init_user():
 @api.route("/company_files", methods=["POST"])
 @login_required
 def company_files():
-    # für jeweilige Organisation von User Upload Ordner laden
-    # alle angehängten Files auf richtiges Dateiformat überprüfen
-    # abspeichern im Upload Ordner
-    
-    return jsonify({}) 
+    try:
+        # für jeweilige Organisation von User Upload Ordner laden
+        orga = db.session.execute(db.select(Organization).filter(Organization.users.any(id=current_user.id))).scalar_one_or_none()
+        if orga is None:
+            return jsonify({"error":"No Organization for User found"}), 500
+        elif orga.folder_path == "":
+            return jsonify({"error":"No Organization Folder defined"}), 500  
+        
+        upload_folder_path = os.path.join(current_app.config["UPLOAD_FOLDER"], orga.folder_path)
+        
+        if request.files:
+            errors = []
+            successful = []
+            if len(request.files.getlist("files[]")) > 8:
+                return jsonify({"error":"Too many files, only 8 allowed"}), 500
+            
+            for file in request.files.getlist("files[]"):
+                filename = secure_filename(file.filename)
+                # alle angehängten Files auf richtiges Dateiformat, Dateiname, Dateigröße überprüfen
+                if filename == "":
+                    errors.append(f"Invalid filename, {file.filename}")
+                    continue
+                
+                if not file_utils.allowed_company_file_extensions(filename):
+                    errors.append(f"File Extension not allowed, {file.filename}")
+                    continue
+                
+                filesize = file_utils.get_file_size(file)
+                if filesize > current_app.config["MAX_FILE_SIZE"]:
+                    errors.append(f"File {file.filename} too big, only {current_app.config['MAX_FILE_SIZE']} allowed ({filesize})")
+                    continue
+                
+                # abspeichern im Upload Ordner
+                file.save(os.path.join(upload_folder_path, filename))
+                successful.append(file.filename)
+            if len(errors) > 0:
+                return jsonify({"error": errors, "successful":", ".join(successful) }), 422
+            else:
+                return jsonify({"successful":", ".join(successful)}), 200
+    except Exception as e:
+        print(e)
+        return jsonify({"error":"An exception has occoured"}), 500
+    return jsonify({}), 200
 
 @api.route("/long_lived_access", methods=["POST"])
 @login_required

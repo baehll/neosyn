@@ -5,13 +5,15 @@
   <MessageContainer
     :thread-id="currentThread"
   />
-  <div class="flex flex-col h-full">
-    <MessagePost
-
-     />
-    <MessageInsights
+  <div class=" message-post-wrap  h-full py-5 bg-lightgray pr-5">
+    <div class="overflow-hidden flex flex-col justify-between w-full h-full bg-darkgray rounded-xl message ">
+      <MessagePost
 
       />
+      <MessageInsights
+
+      />
+    </div>
   </div>
 </template>
 <script>
@@ -50,5 +52,7 @@ export default {
 </script>
 
 <style lang="scss">
-
+.message-post-wrap {
+  width: 410px;
+}
 </style>
