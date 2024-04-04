@@ -7,13 +7,15 @@ import vue from '@vitejs/plugin-vue'
 export default defineConfig( async ({command, mode}) => {
     let configObj = {
         plugins: [vue()],
-        rollupOptions: {
-           input: {
-               comingsoon: resolve(__dirname, `./index.html`),
-               registration: resolve(__dirname, './registration.html'),
-               app: resolve(__dirname, './app.html'),
-           }
-        }
+        build:{
+            rollupOptions: {
+                input: {
+                    comingsoon: resolve(__dirname, `./index.html`),
+                    registration: resolve(__dirname, './registration.html'),
+                    app: resolve(__dirname, './app.html'),
+                }
+            }
+        },
     };
     if (mode === 'development') {
         const sslPlugin = await import('@vitejs/plugin-basic-ssl')
