@@ -30,7 +30,7 @@
         <div class="quick-responses"></div>
         <div class="generate-responses p-4 border border-lightgray rounded-xl flex justify-between">
           <CustomButton
-            class="bg-primary flex flex-row items-center gap-3 rounded-2xl"
+            class="font-medium font-roboto text-sm bg-primary flex flex-row items-center gap-3 rounded-2xl"
           >
             {{ $t('Generate') }}
             <stars

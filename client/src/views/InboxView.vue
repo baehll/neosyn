@@ -5,6 +5,14 @@
   <MessageContainer
     :thread-id="currentThread"
   />
+  <div class="flex flex-col h-full">
+    <MessagePost
+
+     />
+    <MessageInsights
+
+      />
+  </div>
 </template>
 <script>
 
@@ -14,10 +22,12 @@ import ThreadContainer from '../components/inbox/ThreadContainer.vue';
 import MessageContainer from '../components/inbox/MessageContainer.vue';
 import {mapStores} from 'pinia';
 import {useThreadStore} from '../stores/thread.js';
+import MessagePost from '../components/inbox/MessagePost.vue';
+import MessageInsights from '../components/inbox/MessageInsights.vue';
 
 export default {
   name: 'InboxView',
-  components: {MessageContainer, ThreadContainer, Message, Inbox},
+  components: {MessageInsights, MessagePost, MessageContainer, ThreadContainer, Message, Inbox},
   data: () => {
     return {
       currentThread: null,

@@ -9,7 +9,7 @@
           </div>
           <p :class="{'p-4 border border-lightgray-80 text-white font-roboto text-xs rounded-lg': true, 'bg-lightgray-30': from === 0}" v-text="message"></p>
         </div>
-        <small :class="{'text-xs text-lightgray-90': true, 'self-end': from !== 0, 'self-begin': from === 0}" v-text="getFormattedDate"></small>
+        <small :class="{'text-xs text-lightgray-10': true, 'mr-4 self-end': from !== 0, 'ml-4 self-begin': from === 0}" v-text="getFormattedDate"></small>
       </div>
     </div>
   </div>
