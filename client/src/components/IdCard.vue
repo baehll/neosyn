@@ -1,11 +1,24 @@
 <template>
-  <div class="bg-lightgray-60 rounded-lg p-4 w-2/5">
-    <div class="mb-4 bg-darkgray rounded-lg h-64 flex items-end justify-center">
+  <div class="overflow-hidden bg-lightgray-60 rounded-lg p-4 w-2/5 relative"
+  >
+    <div class="absolute top-0 left-0 w-full h-full"
+         :style="getStyle">
+
+    </div>
+    <div class="mb-4 bg-darkgray rounded-lg h-64 flex items-end justify-center relative">
+      <div
+        v-if="userStore.companyImageData"
+        class="w-full h-full bg-contain bg-no-repeat bg-center"
+        :style="{ 'background-image': `url(${userStore.companyImageData})` }"
+      >
+
+      </div>
       <user
+        v-else
         class="text-lightgray-60"
       />
     </div>
-    <div class="text-white flex justify-between flex-col">
+    <div class="text-white flex justify-between flex-col relative">
       <div>
         <h2 class="text-4xl font-bold" v-text="name"></h2>
         <h5 class="text-sm mb-24" v-text="company"></h5>
@@ -36,11 +49,16 @@ export default {
         this.userStore.company :
         'Company'
     },
-    now(){
+    now() {
       return moment().format('DD.MM.YYYY');
     },
     image() {
       return this.userstore.image
+    },
+    getStyle() {
+      return this.userStore.companyImageData !== '' ?
+        `background-position: center; background-image: url(${this.userStore.companyImageData}); background-size: 600%; filter: blur(8px);` :
+        ''
     }
   }
 }

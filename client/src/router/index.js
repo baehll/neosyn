@@ -1,52 +1,31 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import {createRouter, createWebHashHistory, createWebHistory} from 'vue-router';
 import Home from '../views/Home.vue';
 import Login from '../views/Login.vue';
 import Registration from '../views/Registration.vue';
-import ComingSoon from '../views/ComingSoon.vue';
-import Imprint from '../views/Imprint.vue';
-import PrivacyPolicy from '../views/PrivacyPolicy.vue';
+import InboxView from '../views/InboxView.vue';
+import Dashboard from '../views/Dashboard.vue';
 
 const routes = [
     {
         path: "/",
-        name: "Home",
-        component: ComingSoon
+        name: "Index",
+        component: Dashboard,
     },
     {
-        path: "/imprint",
-        name: "Imprint",
-        component: Imprint
+        path: "/inbox",
+        name: "Inbox",
+        component: InboxView
     },
     {
-        path: "/privacy-policy",
-        name: "Privacy Policy",
-        component: PrivacyPolicy
+        path: "/dashboard",
+        name: "Dashboard",
+        component: Login
     },
-//    {
-//        path: "/index",
-//        name: "Index",
-//        component: Home
-//    },
-//    {
-//        path: "/login",
-//        name: "Login",
-//        component: Login
-//    },
-//    {
-//        path: "/register",
-//        name: "Registration",
-//        component: Registration
-//    },
-//    {
-//        path: "/dashboard",
-//        name: "Dashboard",
-//        component: Login
-//    },
 ]
-
 const router = createRouter({
-    history: createWebHistory(import.meta.env.BASE_URL),
-    routes
+    history:createWebHashHistory(import.meta.env.BASE_URL + 'app.html'),
+    routes,
+
 })
 
 export default router

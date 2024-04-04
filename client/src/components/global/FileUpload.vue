@@ -5,18 +5,18 @@
     @drop="drop"
   >
     <input
+      :multiple="multiple"
       type="file"
-      multiple
       name="file"
-      id="fileInput"
+      :id="`fileInput-${uuid}`"
       class="opacity-0 overflow-hidden absolute w-0.5 h-0.5"
       @change="onChange"
       ref="file"
-      accept=".pdf,.jpg,.jpeg,.png"
+      :accept="acceptedFiles"
     />
     <label
       class="hover:cursor-pointer"
-      for="fileInput"
+      :for="`fileInput-${uuid}`"
     >
       <slot name="drop-info" v-if="isDragging">{{ $t('Drop files here.') }}</slot>
       <slot v-else name="default"></slot>
@@ -25,19 +25,24 @@
 </template>
 <script>
 
+import {mapStores} from 'pinia';
+import {useFileStore} from '../../stores/file.js';
+import {useTestStore} from '../../stores/test.js';
+
 export default {
   data() {
     return {
+      uuid: Date.now(),
       isDragging: false,
       files: [],
     };
   },
   methods: {
     onChange() {
-      this.files.push(...this.$refs.file.files);
+      this.$emit('file-added', this.$refs.file.files)
+      this.filesStore.files.push(...this.$refs.file.files);
     },
     dragover(e) {
-      console.log('drag');
       e.preventDefault();
       this.isDragging = true;
     },
@@ -52,14 +57,23 @@ export default {
     },
   },
   name: 'FileUpload',
-  emits: [],
-  props: {},
-  computed: {},
+  emits: ['file-added'],
+  props: {
+    acceptedFiles: {
+      type: String,
+    },
+    multiple: {
+      type: Boolean,
+      default: false
+    }
+  },
+  computed: {
+    ...mapStores(useFileStore, useTestStore)
+  },
   mounted: function () {
 
   },
   created: function () {
-
   }
 }
 </script>

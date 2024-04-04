@@ -1,18 +1,22 @@
 <template>
-  <button class="" :disabled="disabled">
+  <component :is="tag" class="" :disabled="disabled">
     <slot></slot>
-  </button>
+  </component>
 </template>
 <script>
 
 export default {
   props: {
+    tag: {
+      type: String,
+      default: 'button'
+    },
     disabled: {
       type: Boolean,
       default: false
     }
   },
-  name: 'Button',
+  name: 'CustomButton',
   data: () => {
     return {}
   },
@@ -25,8 +29,12 @@ export default {
 </script>
 
 <style lang="scss" scoped>
-button {
+button, a {
   @apply bg-primary text-darkgray px-4 py-2 rounded transition-all;
+
+  &.outlined {
+    @apply border border-lightgray-60 bg-transparent text-lightgray-60;
+  }
 
   &.icon-only {
     @apply bg-transparent text-lightgray-10 px-0 py-0;
@@ -35,10 +43,10 @@ button {
   &.ghost {
     @apply bg-transparent text-lightgray-10;
   }
+}
 
-  &[disabled] {
-    @apply bg-lightgray-60;
-  }
+button[disabled] {
+  @apply bg-lightgray-60;
 }
 
 </style>
