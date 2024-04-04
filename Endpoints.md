@@ -22,7 +22,7 @@ Sample Response:
 ## S1
 Meta Auth Redirect für Login
 
-### /auth/facebook/authorized
+### /auth/facebook
 
 **Wichtiger Redirect zur User Authorisierung**, über Weiterleitung über diesen Endpunkt werden User eingeloggt und einer OAuth Instanz im Backend zugeordnet
 
