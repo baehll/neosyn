@@ -16,9 +16,6 @@ def GPTModel():
     from server import chatGPTModel
     return chatGPTModel()
 
-def allowed_file(filename):
-    return "." in filename and filename.rsplit(".", 1)[1].lower() in {"txt", "pdf"}
-
 @api.route("/init_user", methods=["POST"])
 @login_required
 def init_user():
@@ -59,15 +56,18 @@ def init_user():
                 return jsonify({"error": f"File Extension not allowed, must be {', '.join(file_utils.ALLOWED_LOGO_EXTENSIONS)}"})
             
             filename = secure_filename(file.filename)
+            if filename == "":
+                return jsonify({"error":"Filename invalid"}), 500
+            
             file.save(os.path.join(upload_folder_path, filename))
+            new_orga.logo_file = filename
             
         db.session.add(new_orga)
         db.session.add(current_user)
         db.session.commit()
     except Exception as e:
         print(e)
-        
-    
+        return jsonify({"error":"An exception has occurred"}), 500
     return jsonify({}), 200
 
 @api.route("/company_files", methods=["POST"])

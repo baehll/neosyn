@@ -1,7 +1,8 @@
 <template>
-  <svg width="20" height="38" viewBox="0 0 20 38" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="20" height="38" viewBox="0 0 20 38" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path d="M16.636 37.7294L1.61387 23.1289C0.580265 22.1209 0 20.7567 0 19.3346C0 17.9125 0.580265 16.5482 1.61387 15.5403L16.6533 0.921371L20 4.17428L4.96054 18.7917C4.81243 18.9355 4.72922 19.1305 4.72922 19.3338C4.72922 19.5372 4.81243 19.7322 4.96054 19.876L19.981 34.4765L16.636 37.7294Z" fill="#BFBFBF"/>
-  </svg>
+</svg>
+
 </template>
 <script>
 export default {};

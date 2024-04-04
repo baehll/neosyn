@@ -6,10 +6,13 @@
       <strong class="text-white text-center uppercase block mb-6 font-neuebit text-xl">
         Early Access
       </strong>
-      <input type="text" placeholder="Password" v-model="password" @keyup.enter="login" :class="{'outline-0 focus:border-primary border-transparent border w-full block': true, 'error': error}">
-      <button class="absolute top-4 right-4" @click="$emit('hide')">
-        <close class="text-lightgray-10" />
-      </button>
+      <div class="hidden lg:block">
+        <input type="text" placeholder="Password" v-model="password" @keyup.enter="login" :class="{'outline-0 focus:border-primary border-transparent border w-full block': true, 'error': error}">
+        <button class="absolute top-4 right-4" @click="$emit('hide')">
+          <close class="text-lightgray-10" />
+        </button>
+      </div>
+      <strong class="text-white block lg:hidden text-center">Please switch to a tablet / desktop device.</strong>
     </div>
   </div>
 </template>

@@ -1,17 +1,30 @@
 <template>
   <transition name="fade">
-    <router-view></router-view>
+    <Home/>
   </transition>
 </template>
 <script>
+import Home from './views/Home.vue';
+import {mapStores} from 'pinia';
+import {useTimerStore} from './stores/timer.js';
+
 export default {
   name: "App",
   components: {
+    Home
   },
+  computed: {
+    ...mapStores(useTimerStore)
+  },
+  created(){
+    setInterval(() => {
+      this.timerStore.now = Date.now()
+    }, 60 * 1000)
+  }
 }
 </script>
 
-<style scoped>
+<style lang="scss">
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.5s ease;
@@ -22,5 +35,10 @@ export default {
   opacity: 0;
 }
 
+input {
+  &[type="text"] {
+    @apply bg-transparent rounded-lg px-6 py-3 text-lightgray-10 text-sm;
+  }
+}
 
 </style>

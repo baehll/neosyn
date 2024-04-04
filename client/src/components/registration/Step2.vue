@@ -7,7 +7,7 @@
 </template>
 <script>
 
-import Button from '../global/Button.vue';
+import Button from '../global/CustomButton.vue';
 import IdCard from '../IdCard.vue';
 import {mapStores} from 'pinia';
 import {useUserStore} from '../../stores/user.js';
