@@ -1,4 +1,4 @@
-from flask import Flask
+from flask import Flask, session
 from blinker import signal
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
@@ -8,13 +8,14 @@ from .web.models import db, User, login_manager, EarlyAccessKeys
 from .utils.env_utils import EnvManager 
 from flask_migrate import Migrate
 from flask_talisman import Talisman
+from datetime import timedelta
 import os
 
 ENV = EnvManager()
 
 gptConfig = {
     "EMBEDDING_MODEL":"text-embedding-ada-002", 
-    "GPT_MODEL":"gpt-3.5-turbo", 
+    "GPT_MODEL":"gpt-4-turbo-preview", 
     "CLIENT":OpenAI(api_key=config("OPENAI_API_KEY"))
 }
 
@@ -28,6 +29,7 @@ def create_app() -> Flask:
     app.config['FACEBOOK_OAUTH_CLIENT_ID'] = config("FACEBOOK_OAUTH_CLIENT_ID")
     app.config["FACEBOOK_OAUTH_CLIENT_SECRET"] = config("FACEBOOK_OAUTH_CLIENT_SECRET")
     
+    app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=31)
     app.config["MAX_FILE_SIZE"] = 8 * 64 * 1024 * 1024 # 8 Dateien mit jeweils 64MB = 512 MB
     
     CORS(app)
@@ -88,6 +90,9 @@ def create_app() -> Flask:
 
     #from .web.test import test
     #app.register_blueprint(test, url_prefix="/test")
+    @app.before_request
+    def setup():
+        session.permanent = True
     
     app.register_blueprint(views, url_prefix='/')
     app.register_blueprint(api, url_prefix='/api')
