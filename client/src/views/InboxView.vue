@@ -5,8 +5,8 @@
   <MessageContainer
     :thread-id="currentThread"
   />
-  <div class=" message-post-wrap  h-full py-5 bg-lightgray pr-5">
-    <div class="overflow-hidden flex flex-col justify-between w-full h-full bg-darkgray rounded-xl message ">
+  <div class=" message-post-wrap overflow-hidden h-full py-5 bg-lightgray pr-5">
+    <div class="overflow-hidden flex flex-col justify-between w-full h-full rounded-xl message gap-4">
       <MessagePost
 
       />
@@ -53,6 +53,6 @@ export default {
 
 <style lang="scss">
 .message-post-wrap {
-  width: 410px;
+  width: calc(410px + 1.25rem);
 }
 </style>

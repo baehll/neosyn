@@ -1,8 +1,8 @@
 <template>
-  <div :class="{'w-full flex': true, 'justify-begin': from !== 0, 'justify-end': from === 0}">
+  <div :class="{'w-full flex': true, 'justify-begin': from !== 0, 'justify-end': from === 0, 'opacity-30': state === 'sending'}">
     <div class="w-5/12 flex gap-4 justify-end">
       <div class="flex flex-col ">
-        <div class="flex items-end gap-4 mb-2">
+        <div class="flex justify-end items-end gap-4 mb-2">
           <div
             v-if="from !== 0"
             class="bg-primary rounded-full w-8 h-8 shrink-0">
@@ -39,6 +39,10 @@ export default {
     showLogo: {
       type: Boolean,
       default: false
+    },
+    state: {
+      type: String,
+      default: 'received'
     },
     id: {
       type: Number,

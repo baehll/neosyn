@@ -30,12 +30,7 @@ export default {
 
 <style lang="scss" scoped>
 button, a {
-  @apply px-4 py-2.5 transition-all;
-  border-radius: 10px;
-
-  &.primary {
-    @apply bg-primary text-darkgray;
-  }
+  @apply bg-primary text-darkgray px-4 py-2 rounded transition-all;
 
   &.outlined {
     @apply border border-lightgray-60 bg-transparent text-lightgray-60;
