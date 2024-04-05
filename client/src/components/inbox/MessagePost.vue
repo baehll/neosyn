@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-darkgray shrink-0 h-1/2 overflow-hidden rounded-xl flex flex-col justify-between">
+  <div class="bg-darkgray h-1/2 overflow-hidden rounded-xl flex flex-col justify-between">
     <div class="flex flex-col">
       <img class="shrink-0" width="410" height="410" src="/assets/stock/post.jpg" alt="">
       <div class="shrink-0 flex justify-around items-center text-white py-4">

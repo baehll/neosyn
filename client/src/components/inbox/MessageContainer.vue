@@ -29,6 +29,21 @@
             :state="message.state"
           />
         </div>
+        <div :class="{'message-curtain absolute top-0 left-0 transition-all h-full w-full bg-black': true, 'opacity-0 pointer-events-none': suggestions.length === 0, 'opacity-60 pointer-events-all': suggestions.length}">
+
+        </div>
+        <div :class="{'suggestions absolute bottom-0 right-0 transform transition-transform': true, 'translate-x-100': suggestions.length === 0, 'translate-x-0': suggestions.length > 0}">
+          <Message
+            v-for="(suggestion, i) in suggestions"
+            :class="{'mb-6': true}"
+            :selectable="true"
+            :message="suggestion.message"
+            :from="0"
+            :message-subline="`Suggestion ${i+1}`"
+            :selected="i === selectedSuggestion"
+            @select="suggestionSelected(i)"
+          />
+        </div>
       </div>
       <div class="actions max-w-full">
         <div class="flex justify-end gap-4 quick-responses mb-8">
@@ -43,6 +58,7 @@
           class="grow-0 items-end generate-responses p-4 border border-lightgray rounded-xl flex justify-between gap-4">
           <CustomButton
             class="font-medium font-roboto text-sm bg-primary flex flex-row items-center gap-3 rounded-2xl grow-0"
+            @click="generateSuggestions"
           >
             {{ $t('Generate') }}
             <stars
@@ -74,6 +90,7 @@ import Message from './Message.vue';
 import {mapStores} from 'pinia';
 import {useMessageStore} from '../../stores/message.js';
 import {useThreadStore} from '../../stores/thread.js';
+import SuggestService from '../../services/SuggestService.js';
 
 export default {
   name: 'MessageContainer',
@@ -85,6 +102,7 @@ export default {
   },
   data: () => {
     return {
+      selectedSuggestion: null,
       currentThreadId: null,
       quickResponses: [
         'Thanks! 💚',
@@ -94,21 +112,31 @@ export default {
       ],
       msg: 'Not watching message',
       messageInput: '',
+      suggestions: [],
     }
   },
   watch: {
     threadId(newVal, oldVal) {
       this.messageStore.getMessagesForThread(newVal)
+      this.suggestions = []
       this.currentThreadId = newVal
+      this.messageInput = ''
       setTimeout(() => {
         this.$refs.messageScroller.scrollTo({top: this.$refs.messageScroller.scrollHeight, behavior: 'smooth'})
       }, 250)
     }
   },
   computed: {
-    ...mapStores(useThreadStore, useMessageStore)
+    ...mapStores(useThreadStore, useMessageStore),
   },
   methods: {
+    suggestionSelected(i) {
+      this.selectedSuggestion = i
+      this.insertResponse(this.suggestions[i].message)
+    },
+    async generateSuggestions() {
+      this.suggestions = await SuggestService.generateSuggestions(this.threadId)
+    },
     insertResponse(message) {
       this.messageInput = message
       this.$refs.msgInput.innerText = message
@@ -127,6 +155,8 @@ export default {
         threadId: this.currentThreadId,
         date: Date.now(),
       }
+      this.selectedSuggestion = null
+      this.suggestions = []
       this.messageStore.messages[this.currentThreadId].push(message)
       setTimeout(() => {
         this.$refs.messageScroller.scrollTo({top: this.$refs.messageScroller.scrollHeight, behavior: 'smooth'})

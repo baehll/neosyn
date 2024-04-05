@@ -5,7 +5,7 @@
   <MessageContainer
     :thread-id="currentThread"
   />
-  <div class=" message-post-wrap overflow-hidden h-full py-5 bg-lightgray pr-5">
+  <div class="shrink-0 message-post-wrap overflow-hidden h-full py-5 bg-lightgray pr-5">
     <div class="overflow-hidden flex flex-col justify-between w-full h-full rounded-xl message gap-4">
       <MessagePost
 
