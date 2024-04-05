@@ -68,7 +68,7 @@
           <span contenteditable @keyup="messageUpdated" ref="msgInput"
                 class="text-sm bg-transparent resize-none outline-0 grow-0 text-white block w-full "></span>
           <button
-            :class="{'rounded-xl px-5 py-3 bg-lightgray grow-0': true, 'cursor-not-allowed': messageInput === '', 'bg-primary cursor-pointer': messageInput !== ''}"
+            :class="{'outline-0 rounded-xl px-5 py-3 bg-lightgray grow-0': true, 'cursor-not-allowed': messageInput === '', 'bg-primary cursor-pointer': messageInput !== ''}"
             @click="sendMessage"
           >
             <arrow-up
