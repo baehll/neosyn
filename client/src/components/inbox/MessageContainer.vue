@@ -1,7 +1,7 @@
 <template>
   <div class="grow overflow-hidden h-full px-5 py-5 bg-lightgray">
     <div class="overflow-hidden flex flex-col justify-between w-full h-full bg-darkgray rounded-xl message p-4">
-      <div class="flex justify-between p-6">
+      <div class="flex justify-between px-2 pt-2 pb-4">
         <span class="rounded-3xl border border-white px-4 text-white py-1" v-text="$t('Interaction')"></span>
         <BookmarkOutline
           class="text-darkgray-80"
@@ -11,14 +11,6 @@
         <div
           class="pl-2 pr-5 pt-4 pb-6 messages items-start flex flex-col h-full overflow-scroll absolute top-0 left-0 "
           ref="messageScroller">
-          <!--CustomButton
-            :cta="$t('Mehr laden')"
-            v-if="hasMoreMessages"
-            @click="loadMoreMessages"
-            :loading="loadMessageLoading"
-            type="x-btn--primary"
-            class-name="flex-shrink-0"
-          /-->
           <Message
             class="mb-6"
             v-for="message in messageStore.messages[currentThreadId]"
@@ -46,8 +38,9 @@
         </div>
       </div>
       <div class="actions max-w-full">
-        <div class="flex justify-end gap-4 quick-responses mb-8">
+        <div :class="{'flex justify-end gap-4 quick-responses mb-8 transition-opacity': true, 'opacity-0 pointer-events-none': !currentThreadId, 'opacity-100 pointer-events-all': currentThreadId }">
           <CustomButton
+            class="text-xs"
             v-for="quickResponse in quickResponses"
             @click="insertResponse(quickResponse)"
             v-text="quickResponse"
@@ -56,16 +49,15 @@
         </div>
         <div
           class="grow-0 items-end generate-responses p-4 border border-lightgray rounded-xl flex justify-between gap-4">
-          <CustomButton
-            class="font-medium font-roboto text-sm bg-primary flex flex-row items-center gap-3 rounded-2xl grow-0"
+          <GenerateButton
             @click="generateSuggestions"
+            :disabled="!currentThreadId"
           >
             {{ $t('Generate') }}
             <stars
-              class="text-black"
             />
-          </CustomButton>
-          <span contenteditable @keyup="messageUpdated" ref="msgInput"
+          </GenerateButton>
+          <span v-if="currentThreadId" contenteditable @keyup="messageUpdated" ref="msgInput"
                 class="text-sm bg-transparent resize-none outline-0 grow-0 text-white block w-full "></span>
           <button
             :class="{'outline-0 rounded-xl px-5 py-3 bg-lightgray grow-0': true, 'cursor-not-allowed': messageInput === '', 'bg-primary cursor-pointer': messageInput !== ''}"
@@ -84,6 +76,7 @@
 
 import BookmarkOutline from '../global/bookmark-outline.vue';
 import CustomButton from '../global/CustomButton.vue';
+import GenerateButton from '../global/GenerateButton.vue';
 import Stars from '../global/stars.vue';
 import ArrowUp from '../global/arrow-up.vue';
 import Message from './Message.vue';
@@ -94,7 +87,7 @@ import SuggestService from '../../services/SuggestService.js';
 
 export default {
   name: 'MessageContainer',
-  components: {Message, ArrowUp, Stars, CustomButton, BookmarkOutline},
+  components: {Message, ArrowUp, Stars,GenerateButton, CustomButton, BookmarkOutline},
   props: {
     threadId: {
       type: Number,
@@ -135,6 +128,9 @@ export default {
       this.insertResponse(this.suggestions[i].message)
     },
     async generateSuggestions() {
+      if(!this.currentThreadId) {
+        return
+      }
       this.suggestions = await SuggestService.generateSuggestions(this.threadId)
     },
     insertResponse(message) {

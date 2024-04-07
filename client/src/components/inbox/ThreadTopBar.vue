@@ -1,6 +1,6 @@
 <template>
-  <div class="py-2 flex flex-col justify-between relative">
-    <div class="px-3 relative w-full mb-4">
+  <div class="pt-7 pb-5 flex flex-col justify-between relative bg-darkgray-10">
+    <div class="px-3 relative w-full mb-8">
       <Searchglass
         class="text-lightgray-10 absolute left-6 top-1/2 transform -translate-y-1/2 pointer-events-none"
       />
@@ -14,7 +14,7 @@
         />
         <TimeDifferenceDisplay
           :point-in-time="threadStore.lastUpdated"
-          class="text-lightgray-10"
+          class="text-lightgray-10 text-sm"
         />
       </div>
       <div class="flex gap-2">
@@ -51,7 +51,7 @@
           </li>
         </ul>
       </div>
-      <div v-if="filterLayerVisible" class="w-full bg-primary px-8 py-4 relative">
+      <div v-if="filterLayerVisible" class="flex flex-row w-full bg-darkgray text-white px-8 py-4 relative justify-between">
         <ul>
           <li
             v-for="(label, icon) in availableFilters.platforms"
@@ -61,6 +61,14 @@
             <label :for="`${icon}-filter`">
               <span v-text="label"></span>
             </label>
+          </li>
+        </ul>
+        <ul>
+          <li
+            v-for="messageType in availableFilters.messageTypes"
+          >
+            <label :for="messageType" v-text="messageType"></label>
+            <input type="checkbox" :name="messageType" :id="messageType">
           </li>
         </ul>
       </div>
@@ -95,6 +103,7 @@ export default {
     availableFilters() {
       const result = {}
       result.platforms = ThreadFilter.AVAILABLE_PLATFORMS
+      result.messageTypes = ThreadFilter.MESSAGE_TYPES
       return result
     }
 
@@ -117,7 +126,7 @@ export default {
 <style lang="scss">
 input {
   &[type="text"] {
-    @apply py-2 px-10 rounded-xl outline-0 bg-transparent;
+    @apply py-1.5 px-10 rounded-xl outline-0 bg-transparent;
   }
 }
 </style>

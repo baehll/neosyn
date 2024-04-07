@@ -1,6 +1,8 @@
 export const Platform = {
     Facebook: 'facebook',
     Instagram: 'instagram',
-    Youtube: 'youtube',
+    YouTube: 'youtube',
     LinkedIn: 'linkedin',
+    X: 'x',
+    WhatsApp: 'whatsapp',
 };

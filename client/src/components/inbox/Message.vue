@@ -1,6 +1,6 @@
 <template>
   <div
-    :class="{'w-full flex': true, 'justify-begin': from !== 0, 'justify-end': from === 0, 'opacity-30': state === 'sending'}"
+    :class="{'h-full w-full flex': true, 'justify-begin': from !== 0, 'justify-end': from === 0, 'opacity-30': state === 'sending'}"
     @click="$emit('select')"
   >
     <div :class="{'w-5/12 flex gap-4 justify-end': true,  'cursor-pointer': selectable }">
@@ -71,9 +71,8 @@ export default {
       return moment(this.date).format(this.$i18n.t('dateTimeFormat'))
     },
     getThreads() {
-
     },
-    getClass() {
+   getClass() {
       return this.id === this.from_id
     }
   },
