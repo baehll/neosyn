@@ -54,21 +54,26 @@
       <div v-if="filterLayerVisible" class="flex flex-row w-full bg-darkgray text-white px-8 py-4 relative justify-between">
         <ul>
           <li
-            v-for="(label, icon) in availableFilters.platforms"
-            :key="icon"
+            v-for="(platform) in availableFilters.platforms"
+            :key="platform.name"
           >
-            <input type="checkbox" :name="`${icon}-filter`" :id=" `${icon}-filter`">
-            <label :for="`${icon}-filter`">
-              <span v-text="label"></span>
-            </label>
+            <Checkbox
+              :label="platform.label"
+              :id="platform.name"
+              v-model="platformFilter"
+            />
           </li>
         </ul>
         <ul>
           <li
             v-for="messageType in availableFilters.messageTypes"
           >
-            <label :for="messageType" v-text="messageType"></label>
-            <input type="checkbox" :name="messageType" :id="messageType">
+            <Checkbox
+              :rtl="true"
+              :label="messageType.label"
+              :id="messageType.name"
+             v-model="messageTypeFilter"
+            />
           </li>
         </ul>
       </div>
@@ -76,7 +81,7 @@
   </div>
 </template>
 <script>
-
+import Checkbox from '../global/checkbox.vue';
 import ThreadFilter from '../../lib/ThreadFilter.js';
 import CustomButton from '../global/CustomButton.vue';
 import Filter from '../global/filter.vue';
@@ -89,13 +94,15 @@ import TimeDifferenceDisplay from '../global/TimeDifferenceDisplay.vue';
 
 export default {
   name: 'ThreadTopBar',
-  components: {TimeDifferenceDisplay, Reload, Searchglass, Sorting, Filter, CustomButton},
+  components: {TimeDifferenceDisplay, Reload, Searchglass, Sorting, Filter, CustomButton, Checkbox},
   data: () => {
     return {
       filterLayerVisible: false,
       searchTerm: '',
       threadFilter: null,
-      sorting: 'desc'
+      sorting: 'desc',
+      messageTypeFilter: [],
+      platformFilter: [],
     }
   },
   computed: {
