@@ -51,7 +51,7 @@
           class="grow-0 items-end generate-responses p-4 border border-lightgray rounded-xl flex justify-between gap-4">
           <GenerateButton
             @click="generateSuggestions"
-            :disabled="!currentThreadId"
+            :disabled="suggestions.length || !currentThreadId"
           >
             {{ $t('Generate') }}
           </GenerateButton>

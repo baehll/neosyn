@@ -1,6 +1,6 @@
 <template>
     <component :is="tag" :disabled="disabled"
-      :class="{'font-medium font-roboto text-sm flex flex-row items-center gap-3 rounded-2xl grow-0': true, 'cursor-pointer': !disabled}"
+      :class="{'font-medium font-roboto text-sm flex flex-row items-center gap-3 rounded-2xl grow-0': true, 'cursor-pointer enabled': !disabled}"
   >
     <span>
       <p>
@@ -62,30 +62,36 @@ button, a {
        background-image: linear-gradient(0deg, #ACED84 0%,#ACED84 45%, #D9FFC1 50%)
   }
 
-  &:hover {
-    &:before {
-    animation: rotate-gradient 2s linear infinite; 
+  &.enabled {
+    @apply cursor-pointer;
+    span {
+      @apply gap-2 transition-colors text-primary py-2.5 px-4 z-10 bg-darkgray flex;
+      border-radius: 10px;
+      p{
+        @apply bg-gradient-to-t from-primary to-primary-10 inline-block text-transparent bg-clip-text;
+      }
     }
 
-    span {
-      @apply bg-lightgray-20;
+    svg {
+      @apply text-primary;
+    }
+    &:hover {
+      &:before {
+        animation: rotate-gradient 2s linear infinite; 
+      }
+
+      span {
+        @apply bg-lightgray-20;
+      }
     }
   }
 
-  @apply shrink-0 overflow-hidden relative transition-all text-sm ;
+  @apply shrink-0 overflow-hidden relative transition-all text-sm cursor-not-allowed;
   padding: 1px;
   border-radius: 10px;
 
   span {
-    @apply gap-2 transition-colors text-primary py-2.5 px-4 z-10 bg-darkgray flex;
-    border-radius: 10px;
-    p{
-      @apply bg-gradient-to-t from-primary to-primary-10 inline-block text-transparent bg-clip-text;
-    }
-  }
-
-  svg {
-    @apply text-primary;
+    @apply flex gap-2 py-2.5 px-4;
   }
 }
 
@@ -93,8 +99,12 @@ button[disabled] {
   &:before {
     @apply hidden;
   }
-  @apply bg-darkgray-80 text-black;
-  svg, span {
+  @apply bg-lightgray;
+
+  span {
+    @apply bg-lightgray;
+  }
+  svg, span, span p {
     @apply text-black;
   }
 }

@@ -28,7 +28,7 @@ export default {
     checkResolution() {
       const innerWidth = window.innerWidth;
       const innerHeight = window.innerHeight;
-      this.resolutionTooLow = innerWidth <= 1600 || innerHeight <= 1150
+      this.resolutionTooLow = false // innerWidth <= 1600 || innerHeight <= 1150
     }
   },
   created() {
