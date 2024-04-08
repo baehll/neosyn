@@ -1,10 +1,10 @@
 <template>
-  <nav class="h-full pt-4 pb-6 px-3 bg-black sidebar flex flex-col">
+  <nav class="h-full pt-4 pb-6 px-3 bg-darkgray-20 border-r border-l border-lightgray-70 sidebar flex flex-col">
     <logo-big
-      class="mb-12 self-end text-white logo-sidebar"
+      class="mb-16 self-end text-white logo-sidebar"
     />
     <div class="flex flex-col justify-between h-full">
-      <ul class="flex flex-col items-center gap-8 text-lightgray-10">
+      <ul class="flex flex-col items-center gap-12 text-lightgray-10">
         <li>
           <router-link to="inbox"><inbox
          :class="{'text-primary': $route.name === 'Inbox'}"
@@ -24,7 +24,7 @@
           <router-link to="bookmarks"><bookmarks/></router-link>
         </li>
       </ul>
-      <ul class="flex flex-col items-center gap-4 text-lightgray-10">
+      <ul class="mb-4 flex flex-col items-center gap-10 text-lightgray-10">
         <li class="separator"></li>
         <li>🙆‍♂️</li>
         <li><settings/></li>

@@ -1,15 +1,19 @@
 <template>
-  <div :class="{'w-full flex': true, 'justify-begin': from !== 0, 'justify-end': from === 0}">
-    <div class="w-5/12 flex gap-4 justify-end">
+  <div
+    :class="{'h-full w-full flex': true, 'justify-begin': from !== 0, 'justify-end': from === 0, 'opacity-30': state === 'sending'}"
+    @click="$emit('select')"
+  >
+    <div :class="{'w-5/12 flex gap-4 justify-end': true,  'cursor-pointer': selectable }">
       <div class="flex flex-col ">
-        <div class="flex items-end gap-4 mb-2">
+        <div class="flex justify-end items-end gap-4 mb-2">
           <div
             v-if="from !== 0"
             class="bg-primary rounded-full w-8 h-8 shrink-0">
           </div>
-          <p :class="{'p-4 border border-lightgray-80 text-white font-roboto text-xs rounded-lg': true, 'bg-lightgray-30': from === 0}" v-text="message"></p>
+          <p :class="{'p-4 border border-lightgray-80 text-white font-roboto text-xs rounded-lg': true,'border border-primary': selected === true, 'bg-lightgray-30': from === 0}" v-text="message"></p>
         </div>
-        <small :class="{'text-xs text-lightgray-10': true, 'mr-4 self-end': from !== 0, 'ml-4 self-begin': from === 0}" v-text="getFormattedDate"></small>
+        <small v-if="date" :class="{'text-xs text-lightgray-10': true, 'mr-4 self-end': from !== 0, 'ml-4 self-begin': from === 0}" v-text="getFormattedDate"></small>
+        <small v-else-if="messageSubline" :class="{'text-xs text-lightgray-10': true, 'mr-4 self-end': from !== 0, 'ml-4 self-begin': from === 0}" v-text="messageSubline"></small>
       </div>
     </div>
   </div>
@@ -20,7 +24,15 @@ import moment from 'moment';
 
 export default {
   components: {},
+  emits: ['select'],
   props: {
+    selectable: {
+      type: Boolean,
+      default: false
+   },
+    selected: {
+      type: Boolean,
+    },
     message: {
       type: String
     },
@@ -40,8 +52,15 @@ export default {
       type: Boolean,
       default: false
     },
+    state: {
+      type: String,
+      default: 'received'
+    },
     id: {
       type: Number,
+    },
+    messageSubline: {
+      type: String,
     }
   },
   data: () => {
@@ -52,9 +71,8 @@ export default {
       return moment(this.date).format(this.$i18n.t('dateTimeFormat'))
     },
     getThreads() {
-
     },
-    getClass() {
+   getClass() {
       return this.id === this.from_id
     }
   },
