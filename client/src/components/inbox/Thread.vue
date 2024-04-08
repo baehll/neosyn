@@ -1,6 +1,6 @@
 <template>
   <div
-    :class="'cursor-pointer transition-colors hover:bg-lightgray-20 text-lightgray-10 thread py-4 px-5 border-b border-lightgray relative ' + getInteractiveClasses"
+    :class="'cursor-pointer transition-colors hover:bg-lightgray-20 text-white thread py-4 px-5 border-b border-lightgray relative ' + getInteractiveClasses"
     @click="selectThread"
   >
     <span
@@ -9,8 +9,8 @@
     >
 
     </span>
-    <strong v-text="username" class="font-roboto block mb-2"></strong>
-    <p class="roboto font-light mb-3" v-text="message"></p>
+    <strong v-text="username" class="font-roboto block mb-3"></strong>
+    <p class="roboto font-light text-sm mb-3" v-text="message"></p>
     <div
       @mouseenter="showThreadActions"
       @mouseleave="hideThreadActions"
@@ -18,7 +18,7 @@
     >
       <TimeDifferenceDisplay
         class=""
-        :class="{'text-darkgray-80 text-xs absolute right-0': true, 'opacity-0 pointer-events-none': threadActionVisible}"
+        :class="{'text-lightgray-10 text-xs absolute right-0': true, 'opacity-0 pointer-events-none': threadActionVisible}"
         :point-in-time="lastUpdated"
       />
       <div
@@ -125,6 +125,10 @@ export default {
 
 <style lang="scss">
 .thread {
+  &:first-child {
+    @apply border-t;
+  }
+
   &.selected {
     @apply bg-lightgray;
   }

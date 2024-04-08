@@ -1,5 +1,5 @@
 <template>
-  <div class="shrink-0 thread-container flex flex-col">
+  <div class="bg-darkgray-10 shrink-0 thread-container flex flex-col">
     <ThreadTopBar
       @triggeredSearch="updateSearchTermAndFetch"
       @changedFilter="updateFilterAndFetch"
