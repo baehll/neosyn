@@ -11,6 +11,10 @@ def index():
 def serve_static_assets(filename):
     return send_from_directory('static/assets', filename)
 
-@views.route("/debug")
-def debug():
-    return send_from_directory("templates", "debug.html")
+@views.route("/app.html")
+def app_html():
+    return send_from_directory("static", "app.html")
+
+@views.route("/registration.html")
+def registration():
+    return send_from_directory("static", "registration.html")
