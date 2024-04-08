@@ -54,8 +54,6 @@
             :disabled="!currentThreadId"
           >
             {{ $t('Generate') }}
-            <stars
-            />
           </GenerateButton>
           <span v-if="currentThreadId" contenteditable @keyup="messageUpdated" ref="msgInput"
                 class="text-sm bg-transparent resize-none outline-0 grow-0 text-white block w-full "></span>
