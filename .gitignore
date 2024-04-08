@@ -168,6 +168,8 @@ cython_debug/
 # Ignore contents of server/static
 /server/static/*
 !/server/static/.gitkeep
+# Ignore contents of UPLOADS FOLDER
+/UPLOADS/COMPANY_FOLDERS/*
 
 /.vscode/
 /.UPLOADS/*

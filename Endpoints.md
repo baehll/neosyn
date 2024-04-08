@@ -22,7 +22,7 @@ Sample Response:
 ## S1
 Meta Auth Redirect für Login
 
-### /auth/facebook/authorized
+### /auth/facebook
 
 **Wichtiger Redirect zur User Authorisierung**, über Weiterleitung über diesen Endpunkt werden User eingeloggt und einer OAuth Instanz im Backend zugeordnet
 
@@ -32,15 +32,13 @@ Meta Auth Redirect für Login
 
 Für das initiale Anlegen eines Users + Organisation und evtl. Company Logo
 
-Sample Request:
+Sample Request als multipart/form-data:
 
 ```bash
-    {
-        "username": "...",
-        "companyname": "..."
-    }
+username: ...
+companyname: ...
 ```
-**UND** Logo File, wenn angegeben
+**Optional** *file*, wenn ein Logo File hochgeladen wurde
 
 Sample Response:
 
@@ -48,7 +46,7 @@ Sample Response:
 
 **400**, wenn Username/Companyname fehlt
 
-**500**, wenn Fehler aufgetreten ist mit (zB wenn kein Ordner angelegt werden kann)
+**500**, wenn Fehler aufgetreten ist (zB wenn kein Ordner angelegt werden kann)
 ```bash
     {
         "error": "error_message"
@@ -59,11 +57,24 @@ Sample Response:
 Company Styleguides mit File Upload
 
 ### POST /api/company_files
-Request mit allen Company Files (Styleguides, Product Information etc.)
+
+Request mit allen Company Files (Styleguides, Product Information etc.) als multipart/form-data
+
+**files[]**, wenn Company Files mitgesendet wurden
 
 Sample Response:
+
 **200**, wenn alle Dateien das richtige Format hatten und abgespeichert wurden
-**500**, wenn Fehler aufgetreten ist mit
+
+**422**, wenn mindestens ein Fehler aufgetreten ist bei der Verarbeitung der Dateien mit
+```bash
+    {
+        "error": ["error_message", "error_message", "..."],
+        "successful": "filename1, filename2, ..."
+    }
+```
+
+**500**, wenn ein Fehler aufgetreten ist mit
 ```bash
     {
         "error": "error_message"
@@ -72,12 +83,21 @@ Sample Response:
 
 ## S5
 ### GET /api/data/all_interactions
+
+**Nicht implementiert**
+
 Alle Interaktionen zu einer Organisation (mit Chunks)
 
 ### GET /api/data/bookmarks
+
+**Nicht implementiert**
+
 Bookmarks zu Interaktionen mit bestimmten Kunden
 
 ### GET /api/data/search_interactions
+
+**Nicht implementiert**
+
 Suche nach bestimmten Interaktionen mit Filtereinstellungen
 
 - Generate Responses zu einem Posting
