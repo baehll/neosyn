@@ -38,7 +38,7 @@
       </div>
     </div>
     <div class="flex flex-col">
-      <div v-if="sortingLayerVisible" class="bg-primary px-8 py-4 -32 -32 absolute left-0 top-full">
+      <div v-if="sortingLayerVisible" class="bg-primary px-6 py-4 absolute left-0 top-full">
         <ul>
           <li
             v-for="(label, icon) in availableFilters.platforms"
@@ -51,7 +51,7 @@
           </li>
         </ul>
       </div>
-      <div v-if="filterLayerVisible" class="flex flex-row w-full bg-darkgray text-white px-8 py-4 relative justify-between">
+      <div v-if="filterLayerVisible" class="flex flex-row w-full bg-darkgray text-white px-6 py-4 relative justify-between">
         <ul>
           <li
             v-for="(platform) in availableFilters.platforms"
@@ -60,6 +60,7 @@
             <Checkbox
               :label="platform.label"
               :id="platform.name"
+              :disabled="platform.disabled && platform.disabled === true"
               v-model="platformFilter"
             />
           </li>
