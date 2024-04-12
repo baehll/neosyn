@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 html, body {
-    overflow: hidden;
+    overflow: scroll;
 }
 
 body {
@@ -13,10 +13,11 @@ body {
 #app {
     @screen lg {
         min-width: 1440px;
+        min-height: 720px;
     }
 }
 
-svg path {
+svg:not(.custom-fill) path {
     fill: currentColor;
 }
 

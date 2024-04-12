@@ -1,5 +1,5 @@
 <template>
-  <div class="pt-7 pb-5 flex flex-col justify-between relative bg-darkgray-10">
+  <div class="pt-7 flex flex-col justify-between relative bg-darkgray-10">
     <div class="px-3 relative w-full mb-8">
       <Searchglass
         class="text-lightgray-10 absolute left-6 top-1/2 transform -translate-y-1/2 pointer-events-none"
@@ -7,7 +7,7 @@
       <input type="text" class="bg-transparent border border-lightgray-10 py-0 px-24 w-full"
              @keyup.enter="commitSearch">
     </div>
-    <div class="px-3 justify-between relative flex flex-row">
+    <div class="pb-4 px-3 justify-between relative flex flex-row">
       <div class="flex items-center gap-2 w-8/12">
         <Reload
           class="text-lightgray-10"
@@ -38,16 +38,21 @@
       </div>
     </div>
     <div class="flex flex-col">
-      <div v-if="sortingLayerVisible" class="bg-primary px-6 py-4 absolute left-0 top-full">
-        <ul>
+      <div v-if="sortingLayerVisible" class="flex flex-col w-full border-t border-darkgray bg-black text-white px-6 py-2 relative justify-between">
+        <small v-text="$t('Sort by:')" class="text-darkgray-80 mb-1"></small>
+        <ul
+          :class="{'flex flex-wrap': true}"
+        >
           <li
-            v-for="(label, icon) in availableFilters.platforms"
-            :key="icon"
+            v-for="(sortingTitle, sortingOption) in sortingOptions"
+            :key="sortingOption"
+            :class="{'basis-1/2 mb-2 text-sm even:text-right': true}"
           >
-            <input type="checkbox" :name="`${icon}-filter`" :id=" `${icon}-filter`">
-            <label :for="`${icon}-filter`">
-              <span v-text="label"></span>
-            </label>
+            <button
+              v-text="sortingTitle"
+              :class="{'hover:font-medium': true, 'text-primary font-medium': sortingOption === sorting, 'text-white': sortingOption !== sorting}"
+              @click="setSorting(sortingOption)"
+            ></button>
           </li>
         </ul>
       </div>
@@ -99,6 +104,7 @@ export default {
   data: () => {
     return {
       filterLayerVisible: false,
+      sortingLayerVisible: false,
       searchTerm: '',
       threadFilter: null,
       sorting: 'desc',
@@ -108,21 +114,34 @@ export default {
   },
   computed: {
     ...mapStores(useThreadStore),
+    sortingOptions() {
+      return {
+           'new': this.$t('New'),
+           'old': this.$t('Old'),
+           'most_interaction': this.$t('Most Interaction'),
+           'least_interaction': this.$t('Least Interaction'), 
+        }
+    },
     availableFilters() {
       const result = {}
       result.platforms = ThreadFilter.AVAILABLE_PLATFORMS
       result.messageTypes = ThreadFilter.MESSAGE_TYPES
       return result
-    }
-
+    },
   },
   methods: {
+    setSorting(sorting){
+      this.sorting = sorting
+    },
     commitSearch() {
     },
     toggleFilterLayer() {
+      this.sortingLayerVisible = false
       this.filterLayerVisible = !this.filterLayerVisible
     },
     toggleSorting() {
+      this.filterLayerVisible = false
+      this.sortingLayerVisible = !this.sortingLayerVisible
     }
   },
   created() {

@@ -4,7 +4,7 @@
       <div class="flex justify-between px-2 pt-2 pb-4">
         <span class="rounded-3xl border border-white px-4 text-white py-1" v-text="$t('Interaction')"></span>
         <BookmarkOutline
-          class="text-darkgray-80"
+          class="custom-fill text-darkgray-80"
         />
       </div>
       <div class="messages flex-grow relative">
@@ -12,29 +12,34 @@
           class="pl-2 pr-5 pt-4 pb-6 messages items-start flex flex-col h-full overflow-scroll absolute top-0 left-0 "
           ref="messageScroller">
           <Message
-            class="mb-6"
-            v-for="message in messageStore.messages[currentThreadId]"
-            :message="message.message"
-            :from="message.from"
-            :id="message.id"
-            :date="message.date"
-            :state="message.state"
-          />
+          class="mb-6"
+          v-for="message in messageStore.messages[currentThreadId]"
+          :message="message.message"
+          :from="message.from"
+          :id="message.id"
+          :date="message.date"
+          :state="message.state"
+        />
         </div>
-        <div :class="{'message-curtain absolute top-0 left-0 transition-all h-full w-full bg-black': true, 'opacity-0 pointer-events-none': suggestions.length === 0, 'opacity-60 pointer-events-all': suggestions.length}">
+        <div 
+          @click="closeSuggestions"
+          :class="{'message-curtain absolute top-0 left-0 transition-all h-full w-full bg-black': true, 'opacity-0 pointer-events-none': suggestions.length === 0, 'opacity-60 pointer-events-all': suggestions.length}"
+        >
 
         </div>
-        <div :class="{'suggestions absolute bottom-0 right-0 transform transition-transform': true, 'translate-x-100': suggestions.length === 0, 'translate-x-0': suggestions.length > 0}">
-          <Message
-            v-for="(suggestion, i) in suggestions"
-            :class="{'mb-6': true}"
-            :selectable="true"
-            :message="suggestion.message"
-            :from="0"
-            :message-subline="`Suggestion ${i+1}`"
-            :selected="i === selectedSuggestion"
-            @select="suggestionSelected(i)"
-          />
+        <div 
+          :class="{'suggestions absolute bottom-0 right-0 transform transition-transform': true, 'translate-x-100': suggestions.length === 0, 'translate-x-0': suggestions.length > 0}"
+        >
+          <MessageBody
+          v-for="(suggestion, i) in suggestions"
+          :class="{'mb-6': true}"
+          :selectable="true"
+          :message="suggestion.message"
+          :from="0"
+          :message-subline="`Suggestion ${i+1}`"
+          :selected="i === selectedSuggestion"
+          @select="suggestionSelected(i)"
+        />
         </div>
       </div>
       <div class="actions max-w-full">
@@ -51,7 +56,7 @@
           class="grow-0 items-end generate-responses p-4 border border-lightgray rounded-xl flex justify-between gap-4">
           <GenerateButton
             @click="generateSuggestions"
-            :disabled="suggestions.length || !currentThreadId"
+            :disabled="selectedSuggestion || !currentThreadId"
           >
             {{ $t('Generate') }}
           </GenerateButton>
@@ -82,10 +87,11 @@ import {mapStores} from 'pinia';
 import {useMessageStore} from '../../stores/message.js';
 import {useThreadStore} from '../../stores/thread.js';
 import SuggestService from '../../services/SuggestService.js';
+import MessageBody from './MessageBody.vue';
 
 export default {
   name: 'MessageContainer',
-  components: {Message, ArrowUp, Stars,GenerateButton, CustomButton, BookmarkOutline},
+  components: {Message, ArrowUp, Stars,GenerateButton, CustomButton, BookmarkOutline, MessageBody},
   props: {
     threadId: {
       type: Number,
@@ -121,7 +127,15 @@ export default {
     ...mapStores(useThreadStore, useMessageStore),
   },
   methods: {
+    closeSuggestions(){
+      this.suggestions = []
+    },
     suggestionSelected(i) {
+      if(this.selectedSuggestion && this.selectedSuggestion === i){
+        this.selectedSuggestion = null
+        this.insertResponse('')
+        return
+      }
       this.selectedSuggestion = i
       this.insertResponse(this.suggestions[i].message)
     },

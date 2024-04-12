@@ -1,7 +1,4 @@
 <template>
-  <div
-    :class="{'h-full w-full flex': true, 'justify-begin': from !== 0, 'justify-end': from === 0, 'opacity-30': state === 'sending'}"
-  >
     <div :class="{'w-5/12 flex gap-4 justify-end': true,  'cursor-pointer': selectable }">
       <div class="flex flex-col ">
         <div class="flex justify-end items-end gap-4 mb-2">
@@ -18,7 +15,6 @@
         <small v-else-if="messageSubline" :class="{'text-xs text-lightgray-10': true, 'mr-4 self-end': from !== 0, 'ml-4 self-begin': from === 0}" v-text="messageSubline"></small>
       </div>
     </div>
-  </div>
 </template>
 <script>
 
