@@ -1,11 +1,11 @@
 <template>
-  <div class="bg-darkgray-10 shrink-0 thread-container flex flex-col">
+  <div class="bg-darkgray shrink-0 thread-container flex flex-col">
     <ThreadTopBar
       @triggeredSearch="updateSearchTermAndFetch"
       @changedFilter="updateFilterAndFetch"
       @changeSorting="updateSortingAndFetch"
     />
-    <div class="overflow-y-scroll py-4">
+    <div class="scroller overflow-y-scroll">
       <Thread
         v-for="thread in threadStore.threads"
         :key="thread.id"
@@ -17,6 +17,8 @@
         :platform="thread.platform"
         :unread="thread.unread"
         @selected="setSelectedThread"
+        @toggle-unread="toggleUnreadStatus"
+        @delete="deleteThread"
       />
     </div>
   </div>
@@ -25,13 +27,9 @@
 
 import {mapStores} from 'pinia';
 import {useThreadStore} from '../../stores/thread.js';
-import IconResolver from '../global/IconResolver.vue';
-import {useTimerStore} from '../../stores/timer.js';
-import TimeDifferenceDisplay from '../global/TimeDifferenceDisplay.vue';
-import EnvelopeOpen from '../global/envelope-open.vue';
-import Trash from '../global/trash.vue';
 import ThreadTopBar from './ThreadTopBar.vue';
 import Thread from './Thread.vue';
+import ThreadService from '../../services/ThreadService.js';
 
 export default {
   name: 'ThreadContainer',
@@ -49,10 +47,25 @@ export default {
     ...mapStores(useThreadStore)
   },
   methods: {
+    async toggleUnreadStatus(id) {
+      try{
+        await ThreadService.toggleUnreadStatus(id)
+      } catch (e){
+
+      }
+      const thread = this.threadStore.threads.find(t => t.id === id)
+      this.threadStore.threads.find(t => t.id === id).unread = !thread.unread
+    },
+    async deleteThread(id){
+      try{
+        await ThreadService.deleteThread(id)
+      } catch (e){
+      }
+      this.threadStore.threads = this.threadStore.threads.filter(t => t.id !== id) 
+    },
     async fetchThreads() {
       this.threadStore.fetchThreads()
     },
-
     async updateSortingAndFetch() {
       return this.fetchThreads()
     },
@@ -81,5 +94,8 @@ export default {
 }
 .thread-container {
   width: 370px;
+}
+.scroller {
+  scrollbar-color: #212121 #3e3e3e;
 }
 </style>

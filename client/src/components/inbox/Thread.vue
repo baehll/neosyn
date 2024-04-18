@@ -26,7 +26,7 @@
         :class="{'items-center justify-end flex flex-row gap-4 absolute right-0': true, 'opacity-0 pointer-events-none': !threadActionVisible}"
       >
         <button
-       @click="markAsUnread"
+          @click.stop="toggleUnreadStatus"
         >
           <EnvelopeOpen
             class="hover:text-primary text-darkgray-80"
@@ -101,11 +101,11 @@ export default {
     ...mapStores(useThreadStore, useTimerStore),
   },
   methods: {
-    markAsUnread(){
-
+    toggleUnreadStatus(e){
+      this.$emit('toggle-unread', this.id)
     },
     deleteMessage(){
-
+      this.$emit('delete', this.id)
     },
     showThreadActions() {
       this.threadActionVisible = true
