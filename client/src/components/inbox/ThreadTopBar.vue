@@ -1,6 +1,6 @@
 <template>
-  <div class="pt-7 pb-5 flex flex-col justify-between relative bg-darkgray-10">
-    <div class="px-3 relative w-full mb-8">
+  <div class="pt-7 flex flex-col justify-between relative bg-darkgray">
+    <div class="px-3 relative w-full mb-4">
       <Searchglass
         class="text-lightgray-10 absolute left-6 top-1/2 transform -translate-y-1/2 pointer-events-none"
       />
@@ -8,7 +8,7 @@
              @keyup.enter="commitSearch">
     </div>
     <div class="px-3 justify-between relative flex flex-row">
-      <div class="flex items-center gap-2 w-8/12">
+      <div class="flex items-center gap-2 w-8/1 pt-3 pb-4">
         <Reload
           class="text-lightgray-10"
         />
@@ -19,39 +19,46 @@
       </div>
       <div class="flex gap-2">
         <CustomButton
-          :class="{'icon-only': true}"
           @click="toggleFilterLayer"
+            :class="{'!pb-4 relative top-0.5 z-50 icon-only !px-2 !pt-3 block border !rounded-none': true, 'border-transparent': !filterLayerVisible, '!bg-black border-lightgray-80 border-b-black': filterLayerVisible}"
         >
           <span
-            :class="{'px-2 pt-1 block': true, 'bg-lightgray border border-lightgray-20': filterLayerVisible}"
           >
           <Filter
           />
           </span>
         </CustomButton>
         <CustomButton
-          class="icon-only"
           @click="toggleSorting"
+            :class="{'!pb-4 relative top-0.5 z-50 icon-only !px-2 !pt-3 block border !rounded-none': true, 'border-transparent': !sortingLayerVisible, '!bg-black border-lightgray-80 border-b-black': sortingLayerVisible}"
         >
+          <span
+          >
           <Sorting/>
+          </span>
         </CustomButton>
       </div>
     </div>
     <div class="flex flex-col">
-      <div v-if="sortingLayerVisible" class="bg-primary px-8 py-4 -32 -32 absolute left-0 top-full">
-        <ul>
+      <div v-if="sortingLayerVisible" class="flex flex-col w-full border-t border-lightgray bg-black text-white px-6 pt-3 pb-4 relative justify-between">
+        <small v-text="$t('Sort by:')" class="text-lightgray-10 font-roboto mb-2"></small>
+        <ul
+          :class="{'flex flex-wrap': true}"
+        >
           <li
-            v-for="(label, icon) in availableFilters.platforms"
-            :key="icon"
+            v-for="(sortingTitle, sortingOption) in sortingOptions"
+            :key="sortingOption"
+            :class="{'basis-1/2 mb-2 text-sm even:text-right': true}"
           >
-            <input type="checkbox" :name="`${icon}-filter`" :id=" `${icon}-filter`">
-            <label :for="`${icon}-filter`">
-              <span v-text="label"></span>
-            </label>
+            <button
+              v-text="sortingTitle"
+              :class="{'font-roboto hover:font-medium': true, 'text-primary font-medium': sortingOption === sorting, 'text-white': sortingOption !== sorting}"
+              @click="setSorting(sortingOption)"
+            ></button>
           </li>
         </ul>
       </div>
-      <div v-if="filterLayerVisible" class="flex flex-row w-full bg-darkgray text-white px-8 py-4 relative justify-between">
+      <div v-if="filterLayerVisible" class="flex flex-row w-full bg-black text-white px-6 py-4 border-t border-lightgray relative justify-between">
         <ul>
           <li
             v-for="(platform) in availableFilters.platforms"
@@ -60,6 +67,7 @@
             <Checkbox
               :label="platform.label"
               :id="platform.name"
+              :disabled="platform.disabled && platform.disabled === true"
               v-model="platformFilter"
             />
           </li>
@@ -98,6 +106,7 @@ export default {
   data: () => {
     return {
       filterLayerVisible: false,
+      sortingLayerVisible: false,
       searchTerm: '',
       threadFilter: null,
       sorting: 'desc',
@@ -107,21 +116,34 @@ export default {
   },
   computed: {
     ...mapStores(useThreadStore),
+    sortingOptions() {
+      return {
+           'new': this.$t('New'),
+           'old': this.$t('Old'),
+           'most_interaction': this.$t('Most Interaction'),
+           'least_interaction': this.$t('Least Interaction'), 
+        }
+    },
     availableFilters() {
       const result = {}
       result.platforms = ThreadFilter.AVAILABLE_PLATFORMS
       result.messageTypes = ThreadFilter.MESSAGE_TYPES
       return result
-    }
-
+    },
   },
   methods: {
+    setSorting(sorting){
+      this.sorting = sorting
+    },
     commitSearch() {
     },
     toggleFilterLayer() {
+      this.sortingLayerVisible = false
       this.filterLayerVisible = !this.filterLayerVisible
     },
     toggleSorting() {
+      this.filterLayerVisible = false
+      this.sortingLayerVisible = !this.sortingLayerVisible
     }
   },
   created() {
@@ -130,10 +152,11 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 input {
   &[type="text"] {
-    @apply py-1.5 px-10 rounded-xl outline-0 bg-transparent;
+    @apply py-1.5 px-10 outline-0 bg-transparent focus:border-primary hover:bg-lightgray;
+    border-radius: 36px;
   }
 }
 </style>

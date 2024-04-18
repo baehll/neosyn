@@ -1,7 +1,7 @@
 <template>
   <nav class="h-full pt-4 pb-6 px-3 bg-darkgray-20 border-r border-l border-lightgray-70 sidebar flex flex-col">
     <logo-big
-      class="mb-16 self-end text-white logo-sidebar"
+      class="shrink-0 mb-16 self-end text-white logo-sidebar"
     />
     <div class="flex flex-col justify-between h-full">
       <ul class="flex flex-col items-center gap-12 text-lightgray-10">
