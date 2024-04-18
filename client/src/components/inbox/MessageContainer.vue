@@ -22,17 +22,17 @@
         />
         </div>
         <div 
+          :class="{'flex h-full flex-col grow shrink-0 justify-end items-end suggestions absolute bottom-0 right-0 transform transition-transform': true, 'translate-x-100': suggestions.length === 0, 'translate-x-0': suggestions.length > 0}"
+        >
+        <div 
           @click="closeSuggestions"
           :class="{'message-curtain absolute top-0 left-0 transition-all h-full w-full bg-black': true, 'opacity-0 pointer-events-none': suggestions.length === 0, 'opacity-60 pointer-events-all': suggestions.length}"
         >
 
         </div>
-        <div 
-          :class="{'suggestions absolute bottom-0 right-0 transform transition-transform': true, 'translate-x-100': suggestions.length === 0, 'translate-x-0': suggestions.length > 0}"
-        >
           <MessageBody
           v-for="(suggestion, i) in suggestions"
-          :class="{'mb-6': true}"
+          :class="{'relative mb-6': true}"
           :selectable="true"
           :message="suggestion.message"
           :from="0"
@@ -45,30 +45,34 @@
       <div class="actions max-w-full">
         <div :class="{'flex justify-end gap-4 quick-responses mb-8 transition-opacity': true, 'opacity-0 pointer-events-none': !currentThreadId, 'opacity-100 pointer-events-all': currentThreadId }">
           <CustomButton
-            class="text-xs"
-            v-for="quickResponse in quickResponses"
-            @click="insertResponse(quickResponse)"
+            :class="{'text-xs border hover:bg-lightgray-20': true, 'border-transparent': selectedQuickAction !== i, 'border-primary': selectedQuickAction === i}"
+            v-for="(quickResponse, i) in quickResponses"
+            @click="selectQuickAction(quickResponse, i)"
             v-text="quickResponse"
           >
           </CustomButton>
         </div>
         <div
-          class="grow-0 items-end generate-responses p-4 border border-lightgray rounded-xl flex justify-between gap-4">
+          class="grow-0 items-end generate-responses p-4 border border-lightgray rounded-xl flex gap-4">
           <GenerateButton
             @click="generateSuggestions"
             :disabled="selectedSuggestion || !currentThreadId"
           >
             {{ $t('Generate') }}
           </GenerateButton>
-          <span v-if="currentThreadId" contenteditable @keyup="messageUpdated" ref="msgInput"
-                class="text-sm bg-transparent resize-none outline-0 grow-0 text-white block w-full "></span>
+          <div
+            class="mb-2 max-h-24 overflow-scroll"
+          >
+            <span v-if="currentThreadId" contenteditable @keyup="messageUpdated" ref="msgInput"
+              class="max-w-full text-sm bg-transparent resize-none outline-0 grow-0 text-white block w-full "></span>
+          </div>
           <button
-            :class="{'outline-0 rounded-xl px-5 py-3 bg-lightgray grow-0': true, 'cursor-not-allowed': messageInput === '', 'bg-primary cursor-pointer': messageInput !== ''}"
+            :class="{'outline-0 rounded-xl px-5 py-3 bg-lightgray grow-0 ml-auto': true, 'cursor-not-allowed': messageInput === '', 'bg-primary cursor-pointer': messageInput !== ''}"
             @click="sendMessage"
           >
             <arrow-up
-              class="text-black"
-            />
+            class="text-black"
+          />
           </button>
         </div>
       </div>
@@ -100,6 +104,7 @@ export default {
   data: () => {
     return {
       selectedSuggestion: null,
+      selectedQuickAction: null,
       currentThreadId: null,
       quickResponses: [
         'Thanks! 💚',
@@ -116,6 +121,8 @@ export default {
     threadId(newVal, oldVal) {
       this.messageStore.getMessagesForThread(newVal)
       this.suggestions = []
+      this.selectedQuickAction = null
+      this.selectedSuggestion = null
       this.currentThreadId = newVal
       this.messageInput = ''
       setTimeout(() => {
@@ -131,6 +138,7 @@ export default {
       this.suggestions = []
     },
     suggestionSelected(i) {
+      this.selectedQuickAction = null
       if(this.selectedSuggestion && this.selectedSuggestion === i){
         this.selectedSuggestion = null
         this.insertResponse('')
@@ -144,6 +152,10 @@ export default {
         return
       }
       this.suggestions = await SuggestService.generateSuggestions(this.threadId)
+    },
+    selectQuickAction(message, i) {
+      this.selectedQuickAction = i
+      this.insertResponse(message)
     },
     insertResponse(message) {
       this.messageInput = message
@@ -164,6 +176,7 @@ export default {
         date: Date.now(),
       }
       this.selectedSuggestion = null
+      this.selectedQuickAction = null
       this.suggestions = []
       this.messageStore.messages[this.currentThreadId].push(message)
       setTimeout(() => {

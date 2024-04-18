@@ -1,11 +1,11 @@
 <template>
-  <div class="bg-darkgray-10 shrink-0 thread-container flex flex-col">
+  <div class="bg-darkgray shrink-0 thread-container flex flex-col">
     <ThreadTopBar
       @triggeredSearch="updateSearchTermAndFetch"
       @changedFilter="updateFilterAndFetch"
       @changeSorting="updateSortingAndFetch"
     />
-    <div class="overflow-y-scroll">
+    <div class="scroller overflow-y-scroll">
       <Thread
         v-for="thread in threadStore.threads"
         :key="thread.id"
@@ -94,5 +94,8 @@ export default {
 }
 .thread-container {
   width: 370px;
+}
+.scroller {
+  scrollbar-color: #212121 #3e3e3e;
 }
 </style>

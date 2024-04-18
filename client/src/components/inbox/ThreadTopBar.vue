@@ -1,14 +1,14 @@
 <template>
-  <div class="pt-7 flex flex-col justify-between relative bg-darkgray-10">
-    <div class="px-3 relative w-full mb-8">
+  <div class="pt-7 flex flex-col justify-between relative bg-darkgray">
+    <div class="px-3 relative w-full mb-4">
       <Searchglass
         class="text-lightgray-10 absolute left-6 top-1/2 transform -translate-y-1/2 pointer-events-none"
       />
       <input type="text" class="bg-transparent border border-lightgray-10 py-0 px-24 w-full"
              @keyup.enter="commitSearch">
     </div>
-    <div class="pb-4 px-3 justify-between relative flex flex-row">
-      <div class="flex items-center gap-2 w-8/12">
+    <div class="px-3 justify-between relative flex flex-row">
+      <div class="flex items-center gap-2 w-8/1 pt-3 pb-4">
         <Reload
           class="text-lightgray-10"
         />
@@ -19,27 +19,29 @@
       </div>
       <div class="flex gap-2">
         <CustomButton
-          :class="{'icon-only': true}"
           @click="toggleFilterLayer"
+            :class="{'!pb-4 relative top-0.5 z-50 icon-only !px-2 !pt-3 block border !rounded-none': true, 'border-transparent': !filterLayerVisible, '!bg-black border-lightgray-80 border-b-black': filterLayerVisible}"
         >
           <span
-            :class="{'px-2 pt-1 block': true, 'bg-lightgray border border-lightgray-20': filterLayerVisible}"
           >
           <Filter
           />
           </span>
         </CustomButton>
         <CustomButton
-          class="icon-only"
           @click="toggleSorting"
+            :class="{'!pb-4 relative top-0.5 z-50 icon-only !px-2 !pt-3 block border !rounded-none': true, 'border-transparent': !sortingLayerVisible, '!bg-black border-lightgray-80 border-b-black': sortingLayerVisible}"
         >
+          <span
+          >
           <Sorting/>
+          </span>
         </CustomButton>
       </div>
     </div>
     <div class="flex flex-col">
-      <div v-if="sortingLayerVisible" class="flex flex-col w-full border-t border-darkgray bg-black text-white px-6 py-2 relative justify-between">
-        <small v-text="$t('Sort by:')" class="text-darkgray-80 mb-1"></small>
+      <div v-if="sortingLayerVisible" class="flex flex-col w-full border-t border-lightgray bg-black text-white px-6 pt-3 pb-4 relative justify-between">
+        <small v-text="$t('Sort by:')" class="text-lightgray-10 font-roboto mb-2"></small>
         <ul
           :class="{'flex flex-wrap': true}"
         >
@@ -50,13 +52,13 @@
           >
             <button
               v-text="sortingTitle"
-              :class="{'hover:font-medium': true, 'text-primary font-medium': sortingOption === sorting, 'text-white': sortingOption !== sorting}"
+              :class="{'font-roboto hover:font-medium': true, 'text-primary font-medium': sortingOption === sorting, 'text-white': sortingOption !== sorting}"
               @click="setSorting(sortingOption)"
             ></button>
           </li>
         </ul>
       </div>
-      <div v-if="filterLayerVisible" class="flex flex-row w-full bg-darkgray text-white px-6 py-4 relative justify-between">
+      <div v-if="filterLayerVisible" class="flex flex-row w-full bg-black text-white px-6 py-4 border-t border-lightgray relative justify-between">
         <ul>
           <li
             v-for="(platform) in availableFilters.platforms"
@@ -150,10 +152,11 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 input {
   &[type="text"] {
-    @apply py-1.5 px-10 rounded-xl outline-0 bg-transparent;
+    @apply py-1.5 px-10 outline-0 bg-transparent focus:border-primary hover:bg-lightgray;
+    border-radius: 36px;
   }
 }
 </style>

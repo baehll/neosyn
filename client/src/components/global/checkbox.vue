@@ -1,6 +1,6 @@
 <template>
 	<div :class="{'cursor-pointer mb-3 gap-2 flex items-center': true, 'text-lightgray-40': disabled, 'flex-row justify-end': rtl, 'justify-end flex-row-reverse': !rtl}">
-		<label :for="id" v-text="label"></label>
+		<label class="cursor-pointer" :for="id" v-text="label"></label>
 		<input 
 			:id="id"
 			:disabled="disabled" 
