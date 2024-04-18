@@ -32,7 +32,7 @@
         </div>
           <MessageBody
           v-for="(suggestion, i) in suggestions"
-          :class="{'relative mb-6': true}"
+          :class="{'relative mb-6 mr-6': true}"
           :selectable="true"
           :message="suggestion.message"
           :from="0"
@@ -43,7 +43,7 @@
         </div>
       </div>
       <div class="actions max-w-full">
-        <div :class="{'flex justify-end gap-4 quick-responses mb-8 transition-opacity': true, 'opacity-0 pointer-events-none': !currentThreadId, 'opacity-100 pointer-events-all': currentThreadId }">
+        <div :class="{'flex justify-end gap-4 quick-responses mr-4 mb-8 transition-opacity': true, 'opacity-0 pointer-events-none': !currentThreadId, 'opacity-100 pointer-events-all': currentThreadId }">
           <CustomButton
             :class="{'text-xs border hover:bg-lightgray-20': true, 'border-transparent': selectedQuickAction !== i, 'border-primary': selectedQuickAction === i}"
             v-for="(quickResponse, i) in quickResponses"
