@@ -3,9 +3,14 @@
     <div class="overflow-hidden flex flex-col justify-between w-full h-full bg-darkgray rounded-xl message p-4">
       <div class="flex justify-between px-2 pt-2 pb-4">
         <span class="rounded-3xl border border-white px-4 text-white py-1" v-text="$t('Interaction')"></span>
-        <BookmarkOutline
-          class="custom-fill text-darkgray-80"
-        />
+        <button
+          :class="{'bookmark-button': true, 'bookmarked': currentThread && currentThread.bookmark}"
+          @click="bookmarkThread"
+        >
+          <BookmarkOutline
+            class="bookmark-icon custom-fill"
+          />
+        </button>
       </div>
       <div class="messages flex-grow relative">
         <div
@@ -132,6 +137,9 @@ export default {
   },
   computed: {
     ...mapStores(useThreadStore, useMessageStore),
+    currentThread(){
+      return this.threadStore.threads[this.currentThreadId] || null
+    }
   },
   methods: {
     closeSuggestions(){
@@ -185,9 +193,12 @@ export default {
         this.messageInput = ''
         this.$refs.msgInput.innerText = ''
       }, 250)
+    },
+    bookmarkThread(){
+      this.threadStore.threads[this.currentThreadId].bookmark = !this.threadStore.threads[this.currentThreadId].bookmark
     }
   },
-  created: () => {
+  created: function() {
 
   }
 }
@@ -197,6 +208,22 @@ export default {
 .quick-responses {
   button {
     @apply bg-lightgray text-lightgray-10;
+  }
+}
+.bookmark-button {
+  &.bookmarked {
+    .bookmark-icon path {
+      stroke:  #ACED84;
+      fill:  #ACED84;
+    }
+  }
+  .bookmark-icon path {
+    @apply transition-all;
+  }
+  &:hover {
+    .bookmark-icon path {
+      fill: #494949;
+    }
   }
 }
 </style>
