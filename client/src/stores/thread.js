@@ -51,6 +51,7 @@ export const useThreadStore = defineStore('thread', {
                         "last_message": "The early bird catches the worm."
                     },
                     {
+                        "bookmark": true,
                         "unread": true, "id": 2,
                         "platform": "facebook",
                         "last_updated": 1649898184408,
