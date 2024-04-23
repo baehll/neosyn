@@ -7,15 +7,15 @@
           <heart
             class="text-red-600"
           />
-          800 Likes
+          800 <span class="hide-on-small">Likes</span>
         </div>
         <div class="flex gap-1 items-center">
           <comments/>
-          84 Comments
+          84 <span class="hide-on-small">Comments</span>
         </div>
         <div class="flex gap-1 items-center">
           <retweets/>
-          Retweets
+          11 <span class="hide-on-small">Retweets</span>
         </div>
       </div>
       <div class="px-4 py-2 text-white grow-0">

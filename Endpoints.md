@@ -102,3 +102,37 @@ Suche nach bestimmten Interaktionen mit Filtereinstellungen
 
 - Generate Responses zu einem Posting
 - aktuellster Post
+
+### POST /api/data/threads[/{sorting}]
+
+Liefert Threads aller Social Media Plattform zurück
+
+Struktur der Anfrage:
+GET Parameter für Sortierung (entweder new, old, most-interaction oder
+least-interaction)
+
+JSON Post Body für Filterung:
+
+     {
+          platforms: [int/string],
+          sentiments: [int/string] (question, positive, neutral, negative),
+     }
+
+platforms kann entweder die Namen der Social Media Plattformen als Array aus String oder -
+falls du intern eine Mapping Tabelle hast - als referenzierende Id
+
+sentiments wie bei platforms, entweder als Array aus String oder als int
+
+Struktur der Antwort:
+JSON Array mit Thread Objekten:
+
+     [
+          {
+              id int,
+              username string,
+              message string,
+              platform int/string,
+              lastUpdated datetime,
+              unread bool,
+          }
+     ]
