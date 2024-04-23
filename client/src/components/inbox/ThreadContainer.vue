@@ -93,7 +93,11 @@ export default {
   }
 }
 .thread-container {
-  width: 370px;
+  width: 292px;
+
+  @media (min-width: 1920px){
+    width: 370px;
+  }
 }
 .scroller {
   scrollbar-color: #212121 #3e3e3e;
