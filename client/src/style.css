@@ -11,10 +11,6 @@ body {
 }
 
 #app {
-    @screen lg {
-        min-width: 1440px;
-        min-height: 720px;
-    }
 }
 
 svg:not(.custom-fill) path {
