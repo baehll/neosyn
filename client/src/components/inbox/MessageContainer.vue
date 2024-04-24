@@ -27,7 +27,7 @@
         />
         </div>
         <div 
-          :class="{'flex h-full flex-col grow shrink-0 justify-end items-end suggestions absolute bottom-0 right-0 transform transition-transform': true, 'translate-x-100': suggestions.length === 0, 'translate-x-0': suggestions.length > 0}"
+          :class="{'h-full flex-col grow shrink-0 justify-end items-end suggestions absolute bottom-0 right-0 transform transition-transform': true, 'translate-x-100': suggestions.length === 0, 'translate-x-0': suggestions.length > 0}"
         >
         <div 
           @click="closeSuggestions"
@@ -35,16 +35,18 @@
         >
 
         </div>
-          <MessageBody
-          v-for="(suggestion, i) in suggestions"
-          :class="{'relative mb-6 mr-6': true}"
-          :selectable="true"
-          :message="suggestion.message"
-          :from="0"
-          :message-subline="`Suggestion ${i+1}`"
-          :selected="i === selectedSuggestion"
-          @select="suggestionSelected(i)"
-        />
+          <div class="overflow-y-scroll h-full w-full pr-6">
+            <MessageBody
+              v-for="(suggestion, i) in suggestions"
+              :class="{'relative mb-6 mr-6 left-full w-6/12 transform -translate-x-full': true}"
+              :selectable="true"
+              :message="suggestion.message"
+              :from="0"
+              :message-subline="`Suggestion ${i+1}`"
+              :selected="i === selectedSuggestion"
+              @select="suggestionSelected(i)"
+            />
+          </div>
         </div>
       </div>
       <div class="actions max-w-full">
