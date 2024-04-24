@@ -19,6 +19,7 @@ export default {
   data: () => {
     return {
       resolutionTooLow: false,
+      app: document.getElementById('app'),
     }
   },
   computed: {
@@ -29,6 +30,13 @@ export default {
       const innerWidth = window.innerWidth;
       const innerHeight = window.innerHeight;
       this.resolutionTooLow = false // innerWidth <= 1600 || innerHeight <= 1150
+
+      if(innerWidth < 1400){
+        const scale = (innerWidth/1400)
+        this.app.style.transform = `scale(${scale})`; 
+      } else {
+        this.app.style.transform = ''
+      }
     }
   },
   created() {
