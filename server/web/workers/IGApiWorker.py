@@ -1,4 +1,4 @@
-from ..models import db, Page, BusinessAccount, Media, Comment
+from ..models import db, IGPage, IGBusinessAccount, IGMedia, IGComment
 import requests, json
 from datetime import datetime
 
