@@ -110,12 +110,15 @@ Liefert Threads aller Social Media Plattform zurück
 Struktur der Anfrage:
 GET Parameter für Sortierung (entweder new, old, most-interaction oder
 least-interaction)
+Default Sortierung: new
 
-JSON Post Body für Filterung:
+JSON Post Body für Filterung / Paging:
 
      {
           platforms: [int/string],
           sentiments: [int/string] (question, positive, neutral, negative),
+          offset: int (id des threads nach der die weiteren threads geladen
+werden sollen)
      }
 
 platforms kann entweder die Namen der Social Media Plattformen als Array aus String oder -
@@ -130,9 +133,67 @@ JSON Array mit Thread Objekten:
           {
               id int,
               username string,
+              avatar string,
               message string,
               platform int/string,
               lastUpdated datetime,
               unread bool,
           }
      ]
+
+### GET /api/data/threads/{id}
+
+Liefert den Nachrichtenverlauf eines Threads
+
+Datenstruktur:
+
+     [
+       {
+           id int,
+           threadId int,
+           content string,
+           from int,
+           messageDate datetime,
+       }
+     ]
+
+### POST /api/data/threads/{id}/message
+
+Erstellt eine neue Nachricht in einem Thread
+
+Datenstruktur im JSON Body:
+
+{
+    message string
+}
+
+
+### PUT /api/data/threads/{id}
+
+Aktualisiert einen Thread (gerade nur um den Read Status auf gelesen/ungelesen
+zu setzen)
+
+Datenstruktur im JSON Body:
+
+{
+    unread bool
+}
+
+### GET /api/data/threads/{id}/post
+
+Liefert den zugrundeliegenden Social Media Post eines Threads
+
+Datenstruktur der Antwort:
+
+      {
+           id int,
+           threadId int,
+           postMedia string (absolute url),
+           postMediaType string (image, video)
+           postContent string (post caption),
+           platform (either id referencing the different socialmedia platforms
+           in another table or string, eg. facebook),
+           likes int,
+           comments int,
+           shares int
+      }
