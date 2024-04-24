@@ -5,9 +5,9 @@ import os
 import requests
 from flask_login import login_required, current_user
 from decouple import config
-from ..models import db, User , _PlatformEnum, Organization
+from ..models import db, User , _PlatformEnum, Organization, OAuth
 from pathvalidate import sanitize_filename, replace_symbol
-from ...utils import file_utils
+from ...utils import file_utils, IGApiFetcher
 from werkzeug.utils import secure_filename
 
 api = Blueprint('api', __name__)
@@ -117,33 +117,48 @@ def company_files():
         return jsonify({"error":"An exception has occoured"}), 500
     return jsonify({}), 200
 
-@api.route("/long_lived_access", methods=["POST"])
+@api.route("/update_interactions", methods=["GET"])
 @login_required
-def long_lived_access():
-    print(request.get_json())
-    # Erst einen long lived access token generieren
-    url = 'https://graph.facebook.com/v18.0/oauth/'
-    params = {
-        "client_id": config("FB_APP_ID"),
-        "client_secret": config("FB_CLIENT_SECRET"),
-        "fb_exchange_token": request.get_json()["access_token"],
-        "grant_type": "fb_exchange_token"
-    }
-    res = requests.get(url + "access_token", params=params)
+def update_interactions():
+    # try:
+    #     # access token aus DB nehmen
+    #     oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()
+    #     IGApiFetcher.update_all_entries(oauth.token["access_token"], current_user)
+    #     return jsonify({}), 200
+    # except Exception as e:
+    #     print(e)
+    #     return jsonify({"error":"An exception has occoured"}), 500
+    oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()
+    IGApiFetcher.update_all_entries(oauth.token["access_token"], current_user)
+    return jsonify({}), 200
+
+# @api.route("/long_lived_access", methods=["POST"])
+# @login_required
+# def long_lived_access():
+#     print(request.get_json())
+#     # Erst einen long lived access token generieren
+#     url = 'https://graph.facebook.com/v18.0/oauth/'
+#     params = {
+#         "client_id": config("FB_APP_ID"),
+#         "client_secret": config("FB_CLIENT_SECRET"),
+#         "fb_exchange_token": request.get_json()["access_token"],
+#         "grant_type": "fb_exchange_token"
+#     }
+#     res = requests.get(url + "access_token", params=params)
     
-    # Wenn es einen Token gibt, wird ein long lived client token versucht zu generieren
-    if(res.status_code == 200):
-        params = {
-            "client_id": config("FB_APP_ID"),
-            "client_secret": config("FB_CLIENT_SECRET"),
-            "access_token": res.json()["access_token"],
-            "redirect_uri": "https://quiet-mountain-69143-51eb8184b186.herokuapp.com/"
-        }
-        resp = requests.get(url + "client_code", params=params)
+#     # Wenn es einen Token gibt, wird ein long lived client token versucht zu generieren
+#     if(res.status_code == 200):
+#         params = {
+#             "client_id": config("FB_APP_ID"),
+#             "client_secret": config("FB_CLIENT_SECRET"),
+#             "access_token": res.json()["access_token"],
+#             "redirect_uri": "https://quiet-mountain-69143-51eb8184b186.herokuapp.com/"
+#         }
+#         resp = requests.get(url + "client_code", params=params)
         
-        #Wenn der Code generiert wurde, wird das ans Frontend geschickt und von dort weiter gemacht
-        if(resp.json()["code"]):
-            return jsonify({"code": resp.json()["code"]})
+#         #Wenn der Code generiert wurde, wird das ans Frontend geschickt und von dort weiter gemacht
+#         if(resp.json()["code"]):
+#             return jsonify({"code": resp.json()["code"]})
           
 # @api.route("/long_lived_client_token", methods=["POST"])
 # def long_lived_client_token():
