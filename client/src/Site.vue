@@ -4,13 +4,9 @@
   </transition>
 </template>
 <script>
-import ComingSoon from './views/ComingSoon.vue';
 
 export default {
   name: "Site",
-  components: {
-    ComingSoon
-  },
 }
 </script>
 
