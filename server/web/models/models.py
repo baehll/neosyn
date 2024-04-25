@@ -17,6 +17,9 @@ class _Base(db.Model):
     
     def to_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+    
+    def __str__(self):
+        return "<" + self.__class__.__name__ + " " + str(self.id) + " " +  str(self.to_dict()) + ">"
 
 class _IGBaseTable(_Base):
     __abstract__ = True
@@ -93,18 +96,18 @@ class IGBusinessAccount(_IGBaseTable):
     
     medias = db.relationship("IGMedia", back_populates="bzacc")
 
-class IGInteraction(db.Model):
-    __tablename__ = "ig_interactions"
+class IGThread(_Base):
+    __tablename__ = "ig_threads"
     
-    media_id = db.Column(db.ForeignKey("ig_medias.id"), primary_key=True)
-    comment_id = db.Column(db.ForeignKey("ig_comments.id"), primary_key=True)
-    customer_id = db.Column(db.ForeignKey("ig_customers.id"), primary_key=True)
+    media_id = db.Column(db.ForeignKey("ig_medias.id"))
+    customer_id = db.Column(db.ForeignKey("ig_customers.id"))
     
     is_read = db.Column(db.Boolean, nullable=False, default=False)
     
-    media = db.relationship("IGMedia", back_populates="interaction_association")
-    customer = db.relationship("IGCustomer", back_populates="interaction_association")
-    comment = db.relationship("IGComment", back_populates="interaction_association")
+    media = db.relationship("IGMedia", back_populates="thread_association")
+    customer = db.relationship("IGCustomer", back_populates="thread_association")
+    
+    comments = db.relationship("IGComment", back_populates="thread")
     
 class IGMedia(_IGBaseTable):
     __tablename__ = "ig_medias"
@@ -115,30 +118,38 @@ class IGMedia(_IGBaseTable):
     media_url = db.Column(db.String(450), nullable=False)
     permalink = db.Column(db.String(50), nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False)
+    like_count = db.Column(db.Integer, nullable=False, default=0)
+    comments_count = db.Column(db.Integer, nullable=False, default=0)
     
-    interaction_association = db.relationship("IGInteraction", back_populates="media")
-    customers = association_proxy("interaction_association", "customer")
-    comments = association_proxy("interaction_association", "comment")
+    thread_association = db.relationship("IGThread", back_populates="media")
+    customers = association_proxy("thread_association", "customer")
+    
+    comments = db.relationship("IGComment", back_populates="media")
     
 class IGCustomer(_IGBaseTable):
     __tablename__ = "ig_customers"
 
     name = db.Column(db.String(200), nullable=False)
     
-    interaction_association = db.relationship("IGInteraction", back_populates="customer")
-    medias = association_proxy("interaction_association", "media")
-    comments = association_proxy("interaction_association", "comment")
+    thread_association = db.relationship("IGThread", back_populates="customer")
+    medias = association_proxy("thread_association", "media")
+    
+    comments = db.relationship("IGComment", back_populates="customer")
     
 class IGComment(_IGBaseTable):
     __tablename__  = "ig_comments"
     
     parent_id = db.Column(db.Integer, db.ForeignKey("ig_comments.id"), nullable=True)
-    children = db.relationship("IGComment")
+    parent = db.relationship("IGComment", remote_side="IGComment.id",backref="children")
     
-    interaction_association = db.relationship("IGInteraction", back_populates="comment")
+    thread_id = db.Column(db.Integer, db.ForeignKey("ig_threads.id"))
+    thread = db.relationship("IGThread", back_populates="comments")
     
-    customers = association_proxy("interaction_association", "customer")
-    medias = association_proxy("interaction_association", "media")
+    media_id = db.Column(db.Integer, db.ForeignKey("ig_medias.id"))
+    media = db.relationship("IGMedia", back_populates="comments")
+    
+    customer_id = db.Column(db.Integer, db.ForeignKey("ig_customers.id"))
+    customer = db.relationship("IGCustomer", back_populates="comments")
     
     sentiment = db.Column(db.Integer)
     timestamp = db.Column(db.DateTime, nullable=False)

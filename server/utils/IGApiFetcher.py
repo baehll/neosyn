@@ -1,4 +1,4 @@
-from ..web.models import db, IGPage, IGBusinessAccount, IGMedia, IGComment, IGCustomer, IGInteraction
+from ..web.models import db, IGPage, IGBusinessAccount, IGMedia, IGComment, IGCustomer, IGThread
 import requests, json
 from datetime import datetime
 
@@ -256,7 +256,7 @@ def getBusinessAccounts(access_token, page):
     return new_bz_accs
 
 def getMedia(access_token, bz_acc):
-    _fields = "media_url,timestamp,permalink"
+    _fields = "media_url,timestamp,permalink,comments_count,like_count"
     medias = db.session.execute(db.select(IGMedia).filter(IGMedia.bzacc.has(id=bz_acc.id))).scalars().all()
     new_medias = []
     
@@ -278,7 +278,13 @@ def getMedia(access_token, bz_acc):
     
     for m in media_res:
         body = m["body"]
-        new_media = IGMedia(timestamp=datetime.strptime(body["timestamp"], "%Y-%m-%dT%H:%M:%S%z"), permalink=body["permalink"], media_url=body["media_url"], fb_id=body["id"])
+        new_media = IGMedia(timestamp=datetime.strptime(body["timestamp"], "%Y-%m-%dT%H:%M:%S%z"), 
+                            permalink=body["permalink"], 
+                            media_url=body["media_url"], 
+                            fb_id=body["id"],
+                            like_count=body["like_count"],
+                            comments_count=body["comments_count"])
+        
         new_medias.append(new_media)
         bz_acc.medias.append(new_media)
     _commitToDB(new_medias + [bz_acc])
@@ -287,11 +293,10 @@ def getMedia(access_token, bz_acc):
     
 def getComments(access_token, media):
     _fields = "replies{from, parent, timestamp, username},id,timestamp,from"
-    comments = db.session.execute(db.select(IGComment).filter(IGComment.medias.any(id=media.id))).scalars().all()
+    comments = db.session.execute(db.select(IGComment).filter(IGComment.media.has(id=media.id))).scalars().all()
 
     res = _getInstagramData(access_token, f"/{media.fb_id}/comments")
     
-    # Batch Request, um an alle ETags und Daten zu kommen
     payload = []
     
     #print(res)
@@ -305,50 +310,63 @@ def getComments(access_token, media):
         com_res_filtered = com_res.copy()
         
         for m in com_res_filtered:
-            #print(m)
             if "body" in m and m["body"]["id"] in existing_medias_fb_ids:
                 com_res.remove(m)
-            # elif m["id"] in existing_medias_fb_ids:
-            #     com_res.remove(m)
-            
-    new_comments, media_comment_customer = [], []
+
+    new_comments, comment_customer = [], []
     #print("BATCH RES SIZE: " + str(len(batchRes)))
     for c in com_res:
         body = c["body"]
         new_comm = IGComment(timestamp=datetime.strptime(body["timestamp"], "%Y-%m-%dT%H:%M:%S%z"), fb_id=body["id"])
         # User mit Media und Comment verknüpfen
-        media_comment_customer.append((new_comm, body["from"]))
+        comment_customer.append((new_comm, body["from"]))
         new_comments.append(new_comm)
         #print(body)
         if "replies" in body:
             #print("REPLY SIZE: " + str(len(body["replies"]["data"])))
             for r in body["replies"]["data"]:
-                #print(r)
+                #print("-" + str(r))
                 reply = IGComment(timestamp=datetime.strptime(r["timestamp"], "%Y-%m-%dT%H:%M:%S%z"), fb_id=r["id"])
-                media_comment_customer.append((reply, r["from"]))
-                new_comm.children.append(reply)
+                comment_customer.append((reply, r["from"]))
+                reply.parent = new_comm
                 new_comments.append(reply)
-    
-    _commitToDB(new_comments)
-    
-    for c, cust in media_comment_customer:
+                
+    for comment, fb_user in comment_customer:
         # prüfen, ob customer in DB vorhanden ist, sonst hinzufügen und verbindung media - comment - customer erstellen
-        db_customer = db.session.execute(db.select(IGCustomer).filter_by(fb_id=cust["id"])).scalar_one_or_none()
-        
+        db_customer = db.session.execute(db.select(IGCustomer).filter_by(fb_id=fb_user["id"])).scalar_one_or_none()
+
+        # Wenn kein Customer bis jetzt existiert, neuen erstellen
         if db_customer is None:
             print("creating customer")
-            db_customer = IGCustomer(fb_id=cust["id"], name=cust["username"])
+            db_customer = IGCustomer(fb_id=fb_user["id"], name=fb_user["username"])
+            _commitToDB([db_customer])            
         
-        _commitToDB([db_customer])
-        interaction = IGInteraction(media=media, customer=db_customer, comment=c)
-        _commitToDB([interaction])
+        thread = db.session.execute(db.select(IGThread).filter_by(media=media).filter_by(customer=db_customer)).scalar_one_or_none()
+        # Wenn es noch keinen Thread gibt, neuen erstellen
+        if thread is None:
+            thread = IGThread(media=media, customer=db_customer)
+            _commitToDB([thread])
+            
+        print(thread)
+        #print(comment)
+        # _commitToDB([comment])
+        comment.thread = thread
+        comment.media = media
+        comment.customer = db_customer
+        print(comment)
+        _commitToDB([comment, media, db_customer, thread])
+        thread.comments.append(comment)
+        media.comments.append(comment)
+        db_customer.comments.append(comment)
+        print(comment)
+        print("------------------")
     
     _commitToDB([media])
     
     return new_comments
     
 def update_all_entries(access_token, user):
-    pages, bz_accs, medias, comments, customers, interactions, association = [], [], [], [], [], [], []
+    pages, bz_accs, medias, comments = [], [], [], []
     
     pages = getPages(access_token, user)
     if len(pages) == 0:
@@ -406,12 +424,3 @@ def update_all_entries(access_token, user):
         #         cust_media.interactions.append(interaction)
             
         #     interactions.append(interaction)
-
-    db.session.add_all(pages)
-    db.session.add_all(bz_accs)
-    db.session.add_all(medias)
-    db.session.add_all(comments)
-    db.session.add_all(customers)
-    db.session.add_all(association)
-    db.session.add_all(interactions)
-    db.session.commit()

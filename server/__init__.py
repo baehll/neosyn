@@ -88,8 +88,8 @@ def create_app() -> Flask:
     from .web.api import api
     from .web.auth import authenticate
 
-    #from .web.test import test
-    #app.register_blueprint(test, url_prefix="/test")
+    from .web.test import test
+    app.register_blueprint(test, url_prefix="/test")
     @app.before_request
     def setup():
         session.permanent = True
