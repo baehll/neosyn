@@ -24,4 +24,4 @@ const i18n = createI18n({
 
 i18n.global.setLocaleMessage(locale, messages.default)
 app.use(i18n)
-app.mount('#app')
+app.mount(document.getElementById('app') ? '#app' : '#splash')

@@ -1,46 +1,37 @@
 <template>
   <div class="bg-darkgray h-1/2 overflow-hidden rounded-xl flex flex-col justify-between">
-    <div class="flex flex-col h-full">
-      <img class="shrink-0" width="410" height="410" src="/assets/stock/post.jpg" alt="">
+    <div
+      v-if="messagePost"
+      class="flex flex-col h-full"
+    >
+      <img class="shrink-0" width="410" height="410" :src="image">
       <div class="shrink-0 flex justify-around items-center text-white py-4 font-roboto font-medium text-sm">
         <div class="flex gap-1 items-center">
           <heart
-            class="text-red-600"
-          />
-          800 <span class="hide-on-small">Likes</span>
+          class="text-red-600"
+        />
+          <span v-text="likes"></span> <span class="hide-on-small">Likes</span>
         </div>
         <div class="flex gap-1 items-center">
           <comments/>
-          84 <span class="hide-on-small">Comments</span>
+          <span v-text="comments"></span> <span class="hide-on-small">Comments</span>
         </div>
         <div class="flex gap-1 items-center">
           <retweets/>
-          11 <span class="hide-on-small">Retweets</span>
+          <span v-text="shares"></span> <span class="hide-on-small">Retweets</span>
         </div>
       </div>
-      <div class="px-4 py-2 text-white grow-0">
-        <p class="text-sm font-roboto font-medium">ARE YOU READY? 🤤Nur noch 7 TAGE und eure creamy dreams werden wahr 🫠Am Dienstag launchen wir exklusiv in
-          unserem Onlineshop einen neuen nucao Schokoriegel! 💥So viel vorweg: Es wird extreeeeem cremig, nussig und sau
-          lecker.Welche Riegelsorte wird es wohl werden? 👀Unter allen Antworten in den Kommentaren verlosen wir zweimal
-          eine 12er Packung der neuen Sorte!Ratet bis zum 12.10.2023, 18 Uhr und probiert als erstes unseren neuen Riegel!
-          .
-          .
-          .
-          .
-          .
-          .
-          .
-          .
-          .
-          .
-          #Lorem #Ipsum #Dolor
-        </p>
+      <div class="overflow-y-scroll px-4 pt-2 mb-2 text-white grow-0">
+        <p class="text-sm font-roboto font-medium" v-text="content"></p>
       </div>
     </div>
-    <div class="h-8 shrink-0 bg-darkgray-80 grow flex justify-center items-center">
-      <arrow-up
-        class="transform rotate-180 text-lightgray"
-      />
+    <div
+      class="relative h-full"
+      v-else
+    >
+      <div class="absolute text-white top-1/2 left-1/2 transform -translate-y-1/2 -translate-x-1/2">
+        No message selected
+      </div>
     </div>
   </div>
 
@@ -55,6 +46,26 @@ import ArrowUp from '../global/arrow-up.vue';
 export default {
   name: 'MessagePost',
   components: {ArrowUp, Retweets, Comments, Heart},
+  props: {
+    messagePost: {
+      type: Object
+    },
+    image: {
+      type: String,
+    },
+    content: {
+      type: String,
+    },
+    likes: {
+      type: Number
+    },
+    comments: {
+      type: Number
+    },
+    shares: {
+      type: Number
+    }
+  },
   data: () => {
     return {}
   },
@@ -67,6 +78,11 @@ export default {
 </script>
 
 <style lang="scss">
-.enlarge {
+.hide-on-small {
+  @apply hidden;
+
+  @media (min-width: 1650px){
+    @apply inline-block;
+  }
 }
 </style>
