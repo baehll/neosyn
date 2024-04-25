@@ -30,13 +30,6 @@ export default {
       const innerWidth = window.innerWidth;
       const innerHeight = window.innerHeight;
       this.resolutionTooLow = false // innerWidth <= 1600 || innerHeight <= 1150
-
-      if(innerWidth < 1400){
-        const scale = (innerWidth/1400)
-        this.app.style.transform = `scale(${scale})`; 
-      } else {
-        this.app.style.transform = ''
-      }
     }
   },
   created() {
@@ -50,6 +43,24 @@ export default {
 </script>
 
 <style lang="scss">
+html{
+  #app {
+    height: 100vh;
+  }
+
+  @media (max-width: 1400px) {
+    -moz-transform: scale(0.8, 0.8);
+    -ms-transform: scale(0.8);
+    -webkit-transform: scale(0.8);
+    transform: scale(0.8);
+
+    width:125%; /* to compensate for the 0.8 scale */
+    transform-origin:0 0; /* to move it back to the top left of the window */
+    #app {
+      height: 125vh;
+    }
+  }
+}
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.5s ease;

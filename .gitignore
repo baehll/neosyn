@@ -175,3 +175,8 @@ cython_debug/
 /.UPLOADS/*
 /.idea/
 client/package-lock.json
+
+.ddev
+docker-compose.yml
+Dockerfile
+.dockerignore

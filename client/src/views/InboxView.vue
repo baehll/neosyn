@@ -3,9 +3,11 @@
     @selected-thread="setSelectedThread"
   />
   <MessageContainer
-    :thread-id="currentThread"
+    :thread-id="currentThreadId"
   />
-  <PostContainer/>
+  <PostContainer
+    :thread-id="currentThreadId"
+  />
 </template>
 <script>
 
@@ -19,13 +21,12 @@ export default {
   name: 'InboxView',
   components: {
     PostContainer,
-    MessageContainer, 
+    MessageContainer,
     ThreadContainer
   },
   data: () => {
     return {
-      currentThread: null,
-
+      currentThreadId: null,
     }
   },
   computed: {
@@ -33,7 +34,7 @@ export default {
   },
   methods: {
     setSelectedThread(id) {
-      this.currentThread = id
+      this.currentThreadId = id
       this.threadStore.markThreadAsRead(id)
     }
   },

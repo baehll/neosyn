@@ -115,6 +115,7 @@ Default Sortierung: new
 JSON Post Body für Filterung / Paging:
 
      {
+          q: string, (suchanfrage)
           platforms: [int/string],
           sentiments: [int/string] (question, positive, neutral, negative),
           offset: int (id des threads nach der die weiteren threads geladen
@@ -149,8 +150,8 @@ Datenstruktur:
 
      [
        {
-           id int,
-           threadId int,
+           id int (id der message),
+           threadId int (id des threads),
            content string,
            from int,
            messageDate datetime,
