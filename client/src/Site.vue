@@ -10,13 +10,13 @@ export default {
 }
 </script>
 
-<style scoped>
+<style lang="scss">
 html{
   #app {
     height: 100vh;
   }
 
-  @media (max-width: 1730px) {
+  @media (min-width: 1024px) and (max-width: 1730px) {
     -moz-transform: scale(0.8, 0.8);
     -ms-transform: scale(0.8);
     -webkit-transform: scale(0.8);
