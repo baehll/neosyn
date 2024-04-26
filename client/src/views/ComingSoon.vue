@@ -87,8 +87,8 @@ export default {
 <style lang="scss" scoped>
 .coming-soon {
   @apply relative;
-  height: 100dvh;
-  width: 100vw;
+  height: 100%;
+  width: 100%;
 
   h1 {
     font-weight: 100;
