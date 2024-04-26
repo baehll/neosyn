@@ -48,7 +48,7 @@ html{
     height: 100vh;
   }
 
-  @media (max-width: 1400px) {
+  @media (max-width: 1730px) {
     -moz-transform: scale(0.8, 0.8);
     -ms-transform: scale(0.8);
     -webkit-transform: scale(0.8);
