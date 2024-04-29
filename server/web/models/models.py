@@ -24,11 +24,11 @@ class _Base(db.Model):
 class _IGBaseTable(_Base):
     __abstract__ = True
     
-    etag = db.Column(db.String(50), nullable=True)
-    fb_id = db.Column(db.Integer, nullable=False)
+    etag = db.Column(db.String, nullable=True)
+    fb_id = db.Column(db.String, nullable=False)
 
 class EarlyAccessKeys(_Base):
-    hashed_key = db.Column(db.String(200), nullable=False)
+    hashed_key = db.Column(db.String, nullable=False)
 
     def set_key(self, key):
         self.hashed_key = generate_password_hash(key)
@@ -38,12 +38,12 @@ class EarlyAccessKeys(_Base):
 
 class Organization(_Base):
     __tablename__ = "organizations"
-    name = db.Column(db.String(256))
+    name = db.Column(db.String)
     users = db.relationship("User", back_populates="")
 
-    assistant_id = db.Column(db.String(256))
-    folder_path = db.Column(db.String(256), unique=True)
-    logo_file = db.Column(db.String(256))
+    assistant_id = db.Column(db.String)
+    folder_path = db.Column(db.String, unique=True)
+    logo_file = db.Column(db.String)
 
 class User(_Base, UserMixin):
     __tablename__ = "users"
@@ -51,12 +51,12 @@ class User(_Base, UserMixin):
     orga_id = db.Column(db.Integer, db.ForeignKey("organizations.id"))
     organization = db.relationship("Organization", back_populates="users")
     
-    name = db.Column(db.String(256))
+    name = db.Column(db.String)
     pages = db.relationship("IGPage", back_populates="user")
     platform = db.Column(db.Enum(_PlatformEnum))
     
 class OAuth(OAuthConsumerMixin, _Base):
-    provider_user_id = db.Column(db.String(256), unique=True, nullable=False)
+    provider_user_id = db.Column(db.String, unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)
     user = db.relationship(User)
 
@@ -68,8 +68,8 @@ class IGPage(_IGBaseTable):
 
     business_accounts = db.relationship("IGBusinessAccount", back_populates="page")
 
-    name = db.Column(db.String(200), nullable=False)
-    category = db.Column(db.String(200), nullable=True)
+    name = db.Column(db.String, nullable=False)
+    category = db.Column(db.String, nullable=True)
     can_analyze = db.Column(db.Boolean, default=False)
     can_advertise = db.Column(db.Boolean, default=False)
     can_moderate = db.Column(db.Boolean, default=False)
@@ -115,11 +115,13 @@ class IGMedia(_IGBaseTable):
     bzacc_id = db.Column(db.Integer, db.ForeignKey("ig_business_accounts.id"))
     bzacc = db.relationship("IGBusinessAccount", back_populates="medias")
     
-    media_url = db.Column(db.String(450), nullable=False)
-    permalink = db.Column(db.String(50), nullable=False)
+    media_url = db.Column(db.String, nullable=False)
+    permalink = db.Column(db.String, nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False)
     like_count = db.Column(db.Integer, nullable=False, default=0)
     comments_count = db.Column(db.Integer, nullable=False, default=0)
+    
+    caption = db.Column(db.String)
     
     thread_association = db.relationship("IGThread", back_populates="media")
     customers = association_proxy("thread_association", "customer")
@@ -129,7 +131,8 @@ class IGMedia(_IGBaseTable):
 class IGCustomer(_IGBaseTable):
     __tablename__ = "ig_customers"
 
-    name = db.Column(db.String(200), nullable=False)
+    name = db.Column(db.String, nullable=False)
+    profile_picture_url = db.Column(db.String)    
     
     thread_association = db.relationship("IGThread", back_populates="customer")
     medias = association_proxy("thread_association", "media")
@@ -154,6 +157,7 @@ class IGComment(_IGBaseTable):
     sentiment = db.Column(db.Integer)
     timestamp = db.Column(db.DateTime, nullable=False)
 
+    text = db.Column(db.String)
 
 login_manager = LoginManager()
 login_manager.login_view = "facebook.login"

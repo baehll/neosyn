@@ -84,8 +84,10 @@ def create_app() -> Flask:
                 print("Early Access Keys zur DB hinzugefügt")
             else:
                 print("Keine Early Access Keys in ENV oder DB gefunden")
+    
     from .web.views import views
-    from .web.api import api
+    from .web.api import api_bp
+    from .web.api.data import threads_bp
     from .web.auth import authenticate
 
     from .web.test import test
@@ -95,7 +97,10 @@ def create_app() -> Flask:
         session.permanent = True
     
     app.register_blueprint(views, url_prefix='/')
-    app.register_blueprint(api, url_prefix='/api')
+    
+    app.register_blueprint(api_bp, url_prefix='/api')
+    app.register_blueprint(threads_bp, url_prefix="/api/data/threads")
+    
     app.register_blueprint(authenticate, url_prefix='/auth')
 
     return app    
