@@ -82,12 +82,112 @@ Sample Response:
 ```
 
 ## S5
-### GET /api/data/all_interactions
 
-**Nicht implementiert**
+### GET /api/data/threads
+Liefert Threads aller Social Media Plattformen sortiert nach Query Parametern zurück
 
-Alle Interaktionen zu einer Organisation (mit Chunks)
+Query Parameter
+```bash
+    ?sorting=[new,old,most-interaction,least-interaction]
+```
 
+**200**, wenn die Anfrage erfolgreich war
+Sample JSON Array mit Thread Objekten:
+```bash
+    [
+          {
+              id int,
+              username string,
+              avatar url string,
+              message string,
+              platform int,
+              lastUpdated datetime,
+              unread bool,
+              interactions int
+          }
+    ]
+```
+
+**204**, wenn die Anfrage erfolgreich war, aber keine Threads für diese Anfrage existieren (wenn es zB noch keine Kommentare unter Posts gibt oder die DB noch nicht aktualisiert wurde mit neuen Daten)
+
+**500**, wenn ein Fehler aufgetreten ist mit
+```bash
+    {
+        "error": "error_message"
+    }
+```
+
+### POST /api/data/threads
+
+Liefert Threads aller Social Media Plattformen gefiltert nach JSON Request zurück
+
+JSON Post Body für Filterung / Paging:
+```bash
+    {
+        q: string,
+        platforms: int, (noch nicht implementiert)
+        sentiments: [int/string] (question, positive, neutral, negative), (noch nicht implementiert)
+        offset: int (id des threads nach der die weiteren threads geladen werden sollen)
+    }
+```
+
+**200**, wenn die Anfrage erfolgreich war
+Sample JSON Array mit Thread Objekten:
+```bash
+    [
+          {
+              id int,
+              username string,
+              avatar url string,
+              message string,
+              platform int,
+              lastUpdated datetime,
+              unread bool,
+              interactions int
+          }
+    ]
+```
+
+**204**, wenn die Anfrage erfolgreich war, aber keine Threads für diese Anfrage exisistieren (wenn es zB noch keine Kommentare unter Posts gibt oder die DB noch nicht aktualisiert wurde mit neuen Daten oder es keine Ergebnisse auf Grund der Filter gibt)
+```bash
+    []
+```
+
+**500**, wenn ein Fehler aufgetreten ist mit
+```bash
+    {
+        "error": "error_message"
+    }
+```
+### GET /api/data/threads/<:threadId>
+
+Liefert den Nachrichtenverlauf eines Threads nach threadId
+
+**200**, wenn die Anfrage erfolgreich war
+Sample JSON Array mit Message/Comment Objekten:
+```bash
+    [
+        {
+            id int (id der message/comment),
+            threadId int (id des threads),
+            content string,
+            from int (id des users/customers),
+            messageDate datetime,
+        }
+    ]
+```
+
+**204**, wenn die Anfrage erfolgreich war, aber keine Threads für diese Anfrage exisistieren (wenn es zB noch keine Kommentare unter Posts gibt oder die DB noch nicht aktualisiert wurde mit neuen Daten oder es keinen Thread mit der threadId gibt)
+```bash
+    []
+```
+
+**500**, wenn ein Fehler aufgetreten ist mit
+```bash
+    {
+        "error": "error_message"
+    }
+```
 ### GET /api/data/bookmarks
 
 **Nicht implementiert**
@@ -103,62 +203,10 @@ Suche nach bestimmten Interaktionen mit Filtereinstellungen
 - Generate Responses zu einem Posting
 - aktuellster Post
 
-### POST /api/data/threads[/{sorting}]
-
-Liefert Threads aller Social Media Plattform zurück
-
-Struktur der Anfrage:
-GET Parameter für Sortierung (entweder new, old, most-interaction oder
-least-interaction)
-Default Sortierung: new
-
-JSON Post Body für Filterung / Paging:
-
-     {
-          platforms: [int/string],
-          sentiments: [int/string] (question, positive, neutral, negative),
-          offset: int (id des threads nach der die weiteren threads geladen
-werden sollen)
-     }
-
-platforms kann entweder die Namen der Social Media Plattformen als Array aus String oder -
-falls du intern eine Mapping Tabelle hast - als referenzierende Id
-
-sentiments wie bei platforms, entweder als Array aus String oder als int
-
-Struktur der Antwort:
-JSON Array mit Thread Objekten:
-
-     [
-          {
-              id int,
-              username string,
-              avatar string,
-              message string,
-              platform int/string,
-              lastUpdated datetime,
-              unread bool,
-          }
-     ]
-
-### GET /api/data/threads/{id}
-
-Liefert den Nachrichtenverlauf eines Threads
-
-Datenstruktur:
-
-     [
-       {
-           id int,
-           threadId int,
-           content string,
-           from int,
-           messageDate datetime,
-       }
-     ]
 
 ### POST /api/data/threads/{id}/message
 
+**Nicht implementiert**
 Erstellt eine neue Nachricht in einem Thread
 
 Datenstruktur im JSON Body:
@@ -170,6 +218,7 @@ Datenstruktur im JSON Body:
 
 ### PUT /api/data/threads/{id}
 
+**Nicht implementiert**
 Aktualisiert einen Thread (gerade nur um den Read Status auf gelesen/ungelesen
 zu setzen)
 
@@ -181,6 +230,7 @@ Datenstruktur im JSON Body:
 
 ### GET /api/data/threads/{id}/post
 
+**Nicht implementiert**
 Liefert den zugrundeliegenden Social Media Post eines Threads
 
 Datenstruktur der Antwort:

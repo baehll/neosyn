@@ -194,7 +194,7 @@ def getPages(access_token, user):
     
     if len(pages) > 0:
         # bereits vorhandene Einträge nicht einfügen
-        existing_pages_fb_ids = [str(p.fb_id) for p in pages]
+        existing_pages_fb_ids = [p.fb_id for p in pages]
         page_res_filtered = page_res.copy()
         
         for all_pages in page_res_filtered:
@@ -237,7 +237,7 @@ def getBusinessAccounts(access_token, page):
     
     if len(bz_accs):
         # bereits vorhandene Einträge nicht einfügen
-        existing_bz_accs_fb_ids = [str(b.fb_id) for b in bz_accs]
+        existing_bz_accs_fb_ids = [b.fb_id for b in bz_accs]
         bs_res_filtered = bs_res.copy()
         
         for b in bs_res_filtered:
@@ -256,7 +256,7 @@ def getBusinessAccounts(access_token, page):
     return new_bz_accs
 
 def getMedia(access_token, bz_acc):
-    _fields = "media_url,timestamp,permalink,comments_count,like_count"
+    _fields = "media_url,timestamp,permalink,comments_count,like_count,caption"
     medias = db.session.execute(db.select(IGMedia).filter(IGMedia.bzacc.has(id=bz_acc.id))).scalars().all()
     new_medias = []
     
@@ -270,7 +270,7 @@ def getMedia(access_token, bz_acc):
     
     if len(medias) > 0:
         # bereits vorhandene Einträge nicht einfügen
-        existing_medias_fb_ids = [str(m.fb_id) for m in medias]
+        existing_medias_fb_ids = [m.fb_id for m in medias]
         media_res_filtered = media_res.copy()
         for m in media_res_filtered:
             if m["body"]["id"] in existing_medias_fb_ids:
@@ -283,7 +283,8 @@ def getMedia(access_token, bz_acc):
                             media_url=body["media_url"], 
                             fb_id=body["id"],
                             like_count=body["like_count"],
-                            comments_count=body["comments_count"])
+                            comments_count=body["comments_count"],
+                            caption=body["caption"])
         
         new_medias.append(new_media)
         bz_acc.medias.append(new_media)
@@ -292,7 +293,7 @@ def getMedia(access_token, bz_acc):
     return new_medias
     
 def getComments(access_token, media):
-    _fields = "replies{from, parent, timestamp, username},id,timestamp,from"
+    _fields = "replies{from, parent, timestamp, username,text},id,timestamp,from,text"
     comments = db.session.execute(db.select(IGComment).filter(IGComment.media.has(id=media.id))).scalars().all()
 
     res = _getInstagramData(access_token, f"/{media.fb_id}/comments")
@@ -306,7 +307,7 @@ def getComments(access_token, media):
     
     if len(comments) > 0:
         # bereits vorhandene Einträge nicht einfügen
-        existing_medias_fb_ids = [str(m.fb_id) for m in comments]
+        existing_medias_fb_ids = [m.fb_id for m in comments]
         com_res_filtered = com_res.copy()
         
         for m in com_res_filtered:
@@ -317,16 +318,16 @@ def getComments(access_token, media):
     #print("BATCH RES SIZE: " + str(len(batchRes)))
     for c in com_res:
         body = c["body"]
-        new_comm = IGComment(timestamp=datetime.strptime(body["timestamp"], "%Y-%m-%dT%H:%M:%S%z"), fb_id=body["id"])
+        new_comm = IGComment(timestamp=datetime.strptime(body["timestamp"], "%Y-%m-%dT%H:%M:%S%z"), fb_id=body["id"], text=body["text"])
+        
         # User mit Media und Comment verknüpfen
         comment_customer.append((new_comm, body["from"]))
         new_comments.append(new_comm)
-        #print(body)
         if "replies" in body:
             #print("REPLY SIZE: " + str(len(body["replies"]["data"])))
             for r in body["replies"]["data"]:
                 #print("-" + str(r))
-                reply = IGComment(timestamp=datetime.strptime(r["timestamp"], "%Y-%m-%dT%H:%M:%S%z"), fb_id=r["id"])
+                reply = IGComment(timestamp=datetime.strptime(r["timestamp"], "%Y-%m-%dT%H:%M:%S%z"), fb_id=r["id"], text=r["text"])
                 comment_customer.append((reply, r["from"]))
                 reply.parent = new_comm
                 new_comments.append(reply)
@@ -337,7 +338,6 @@ def getComments(access_token, media):
 
         # Wenn kein Customer bis jetzt existiert, neuen erstellen
         if db_customer is None:
-            print("creating customer")
             db_customer = IGCustomer(fb_id=fb_user["id"], name=fb_user["username"])
             _commitToDB([db_customer])            
         
@@ -347,23 +347,39 @@ def getComments(access_token, media):
             thread = IGThread(media=media, customer=db_customer)
             _commitToDB([thread])
             
-        print(thread)
-        #print(comment)
-        # _commitToDB([comment])
         comment.thread = thread
         comment.media = media
         comment.customer = db_customer
-        print(comment)
+        
         _commitToDB([comment, media, db_customer, thread])
         thread.comments.append(comment)
         media.comments.append(comment)
         db_customer.comments.append(comment)
-        print(comment)
-        print("------------------")
     
     _commitToDB([media])
+    getCustomers(access_token, media)
     
     return new_comments
+ 
+def getCustomers(access_token, media):
+    _fields = "profile_picture_url"
+        
+    if len(media.customers) == 0:
+        return
+    
+    payload = []
+    for customer in media.customers:
+        payload.append({"method": "GET", "relative_url": f"{customer.fb_id}?fields=" + _fields})
+    customer_res = _batchRequest(access_token, payload)
+
+    for res in customer_res:
+        body = res["body"]
+        for c in media.customers:
+            if c.fb_id == body["id"]:
+                c.profile_picture_url = body["profile_picture_url"]
+    
+    _commitToDB([media])
+    return
     
 def update_all_entries(access_token, user):
     pages, bz_accs, medias, comments = [], [], [], []
