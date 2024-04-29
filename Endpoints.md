@@ -125,7 +125,7 @@ JSON Post Body für Filterung / Paging:
 ```bash
     {
         q: string,
-        platforms: int, (noch nicht implementiert)
+        platforms: int, (noch nicht implementiert, da Enums noch nicht geteilt werden)
         sentiments: [int/string] (question, positive, neutral, negative), (noch nicht implementiert)
         offset: int (id des threads nach der die weiteren threads geladen werden sollen)
     }
@@ -170,7 +170,7 @@ Sample JSON Array mit Message/Comment Objekten:
         {
             id int (id der message/comment),
             threadId int (id des threads),
-            content string,
+            message string,
             from int (id des users/customers),
             messageDate datetime,
         }
@@ -202,61 +202,6 @@ Suche nach bestimmten Interaktionen mit Filtereinstellungen
 
 - Generate Responses zu einem Posting
 - aktuellster Post
-
-### POST /api/data/threads[/{sorting}]
-
-Liefert Threads aller Social Media Plattform zurück
-
-Struktur der Anfrage:
-GET Parameter für Sortierung (entweder new, old, most-interaction oder
-least-interaction)
-Default Sortierung: new
-
-JSON Post Body für Filterung / Paging:
-
-     {
-          q: string, (suchanfrage)
-          platforms: [int/string],
-          sentiments: [int/string] (question, positive, neutral, negative),
-          offset: int (id des threads nach der die weiteren threads geladen
-werden sollen)
-     }
-
-platforms kann entweder die Namen der Social Media Plattformen als Array aus String oder -
-falls du intern eine Mapping Tabelle hast - als referenzierende Id
-
-sentiments wie bei platforms, entweder als Array aus String oder als int
-
-Struktur der Antwort:
-JSON Array mit Thread Objekten:
-
-     [
-          {
-              id int,
-              username string,
-              avatar string,
-              message string,
-              platform int/string,
-              lastUpdated datetime,
-              unread bool,
-          }
-     ]
-
-### GET /api/data/threads/{id}
-
-Liefert den Nachrichtenverlauf eines Threads
-
-Datenstruktur:
-
-     [
-       {
-           id int (id der message),
-           threadId int (id des threads),
-           content string,
-           from int,
-           messageDate datetime,
-       }
-     ]
 
 ### POST /api/data/threads/{id}/message
 
