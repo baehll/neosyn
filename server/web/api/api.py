@@ -5,18 +5,19 @@ import os
 import requests
 from flask_login import login_required, current_user
 from decouple import config
-from ..models import db, User , _PlatformEnum, Organization
-from pathvalidate import sanitize_filename, replace_symbol
-from ...utils import file_utils
+from ..models import db, User , _PlatformEnum, Organization, OAuth
+from pathvalidate import replace_symbol
+from ...utils import file_utils, IGApiFetcher
 from werkzeug.utils import secure_filename
+import traceback
 
-api = Blueprint('api', __name__)
+api_bp = Blueprint('api', __name__)
 
 def GPTModel():
     from server import chatGPTModel
     return chatGPTModel()
 
-@api.route("/init_user", methods=["POST"])
+@api_bp.route("/init_user", methods=["POST"])
 @login_required
 def init_user():
     try:
@@ -53,7 +54,7 @@ def init_user():
             if file.filename == "":
                 return jsonify({"error":"File attached, but no filename specified"}), 500
             if not file_utils.allowed_logo_extensions(file.filename):
-                return jsonify({"error": f"File Extension not allowed, must be {', '.join(file_utils.ALLOWED_LOGO_EXTENSIONS)}"})
+                return jsonify({"error": f"File Extension not allowed, must be {', '.join(file_utils.ALLOWED_LOGO_EXTENSIONS)}"}), 500
             
             filename = secure_filename(file.filename)
             if filename == "":
@@ -65,12 +66,12 @@ def init_user():
         db.session.add(new_orga)
         db.session.add(current_user)
         db.session.commit()
-    except Exception as e:
-        print(e)
+    except Exception:
+        print(traceback.format_exc())
         return jsonify({"error":"An exception has occurred"}), 500
     return jsonify({}), 200
 
-@api.route("/company_files", methods=["POST"])
+@api_bp.route("/company_files", methods=["POST"])
 @login_required
 def company_files():
     try:
@@ -113,60 +114,27 @@ def company_files():
             else:
                 return jsonify({"successful":", ".join(successful)}), 200
     except Exception as e:
-        print(e)
+        print(traceback.format_exc())
         return jsonify({"error":"An exception has occoured"}), 500
     return jsonify({}), 200
 
-@api.route("/long_lived_access", methods=["POST"])
+@api_bp.route("/update_interactions", methods=["GET"])
 @login_required
-def long_lived_access():
-    print(request.get_json())
-    # Erst einen long lived access token generieren
-    url = 'https://graph.facebook.com/v18.0/oauth/'
-    params = {
-        "client_id": config("FB_APP_ID"),
-        "client_secret": config("FB_CLIENT_SECRET"),
-        "fb_exchange_token": request.get_json()["access_token"],
-        "grant_type": "fb_exchange_token"
-    }
-    res = requests.get(url + "access_token", params=params)
-    
-    # Wenn es einen Token gibt, wird ein long lived client token versucht zu generieren
-    if(res.status_code == 200):
-        params = {
-            "client_id": config("FB_APP_ID"),
-            "client_secret": config("FB_CLIENT_SECRET"),
-            "access_token": res.json()["access_token"],
-            "redirect_uri": "https://quiet-mountain-69143-51eb8184b186.herokuapp.com/"
-        }
-        resp = requests.get(url + "client_code", params=params)
+def update_interactions():
+    # try:
+    #     # access token aus DB nehmen
+    #     oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()
+    #     IGApiFetcher.update_all_entries(oauth.token["access_token"], current_user)
+    #     return jsonify({}), 200
+    # except Exception as e:
+    #     print(e)
+    #     return jsonify({"error":"An exception has occoured"}), 500
+    oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()
+    IGApiFetcher.update_all_entries(oauth.token["access_token"], current_user)
+    return jsonify({}), 200
         
-        #Wenn der Code generiert wurde, wird das ans Frontend geschickt und von dort weiter gemacht
-        if(resp.json()["code"]):
-            return jsonify({"code": resp.json()["code"]})
-          
-# @api.route("/long_lived_client_token", methods=["POST"])
-# def long_lived_client_token():
-#     #den richtigen Nutzer finden und die Session dafür befüllen
-#     user = db.session.execute(db.select(User).filter_by(id=get_jwt_identity())).scalar_one_or_none()
-    
-#     if user is None:
-#         return jsonify({"error": "No user found for request"}), 404
-#     else:
-#         ut = db.session.execute(db.select(UserToken).filter_by(user_id=get_jwt_identity())).scalar_one_or_none()
-#         if ut is None:
-#             tokenEntity = UserToken(expiration=request.get_json()["expiration"], client_token=request.get_json()["access_token"], user=user, platform=request.get_json()["platform"])
-#             db.session.add(tokenEntity)
-#             db.session.commit()
-#             return jsonify({}), 201 
-#         else:
-#             ut.set_data(exp=request.get_json()["expiration"], token=request.get_json()["access_token"], platform=request.get_json()["platform"])
-#             db.session.add(ut)
-#             db.session.commit()
-#             return jsonify({}), 202
-    
 
-@api.route("/fast_response", methods=["POST"])
+@api_bp.route("/fast_response", methods=["POST"])
 @login_required
 def fast_response():
     print(request.get_json())
@@ -186,7 +154,7 @@ def fast_response():
     print(output)
     return jsonify({"answers": output})
 
-@api.route("/context_response", methods=["POST"])
+@api_bp.route("/context_response", methods=["POST"])
 @login_required
 def context_response():
     comment_line = ""

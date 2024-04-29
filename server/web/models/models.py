@@ -1,4 +1,5 @@
 from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.ext.associationproxy import association_proxy
 from flask_login import LoginManager, UserMixin
 from flask_dance.consumer.storage.sqla import OAuthConsumerMixin
 from enum import Enum, auto
@@ -16,15 +17,18 @@ class _Base(db.Model):
     
     def to_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
+    
+    def __str__(self):
+        return "<" + self.__class__.__name__ + " " + str(self.id) + " " +  str(self.to_dict()) + ">"
 
 class _IGBaseTable(_Base):
     __abstract__ = True
     
-    etag = db.Column(db.String(50), nullable=True)
-    fb_id = db.Column(db.Integer, nullable=False)
+    etag = db.Column(db.String, nullable=True)
+    fb_id = db.Column(db.String, nullable=False)
 
 class EarlyAccessKeys(_Base):
-    hashed_key = db.Column(db.String(200), nullable=False)
+    hashed_key = db.Column(db.String, nullable=False)
 
     def set_key(self, key):
         self.hashed_key = generate_password_hash(key)
@@ -34,12 +38,12 @@ class EarlyAccessKeys(_Base):
 
 class Organization(_Base):
     __tablename__ = "organizations"
-    name = db.Column(db.String(256))
+    name = db.Column(db.String)
     users = db.relationship("User", back_populates="")
 
-    assistant_id = db.Column(db.String(256))
-    folder_path = db.Column(db.String(256), unique=True)
-    logo_file = db.Column(db.String(256))
+    assistant_id = db.Column(db.String)
+    folder_path = db.Column(db.String, unique=True)
+    logo_file = db.Column(db.String)
 
 class User(_Base, UserMixin):
     __tablename__ = "users"
@@ -47,25 +51,25 @@ class User(_Base, UserMixin):
     orga_id = db.Column(db.Integer, db.ForeignKey("organizations.id"))
     organization = db.relationship("Organization", back_populates="users")
     
-    name = db.Column(db.String(256))
-    pages = db.relationship("Page", back_populates="user")
+    name = db.Column(db.String)
+    pages = db.relationship("IGPage", back_populates="user")
     platform = db.Column(db.Enum(_PlatformEnum))
     
 class OAuth(OAuthConsumerMixin, _Base):
-    provider_user_id = db.Column(db.String(256), unique=True, nullable=False)
+    provider_user_id = db.Column(db.String, unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)
     user = db.relationship(User)
 
-class Page(_IGBaseTable):
-    __tablename__ = "pages"
+class IGPage(_IGBaseTable):
+    __tablename__ = "ig_pages"
     
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     user = db.relationship('User', back_populates='pages')
 
-    business_accounts = db.relationship("BusinessAccount", back_populates="page")
+    business_accounts = db.relationship("IGBusinessAccount", back_populates="page")
 
-    name = db.Column(db.String(200), nullable=False)
-    category = db.Column(db.String(200), nullable=True)
+    name = db.Column(db.String, nullable=False)
+    category = db.Column(db.String, nullable=True)
     can_analyze = db.Column(db.Boolean, default=False)
     can_advertise = db.Column(db.Boolean, default=False)
     can_moderate = db.Column(db.Boolean, default=False)
@@ -82,42 +86,78 @@ class Page(_IGBaseTable):
         self.can_create_content = create_content
         self.can_manage = manage
     
-class BusinessAccount(_IGBaseTable):
-    __tablename__ = "business_accounts"
+class IGBusinessAccount(_IGBaseTable):
+    __tablename__ = "ig_business_accounts"
     
-    page_id = db.Column(db.Integer, db.ForeignKey("pages.id"))
-    page = db.relationship("Page", back_populates="business_accounts")
+    page_id = db.Column(db.Integer, db.ForeignKey("ig_pages.id"))
+    page = db.relationship("IGPage", back_populates="business_accounts")
     
     followers_count = db.Column(db.Integer)
     
-    medias = db.relationship("Media", back_populates="bzacc")
+    medias = db.relationship("IGMedia", back_populates="bzacc")
+
+class IGThread(_Base):
+    __tablename__ = "ig_threads"
     
-class Media(_IGBaseTable):
-    __tablename__ = "medias"
+    media_id = db.Column(db.ForeignKey("ig_medias.id"))
+    customer_id = db.Column(db.ForeignKey("ig_customers.id"))
     
-    bzacc_id = db.Column(db.Integer, db.ForeignKey("business_accounts.id"))
-    bzacc = db.relationship("BusinessAccount", back_populates="medias")
+    is_read = db.Column(db.Boolean, nullable=False, default=False)
     
-    media_url = db.Column(db.String(450), nullable=False)
-    permalink = db.Column(db.String(50), nullable=False)
+    media = db.relationship("IGMedia", back_populates="thread_association")
+    customer = db.relationship("IGCustomer", back_populates="thread_association")
+    
+    comments = db.relationship("IGComment", back_populates="thread")
+    
+class IGMedia(_IGBaseTable):
+    __tablename__ = "ig_medias"
+    
+    bzacc_id = db.Column(db.Integer, db.ForeignKey("ig_business_accounts.id"))
+    bzacc = db.relationship("IGBusinessAccount", back_populates="medias")
+    
+    media_url = db.Column(db.String, nullable=False)
+    permalink = db.Column(db.String, nullable=False)
     timestamp = db.Column(db.DateTime, nullable=False)
+    like_count = db.Column(db.Integer, nullable=False, default=0)
+    comments_count = db.Column(db.Integer, nullable=False, default=0)
     
-    comments = db.relationship("Comment", back_populates="media")
+    caption = db.Column(db.String)
     
-class Comment(_IGBaseTable):
-    __tablename__  = "comments"
+    thread_association = db.relationship("IGThread", back_populates="media")
+    customers = association_proxy("thread_association", "customer")
     
-    from_user = db.Column(db.Integer, nullable=False)
+    comments = db.relationship("IGComment", back_populates="media")
     
-    parent_id = db.Column(db.Integer, db.ForeignKey("comments.id"), nullable=True)
-    children = db.relationship("Comment")
+class IGCustomer(_IGBaseTable):
+    __tablename__ = "ig_customers"
+
+    name = db.Column(db.String, nullable=False)
+    profile_picture_url = db.Column(db.String)    
     
-    media_id = db.Column(db.Integer, db.ForeignKey("medias.id"))
-    media = db.relationship("Media", back_populates="comments")
+    thread_association = db.relationship("IGThread", back_populates="customer")
+    medias = association_proxy("thread_association", "media")
+    
+    comments = db.relationship("IGComment", back_populates="customer")
+    
+class IGComment(_IGBaseTable):
+    __tablename__  = "ig_comments"
+    
+    parent_id = db.Column(db.Integer, db.ForeignKey("ig_comments.id"), nullable=True)
+    parent = db.relationship("IGComment", remote_side="IGComment.id",backref="children")
+    
+    thread_id = db.Column(db.Integer, db.ForeignKey("ig_threads.id"))
+    thread = db.relationship("IGThread", back_populates="comments")
+    
+    media_id = db.Column(db.Integer, db.ForeignKey("ig_medias.id"))
+    media = db.relationship("IGMedia", back_populates="comments")
+    
+    customer_id = db.Column(db.Integer, db.ForeignKey("ig_customers.id"))
+    customer = db.relationship("IGCustomer", back_populates="comments")
     
     sentiment = db.Column(db.Integer)
     timestamp = db.Column(db.DateTime, nullable=False)
 
+    text = db.Column(db.String)
 
 login_manager = LoginManager()
 login_manager.login_view = "facebook.login"
