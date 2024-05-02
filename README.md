@@ -37,10 +37,11 @@
     DATABASE_URL=sqlite:///database.db
     OPENAI_API_KEY=<KEY>
     EARLY_ACCESS_KEYS=<KEY>;<KEY>;...
-    JWT_SECRET_TOKEN=<KEY>
     FLASK_SECRET_KEY=<KEY>
     FACEBOOK_OAUTH_CLIENT_ID=175537112285037
     FACEBOOK_OAUTH_CLIENT_SECRET=<KEY>
+    COMPANY_FILE_UPLOAD_FOLDER=./UPLOADS/COMPANY_FOLDERS
+    IMPLEMENTED_PLATFORMS=Instagram
     ```
 
 5. For local testing, run the following command to start flask as HTTPS and self signed cert in DEBUG mode
