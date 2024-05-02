@@ -77,7 +77,7 @@ def facebook_logged_in(blueprint, token):
         print("New User created and successfully signed in.")
 
     # im Hintergrund update der Interactions und User Daten triggern
-    IGApiFetcher.updateAllEntries(oauth.token["access_token"], oauth.user)
+    #IGApiFetcher.updateAllEntries(oauth.token["access_token"], oauth.user)
     
     # Disable Flask-Dance's default behavior for saving the OAuth token
     return False
