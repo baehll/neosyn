@@ -8,7 +8,12 @@ from werkzeug.security import generate_password_hash, check_password_hash
 db = SQLAlchemy()
 
 class _PlatformEnum(Enum):
-    Meta = auto()
+    Instagram = auto()
+    TikTok = auto()
+    YouTube = auto()
+    Whatsapp = auto()
+    LinkedIn = auto()
+    X = auto()
 
 class _Base(db.Model):
     __abstract__ = True
@@ -26,6 +31,12 @@ class _IGBaseTable(_Base):
     
     etag = db.Column(db.String, nullable=True)
     fb_id = db.Column(db.String, nullable=False)
+
+class Platform(_Base):
+    __tablename__ = "platforms"
+    
+    name = db.Column(db.Enum(_PlatformEnum))
+    is_implemented = db.Column(db.String, default=False)
 
 class EarlyAccessKeys(_Base):
     hashed_key = db.Column(db.String, nullable=False)
@@ -53,7 +64,8 @@ class User(_Base, UserMixin):
     
     name = db.Column(db.String)
     pages = db.relationship("IGPage", back_populates="user")
-    platform = db.Column(db.Enum(_PlatformEnum))
+    platform_id = db.Column(db.Integer, db.ForeignKey("platforms.id"))
+    platform = db.relationship("Platform")
     
 class OAuth(OAuthConsumerMixin, _Base):
     provider_user_id = db.Column(db.String, unique=True, nullable=False)

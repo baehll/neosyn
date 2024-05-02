@@ -46,4 +46,3 @@ def comments():
     for b in medias:
         results.extend(getComments(oauth.token["access_token"], b))
     return jsonify({"results": [r.to_dict() for r in results]})
-    

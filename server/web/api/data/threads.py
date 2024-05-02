@@ -11,14 +11,14 @@ threads_bp = Blueprint('threads', __name__)
 
 def thread_result_obj(at, comment_timestamp, comment_message):
     return {
-                "id": at.id,
-                "username": at.customer.name,
-                "avatar": at.customer.profile_picture_url,
-                "platform": _PlatformEnum.Meta.value,
-                "lastUpdated": comment_timestamp,
-                "message": comment_message,
-                "unread": at.is_read,
-                "interactions": len(at.comments)
+        "id": at.id,
+        "username": at.customer.name,
+        "avatar": at.customer.profile_picture_url,
+        "platform": _PlatformEnum.Instagram.name,
+        "lastUpdated": comment_timestamp,
+        "message": comment_message,
+        "unread": at.is_read,
+        "interactions": len(at.comments)
     }
 
 def message_result_obj(comment):
@@ -48,8 +48,11 @@ def all_threads():
                 for b in p.business_accounts:
                     for m in b.medias:
                         media_ids.append(m.id)
-                
+                                  
+            oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()
             
+            query_offset = request.args.get("offset") if request.args.get("offset") is not None else 0  
+            IGApiFetcher.updateInteractions(oauth.token["access_token"], media_ids, query_offset)
             associated_threads = db.session.execute(db.select(IGThread).filter(IGThread.media_id.in_(media_ids))).scalars().all()
             if len(associated_threads) == 0:
                 return jsonify([]), 204

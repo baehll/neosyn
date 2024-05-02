@@ -6,7 +6,7 @@ from datetime import datetime
 
 _URL = "https://graph.facebook.com/v19.0"
 # TASKS = ["ADVERTISE", "ANALYZE", "CREATE_CONTENT", "MESSAGING", "MODERATE", "MANAGE"]
-
+_UPDATE_OFFSET = 1
 # request gegen IG Graph API für die IDs (pre Batches)
 def _getIDs(access_token, path, fields="", url=""):
     request_url = _URL + path
@@ -381,7 +381,16 @@ def getCustomers(access_token, media):
     _commitToDB([media])
     return
     
-def update_all_entries(access_token, user):
+def updateInteractions(access_token, media_ids, interaction_id):
+    # doppelter _UPDATE_OFFSET, um die eine hälfte jetzt zu updaten und die andere im Hintergrund zu updaten
+    interactions = db.session.execute(db.select(IGThread).filter(IGThread.media_id.in_(media_ids)).offset(interaction_id).limit(_UPDATE_OFFSET*2)).scalars().all()
+    print(interactions)
+    # ab der ersten Interaction die nächsten _UPDATE_OFFSET updaten
+    
+    # ab der ersten Interaction + _UPDATE_OFFSET die nächsten _UPDATE_OFFSET updaten im Hintergrund 
+    
+
+def updateAllEntries(access_token, user):
     pages, bz_accs, medias, comments = [], [], [], []
     
     pages = getPages(access_token, user)
@@ -404,39 +413,4 @@ def update_all_entries(access_token, user):
         for b in bz_accs:
             medias = db.session.execute(db.select(IGMedia).filter(IGMedia.bzacc.has(id=b.id))).scalars().all()
     for m in medias:
-        comments.extend(getComments(access_token, m))
-        # for com_media in all_comments_for_media:
-        #     # Prüfen, ob dieser Customer bereits existiert
-        #     customer = db.session.execute(db.select(IGCustomer).filter(IGCustomer.comments.any(fb_id=com_media.id))).scalar_one_or_none()
-            
-        #     if customer is None:
-        #         customer = IGCustomer(fb_id=com_media.id)
-            
-        #     customers.append(customer)
-        #     # Prüfe, ob Customer Media Association existiert
-        #     cust_media = db.session.execute(
-        #         db.select(IGCustomer_IGMedia_Association)
-        #         .filter(IGCustomer_IGMedia_Association.media.has(id=m.id)
-        #         .filter(IGCustomer_IGMedia_Association.customer.has(id=customer.id)))
-        #     ).scalars().all()
-            
-        #     if len(cust_media) == 0:
-        #         cust_media = IGCustomer_IGMedia_Association()
-        #         cust_media.customer = customer
-        #         m.customers.append(customer)
-            
-        #     association.append(cust_media)
-        #     # Prüfen, ob Interaction zu Customer Media Association + Comment existiert
-        
-        #     interaction = db.session.execute(
-        #         db.select(IGInteraction)
-        #         .filter(IGInteraction.customer_media_association.has(id=cust_media.id))
-        #         .filter(IGInteraction.comment.has(id=com_media.id))
-        #     ).scalars().all()
-
-        #     if len(interactions) == 0:
-        #         interaction = IGInteraction()
-        #         interaction.comment = com_media
-        #         cust_media.interactions.append(interaction)
-            
-        #     interactions.append(interaction)
+        getComments(access_token, m)

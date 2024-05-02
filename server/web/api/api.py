@@ -5,7 +5,7 @@ import os
 import requests
 from flask_login import login_required, current_user
 from decouple import config
-from ..models import db, User , _PlatformEnum, Organization, OAuth
+from ..models import db, User , _PlatformEnum, Organization, OAuth, Platform
 from pathvalidate import replace_symbol
 from ...utils import file_utils, IGApiFetcher
 from werkzeug.utils import secure_filename
@@ -17,12 +17,29 @@ def GPTModel():
     from server import chatGPTModel
     return chatGPTModel()
 
+@api_bp.route("/supported_platforms", methods=["GET"])
+@login_required
+def supported_platforms():
+    try:
+        platforms = db.session.execute(db.select(Platform)).scalars().all()
+        result = []
+        for p in platforms:
+            result.append({
+                "name": p.name.name,
+                "is_implemented": p.is_implemented,
+                "id": p.id
+            })
+        return jsonify(result), 200
+    except Exception:
+        print(traceback.format_exc())
+        return jsonify({"error":"An exception has occurred"}), 500
+
 @api_bp.route("/init_user", methods=["POST"])
 @login_required
 def init_user():
     try:
         form_data = request.form
-        print(form_data)
+        
         if "username" not in form_data or form_data["username"] == "":
             return jsonify({"error": "No username specified"}), 400
         
