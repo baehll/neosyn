@@ -88,11 +88,14 @@ Liefert Threads aller Social Media Plattformen sortiert nach Query Parametern zu
 
 Query Parameter
 ```bash
-    ?sorting=[new,old,most-interaction,least-interaction]
+    ?sorting=YYY string (Ein Wert aus new,old,most-interaction,least-interaction)
+    &offset=threadId int (ThreadID, ab dem geladen werden soll, default: 1) 
 ```
+Der offset wird verwendet, um die ersten Interaktionen in der Sortierung anzuzeigen und nur diese zu updaten, da durch die Menge an Anfragen bei vielen Kommentaren viel Zeit vergeht. 
 
 **200**, wenn die Anfrage erfolgreich war
-Sample JSON Array mit Thread Objekten:
+
+Sample JSON Array mit bis zu **20** Thread Objekten:
 ```bash
     [
           {
@@ -108,7 +111,7 @@ Sample JSON Array mit Thread Objekten:
     ]
 ```
 
-**204**, wenn die Anfrage erfolgreich war, aber keine Threads für diese Anfrage existieren (wenn es zB noch keine Kommentare unter Posts gibt oder die DB noch nicht aktualisiert wurde mit neuen Daten)
+**204**, wenn die Anfrage erfolgreich war, aber keine Threads für diese Anfrage existieren (wenn es zB noch keine Kommentare unter Posts gibt oder in der DB noch nichts enthalten ist)
 
 **500**, wenn ein Fehler aufgetreten ist mit
 ```bash
@@ -132,7 +135,7 @@ JSON Post Body für Filterung / Paging:
 ```
 
 **200**, wenn die Anfrage erfolgreich war
-Sample JSON Array mit Thread Objekten:
+Sample JSON Array mit bis zu **20** Thread Objekten:
 ```bash
     [
           {
@@ -188,20 +191,39 @@ Sample JSON Array mit Message/Comment Objekten:
         "error": "error_message"
     }
 ```
+
+### GET /api/supported_platforms
+
+Gibt die Liste der Plattformen zurück, die aktuell implementiert sind
+
+**200**, wenn die Anfrage erfolgreich war
+Sample JSON Array mit platform Objekten:
+```bash
+[
+    {
+        "id": 1,
+        "is_implemented": "1",
+        "name": "Instagram"
+    },
+    {
+        "id": 2,
+        "is_implemented": "0",
+        "name": "TikTok"
+    },...
+]
+```
+
+**500**, wenn ein Fehler aufgetreten ist mit
+```bash
+    {
+        "error": "error_message"
+    }
+```
 ### GET /api/data/bookmarks
 
 **Nicht implementiert**
 
 Bookmarks zu Interaktionen mit bestimmten Kunden
-
-### GET /api/data/search_interactions
-
-**Nicht implementiert**
-
-Suche nach bestimmten Interaktionen mit Filtereinstellungen
-
-- Generate Responses zu einem Posting
-- aktuellster Post
 
 ### POST /api/data/threads/{id}/message
 

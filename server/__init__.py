@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from decouple import config
 from openai import OpenAI
-from .web.models import db, User, login_manager, EarlyAccessKeys
+from .web.models import db, User, login_manager, EarlyAccessKeys, Platform, _PlatformEnum
 from .utils.env_utils import EnvManager 
 from flask_migrate import Migrate
 from flask_talisman import Talisman
@@ -83,15 +83,28 @@ def create_app() -> Flask:
                 db.session.commit()
                 print("Early Access Keys zur DB hinzugefügt")
             else:
-                print("Keine Early Access Keys in ENV oder DB gefunden")
-    
+                print("Keine Early Access Keys in ENV gefunden")
+        
+        if Platform.query.count() == 0:
+            platform_string = config("IMPLEMENTED_PLATFORMS")
+            implemented_platforms = []
+            if platform_string != "":
+                for p in platform_string.split("//"):
+                    implemented_platforms.append(_PlatformEnum[p])
+                    p_db = Platform(name=_PlatformEnum[p], is_implemented=True)
+                    db.session.add(p_db)
+            else: 
+                print("Keine implementierten Plattformen gefunden")
+            for p_e in _PlatformEnum:
+                if p_e not in implemented_platforms:
+                    db.session.add(Platform(name=p_e.name, is_implemented=False))
+            db.session.commit()
+            
     from .web.views import views
     from .web.api import api_bp
     from .web.api.data import threads_bp
     from .web.auth import authenticate
 
-    from .web.test import test
-    app.register_blueprint(test, url_prefix="/test")
     @app.before_request
     def setup():
         session.permanent = True
@@ -103,4 +116,8 @@ def create_app() -> Flask:
     
     app.register_blueprint(authenticate, url_prefix='/auth')
 
+    if app.debug == True:
+        from .web.test import test
+        app.register_blueprint(test, url_prefix="/test")
+        
     return app    
