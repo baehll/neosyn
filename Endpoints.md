@@ -128,7 +128,7 @@ JSON Post Body für Filterung / Paging:
 ```bash
     {
         q: string,
-        platforms: int, (noch nicht implementiert)
+        platforms: int, (noch nicht implementiert, da Enums noch nicht geteilt werden)
         sentiments: [int/string] (question, positive, neutral, negative), (noch nicht implementiert)
         offset: int (id des threads nach der die weiteren threads geladen werden sollen)
     }
@@ -173,7 +173,7 @@ Sample JSON Array mit Message/Comment Objekten:
         {
             id int (id der message/comment),
             threadId int (id des threads),
-            content string,
+            message string,
             from int (id des users/customers),
             messageDate datetime,
         }
@@ -199,7 +199,7 @@ Gibt die Liste der Plattformen zurück, die aktuell implementiert sind
 **200**, wenn die Anfrage erfolgreich war
 Sample JSON Array mit platform Objekten:
 ```bash
-    [
+[
     {
         "id": 1,
         "is_implemented": "1",
