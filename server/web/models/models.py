@@ -114,7 +114,7 @@ class IGThread(_Base):
     media_id = db.Column(db.ForeignKey("ig_medias.id"))
     customer_id = db.Column(db.ForeignKey("ig_customers.id"))
     
-    is_read = db.Column(db.Boolean, nullable=False, default=False)
+    is_unread = db.Column(db.Boolean, nullable=False, default=True)
     
     media = db.relationship("IGMedia", back_populates="thread_association")
     customer = db.relationship("IGCustomer", back_populates="thread_association")
