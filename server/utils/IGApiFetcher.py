@@ -6,7 +6,7 @@ from datetime import datetime
 
 _URL = "https://graph.facebook.com/v19.0"
 # TASKS = ["ADVERTISE", "ANALYZE", "CREATE_CONTENT", "MESSAGING", "MODERATE", "MANAGE"]
-_UPDATE_OFFSET = 1
+_UPDATE_OFFSET = 20
 # request gegen IG Graph API für die IDs (pre Batches)
 def _getIDs(access_token, path, fields="", url=""):
     request_url = _URL + path

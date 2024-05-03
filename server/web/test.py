@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request, current_app
 from .models import db, IGPage, IGMedia, IGBusinessAccount, IGComment, OAuth
 from flask_jwt_extended import get_jwt_identity, jwt_required, create_access_token
-from ..utils.IGApiFetcher import getPages, getComments, getBusinessAccounts, getMedia
+from ..utils.IGApiFetcher import getPages, getComments, getBusinessAccounts, getMedia, updateAllEntries
 from flask_login import current_user, login_required
 test = Blueprint('test', __name__)
 
@@ -46,3 +46,10 @@ def comments():
     for b in medias:
         results.extend(getComments(oauth.token["access_token"], b))
     return jsonify({"results": [r.to_dict() for r in results]})
+
+@test.route("/update_all_entries", methods=["GET"])
+@login_required
+def update_all_entries():
+    oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()
+    updateAllEntries(oauth.token["access_token"], current_user)
+    return jsonify({}), 200

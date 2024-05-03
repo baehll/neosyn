@@ -3,9 +3,10 @@ import requests
 
 views = Blueprint('views', __name__)
 
-@views.route('/')
-def index():
-    return send_from_directory('static', 'index.html')
+@views.route('/', defaults={"path":""})
+@views.route("/<path:path>")
+def catch_all(path):
+    return send_from_directory('static', "index.html")
 
 @views.route('/assets/<path:filename>')
 def serve_static_assets(filename):

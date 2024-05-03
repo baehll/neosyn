@@ -219,35 +219,56 @@ Sample JSON Array mit platform Objekten:
         "error": "error_message"
     }
 ```
+
+### PUT /api/data/threads/{id}
+
+Aktualisiert einen Thread (gerade nur um den Read Status auf gelesen/ungelesen zu setzen)
+
+JSON Post Body für Filterung / Paging:
+```bash
+    {
+        unread bool
+    }
+```
+
+**200**, wenn die Anfrage erfolgreich war ohne Response Body
+
+
+**500**, wenn ein Fehler aufgetreten ist mit
+```bash
+    {
+        "error": "error_message"
+    }
+```
+
+### POST /api/data/threads/{id}/message
+
+Erstellt eine neue Nachricht in einem Thread
+
+Datenstruktur im JSON Body:
+```bash
+    {
+        message string
+        [, generated_message string] (optional, wenn eine Nachricht vorher generiert wurde und diese abgeändert wurde)
+    }
+```
+
+
+**200**, wenn die Anfrage erfolgreich war ohne Response Body
+
+**500**, wenn ein Fehler aufgetreten ist mit
+```bash
+    {
+        "error": "error_message"
+    }
+```
 ### GET /api/data/bookmarks
 
 **Nicht implementiert**
 
 Bookmarks zu Interaktionen mit bestimmten Kunden
 
-### POST /api/data/threads/{id}/message
 
-**Nicht implementiert**
-Erstellt eine neue Nachricht in einem Thread
-
-Datenstruktur im JSON Body:
-
-{
-    message string
-}
-
-
-### PUT /api/data/threads/{id}
-
-**Nicht implementiert**
-Aktualisiert einen Thread (gerade nur um den Read Status auf gelesen/ungelesen
-zu setzen)
-
-Datenstruktur im JSON Body:
-
-{
-    unread bool
-}
 
 ### GET /api/data/threads/{id}/post
 
