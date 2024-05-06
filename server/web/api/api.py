@@ -122,7 +122,7 @@ def company_files():
                 
                 # abspeichern im Upload Ordner
                 file.save(os.path.join(upload_folder_path, filename))
-                successful.append(file.filename)
+                successful.append(filename)
             
             assistant_utils.init_assistant(config("COMPANY_FILE_UPLOAD_FOLDER"), successful, orga)
             
