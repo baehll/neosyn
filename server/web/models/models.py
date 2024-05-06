@@ -37,6 +37,7 @@ class Platform(_Base):
     
     name = db.Column(db.Enum(_PlatformEnum))
     is_implemented = db.Column(db.String, default=False)
+    icon = db.Column(db.String)
 
 class EarlyAccessKeys(_Base):
     hashed_key = db.Column(db.String, nullable=False)
