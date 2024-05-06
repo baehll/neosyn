@@ -43,7 +43,8 @@ def getThreadsByUser(user):
                 media_ids.append(m.id)
     
     # alle Threads finden            
-    return db.session.execute(db.select(IGThread).filter(IGThread.media_id.in_(media_ids))).scalars().all()
+    threads = db.session.execute(db.select(IGThread).filter(IGThread.media_id.in_(media_ids))).scalars().all()
+    return threads
 
 def isThreadByUser(threadId, user):
     return (next((t for t in getThreadsByUser(user) if t.id == threadId), None) != None)
