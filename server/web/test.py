@@ -4,7 +4,12 @@ from flask_jwt_extended import get_jwt_identity, jwt_required, create_access_tok
 from ..utils.IGApiFetcher import getPages, getComments, getBusinessAccounts, getMedia, updateAllEntries
 from flask_login import current_user, login_required
 
+
 test = Blueprint('test', __name__)
+
+def GPTConfig():
+    from server import GPTConfig
+    return GPTConfig
 
 def GPTConfig():
     from server import GPTConfig
@@ -59,13 +64,12 @@ def update_all_entries():
     updateAllEntries(oauth.token["access_token"], current_user)
     return jsonify({}), 200
 
-@test.route("/thread_run_status/<thread_id>/<run_id>", methods=["GET"])
+@test.route("/thread_run_status/<thread_id>", methods=["GET"])
 @login_required
-def thread_run_status(thread_id, run_id):
-    run = GPTConfig().CLIENT.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run_id)
+def thread_run_status(thread_id):
+    run = GPTConfig().CLIENT.beta.threads.runs.retrieve(thread_id=thread_id, run_id="run_QZqjuPLI7QNX5mId3ZxL7OWq")
     if run.status == "completed":
         messages = GPTConfig().CLIENT.beta.threads.messages.list(thread_id=thread_id)
         return jsonify(messages)
     else:
-        print(run)
         return jsonify(run.status)

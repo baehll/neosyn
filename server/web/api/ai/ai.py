@@ -65,7 +65,7 @@ def generate_response():
             last_comment = max(thread.comments, key=attrgetter("id"))
             if gpt_thread.metadata["last_comment_id"] != last_comment.id:
                 # Alle Kommentare zwischen alter last_comment_id und last_comment.id zu messages hinzufügen
-                for c in [t for t in thread.comments if t.id >= int(gpt_thread.metadata["last_comment_id"])]:
+                for c in [t for t in thread.comments if t.id >= gpt_thread.metadata["last_comment_id"]]:
                     message = GPTConfig().CLIENT.beta.threads.messages.create(
                         thread_id=gpt_thread.id,
                         role="user",
@@ -83,17 +83,17 @@ def generate_response():
         run = GPTConfig().CLIENT.beta.threads.runs.create(
             thread_id=gpt_thread.id,
             assistant_id=orga.assistant_id,
-            instructions="Answer questions about the included files"
+            instructions=""
         )
         print(run)
-        
         if run.status == 'completed': 
             messages = GPTConfig().CLIENT.beta.threads.messages.list(
                 thread_id=thread.id
             )
-            return jsonify(messages)
+            print(messages)
         else:
-            return jsonify(run.status)
+            print(run.status)
+        return jsonify()
     
     except Exception:
         print(traceback.format_exc())
