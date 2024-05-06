@@ -262,30 +262,61 @@ Datenstruktur im JSON Body:
         "error": "error_message"
     }
 ```
+
+### GET /api/data/threads/{id}/post
+
+Liefert den zugrundeliegenden Social Media Post eines Threads
+
+**200**, wenn die Anfrage erfolgreich war
+Sample JSON Antwort:
+```bash
+    "comments": 58,
+    "id": 23,
+    "likes": 1,
+    "mediaType": "IMAGE",
+    "permalink": "https://www.instagram.com/p/C3AVzmrCawb/",
+    "platform": "Instagram",
+    "postContent": "Heute lernen wir die Zahlen",
+    "postMedia": "https://...",
+    "shares": null,
+    "threadId": 1,
+    "timestamp": "Tue, 06 Feb 2024 12:02:42 GMT"
+```
+
+**500**, wenn ein Fehler aufgetreten ist mit
+```bash
+    {
+        "error": "error_message"
+    }
+```
+
+### POST /api/data/ai/generate_responses
+
+**Nicht implementiert**
+
+Generiert Antworten zu den inhalten eines Threads
+
+Datenstruktur im JSON Body:
+```bash
+    {
+        threadId int,
+        (oder andere mögliche weitere Anfrageparameter) 
+    }
+```
+
+**200**, wenn die Anfrage erfolgreich war
+Sample JSON Array Antwort:
+```bash
+    [
+        "....",
+        "....",
+        "....",
+        ...
+    ]
+```
+
 ### GET /api/data/bookmarks
 
 **Nicht implementiert**
 
 Bookmarks zu Interaktionen mit bestimmten Kunden
-
-
-
-### GET /api/data/threads/{id}/post
-
-**Nicht implementiert**
-Liefert den zugrundeliegenden Social Media Post eines Threads
-
-Datenstruktur der Antwort:
-
-      {
-           id int,
-           threadId int,
-           postMedia string (absolute url),
-           postMediaType string (image, video)
-           postContent string (post caption),
-           platform (either id referencing the different socialmedia platforms
-           in another table or string, eg. facebook),
-           likes int,
-           comments int,
-           shares int
-      }

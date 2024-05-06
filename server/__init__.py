@@ -13,14 +13,11 @@ import os
 
 ENV = EnvManager()
 
-gptConfig = {
-    "EMBEDDING_MODEL":"text-embedding-ada-002", 
-    "GPT_MODEL":"gpt-4-turbo-preview", 
-    "CLIENT":OpenAI(api_key=config("OPENAI_API_KEY"))
-}
+class GPTConfig():
+    EMBEDDING_MODEL="text-embedding-ada-002" 
+    GPT_MODEL="gpt-4-turbo-preview"
+    CLIENT=OpenAI(api_key=config("OPENAI_API_KEY"))
 
-def chatGPTModel():
-    return gptConfig
 
 def create_app() -> Flask:
     app = Flask(__name__)
@@ -103,6 +100,7 @@ def create_app() -> Flask:
     from .web.views import views
     from .web.api import api_bp
     from .web.api.data import threads_bp
+    from .web.api.ai import ai_bp
     from .web.auth import authenticate
 
     @app.before_request
@@ -113,6 +111,7 @@ def create_app() -> Flask:
     
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(threads_bp, url_prefix="/api/data/threads")
+    app.register_blueprint(ai_bp, url_prefix="/api/data/ai")
     
     app.register_blueprint(authenticate, url_prefix='/auth')
 
