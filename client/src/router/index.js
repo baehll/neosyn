@@ -1,7 +1,5 @@
 import {createRouter, createWebHashHistory, createWebHistory} from 'vue-router';
-import Home from '../views/Home.vue';
 import Login from '../views/Login.vue';
-import Registration from '../views/Registration.vue';
 import InboxView from '../views/InboxView.vue';
 import Dashboard from '../views/Dashboard.vue';
 
