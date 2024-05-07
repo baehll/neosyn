@@ -22,6 +22,7 @@ class GPTConfig():
 def create_app() -> Flask:
     app = Flask(__name__)
     
+    app.config["CONFIG_FOLDER"] = config("CONFIG_FOLDER")
     app.config["GPT_ASSISTANT_ID"] = config("GPT_ASSISTANT_ID")
     
     app.config['SECRET_KEY'] = config("FLASK_SECRET_KEY")
