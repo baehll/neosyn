@@ -26,7 +26,7 @@ def pages():
 
     oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()
     results = getPages(oauth.token["access_token"], current_user)
-    return jsonify({"results": [r.to_dict() for r in results]}) 
+    return jsonify({"results": [r.to_dict() for r in results]})
 
 @test.route("/bz_acc", methods=["POST"])
 @login_required
@@ -52,9 +52,9 @@ def medias():
 
 @test.route("/comments", methods=["POST"])
 @login_required
-def comments():    
+def comments():
     oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()
-    
+
     media_ids = request.get_json()["medias"]
     medias = db.session.execute(db.select(IGMedia).filter(IGMedia.fb_id.in_(media_ids))).scalars()
     results = []

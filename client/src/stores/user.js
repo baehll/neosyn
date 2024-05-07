@@ -6,6 +6,7 @@ export const useUserStore = defineStore('user', {
         companyImage: '',
         companyImageData: '',
         company: '',
+        companyFiles: '',
     }),
     getters: {
         getName(state) {
@@ -16,6 +17,9 @@ export const useUserStore = defineStore('user', {
         },
         getCompany(state) {
             return state.company;
+        },
+        getCompanyFiles(state){
+            return state.companyFiles
         }
     },
     actions: {

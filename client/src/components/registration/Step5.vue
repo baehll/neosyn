@@ -66,6 +66,7 @@ export default {
     companyFileAdded(files) {
       this.uploadedFiles.push(...files)
       console.log(this.uploadedFiles);
+      this.userStore.companyFiles = this.uploadedFiles
     }
   },
   created: () => {

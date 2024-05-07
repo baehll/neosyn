@@ -5,6 +5,7 @@ import vue from '@vitejs/plugin-vue'
 
 // https://vitejs.dev/config/
 export default defineConfig( async ({command, mode}) => {
+    console.log(mode)
     let configObj = {
         plugins: [vue()],
         build:{

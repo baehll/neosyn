@@ -12,6 +12,16 @@ export default {
             headers: {
                 'Content-Type': 'multipart/form-data'
             }
-        });
+        })
+    },
+    companyFiles(files){
+        const form = new FormData
+        files.forEach(f => form.append('files[]', f))
+
+        return API.client.post('/api/company_files', form, {
+            headers: {
+                'Content-Type': 'multipart/form-data'
+            }
+        })
     }
 }
