@@ -52,6 +52,7 @@ import { useUserStore } from './stores/user.js';
 import Step4 from './components/registration/Step4.vue';
 import Logo from './components/global/logo.vue';
 import Step5 from './components/registration/Step5.vue';
+import RegistrationService from './services/RegistrationService';
 
 export default {
   name: 'Registration',
@@ -108,10 +109,18 @@ export default {
     },
   },
   methods: {
-    nextStep() {
+    async nextStep() {
       if (this.currentStep === this.steps.length - 1) {
         return
       }
+
+      if(this.currentStep === 2){
+        const res = await RegistrationService.register(this.userStore.name, this.userStore.company, this.userStore.companyImage)
+        if(res.status > 300){
+          // show error message
+        }
+      }
+
       this.currentStep++;
       this.currentStepComponent = this.steps[this.currentStep].component;
     },
@@ -122,7 +131,11 @@ export default {
       this.currentStep--;
       this.currentStepComponent = this.steps[this.currentStep].component;
     },
-    finishRegistration() {
+    async finishRegistration() {
+        const res = await RegistrationService.companyFiles(this.userStore.companyFiles)
+        if(res.status > 300){
+          // show error
+        }
       this.$router.push('company-info')
     }
   },
@@ -133,6 +146,24 @@ export default {
 </script>
 
 <style lang="scss">
+html{
+  #app {
+    height: 100vh;
+  }
+
+  @media (min-width: 1024px) and (max-width: 1530px) {
+    -moz-transform: scale(0.8, 0.8);
+    -ms-transform: scale(0.8);
+    -webkit-transform: scale(0.8);
+    transform: scale(0.8);
+
+    width:125%; /* to compensate for the 0.8 scale */
+    transform-origin:0 0; /* to move it back to the top left of the window */
+    #app {
+      height: 125vh;
+    }
+  }
+}
 .registration {
   p {
     @apply mb-8;
@@ -145,7 +176,7 @@ export default {
   }
 
   input {
-    @apply border border-lightgray focus:border-primary ring-0 focus:outline-0 outline-0 focus:ring-0 focus:ring-offset-0 rounded-lg w-full bg-transparent;
+    @apply border border-lightgray focus:border-primary ring-0 focus:outline-0 outline-0 focus:ring-0 focus:ring-offset-0 rounded-lg w-full bg-transparent py-2 px-4;
   }
 
   label {
