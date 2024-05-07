@@ -19,18 +19,15 @@ def init_vector_storage(vector_store_name, file_ids):
     )
 
 def init_assistant(upload_folder, filenames, orga):
-    if orga.vec_storage_id != "":
+    if orga.vec_storage_id is not None:
         deleted_store = GPTConfig().CLIENT.beta.vector_stores.delete(vector_store_id=orga.vec_storage_id)    
     
     # dateien hochladen 
     file_ids = upload_files_to_openai(os.path.join(upload_folder, orga.folder_path), filenames)
     vec_storage = init_vector_storage(orga.folder_path + "_VECTOR_STORE", file_ids)
-    # neuen assistant erstellen
-    assistant = GPTConfig().CLIENT.beta.assistants.create(
-        name="",
-        instructions="",
-        model=GPTConfig().GPT_MODEL,
-        tools=[{"type":"file_search"}],
+    
+    # neuen Thread erstellen
+    thread = GPTConfig().CLIENT.beta.threads.create(
         tool_resources={
             "file_search": {
                 "vector_store_ids": [vec_storage.id]
@@ -38,7 +35,7 @@ def init_assistant(upload_folder, filenames, orga):
         }
     )
     # assistant mit vector storage verknüpfen
-    orga.assistant_id = assistant.id
+    orga.gpt_thread_id = thread.id
     orga.vec_storage_id = vec_storage.id
     
 

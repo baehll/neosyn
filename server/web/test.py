@@ -75,6 +75,7 @@ def thread_run_status(thread_id, run_id):
     run = GPTConfig().CLIENT.beta.threads.runs.retrieve(thread_id=thread_id, run_id=run_id)
     if run.status == "completed":
         messages = GPTConfig().CLIENT.beta.threads.messages.list(thread_id=thread_id)
+        print(messages)
         return jsonify(messages)
     else:
         print(run)

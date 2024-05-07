@@ -4,6 +4,7 @@ from flask_login import LoginManager, UserMixin
 from flask_dance.consumer.storage.sqla import OAuthConsumerMixin
 from enum import Enum, auto
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.sql import func
 
 db = SQLAlchemy()
 
@@ -51,13 +52,22 @@ class EarlyAccessKeys(_Base):
 class Organization(_Base):
     __tablename__ = "organizations"
     name = db.Column(db.String)
-    users = db.relationship("User", back_populates="")
-
-    assistant_id = db.Column(db.String)
+    users = db.relationship("User", back_populates="organization")
+    generated_runs = db.relationship("OpenAI_Run", back_populates="organization")
+    
+    gpt_thread_id = db.Column(db.String)
     vec_storage_id = db.Column(db.String)
     
     folder_path = db.Column(db.String, unique=True)
     logo_file = db.Column(db.String)
+
+class OpenAI_Run(_Base):
+    __tablename__ = "openai_runs"
+    run_id = db.Column(db.String)
+    timestamp = db.Column(db.DateTime, default=func.now())
+    
+    orga_id = db.Column(db.Integer, db.ForeignKey("organizations.id"))
+    organization = db.relationship("Organization", back_populates="generated_runs")
 
 class User(_Base, UserMixin):
     __tablename__ = "users"
