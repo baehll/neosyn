@@ -16,7 +16,7 @@ ENV = EnvManager()
 class GPTConfig():
     EMBEDDING_MODEL="text-embedding-ada-002" 
     GPT_MODEL="gpt-4-turbo"
-    CLIENT=OpenAI()
+    CLIENT=OpenAI(api_key=config("OPENAI_API_KEY"))
 
 
 def create_app() -> Flask:
