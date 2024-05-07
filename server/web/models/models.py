@@ -37,6 +37,7 @@ class Platform(_Base):
     
     name = db.Column(db.Enum(_PlatformEnum))
     is_implemented = db.Column(db.String, default=False)
+    icon = db.Column(db.String)
 
 class EarlyAccessKeys(_Base):
     hashed_key = db.Column(db.String, nullable=False)
@@ -53,6 +54,8 @@ class Organization(_Base):
     users = db.relationship("User", back_populates="")
 
     assistant_id = db.Column(db.String)
+    vec_storage_id = db.Column(db.String)
+    
     folder_path = db.Column(db.String, unique=True)
     logo_file = db.Column(db.String)
 
@@ -116,6 +119,8 @@ class IGThread(_Base):
     
     is_unread = db.Column(db.Boolean, nullable=False, default=True)
     
+    gpt_thread = db.Column(db.String, default="")
+    
     media = db.relationship("IGMedia", back_populates="thread_association")
     customer = db.relationship("IGCustomer", back_populates="thread_association")
     
@@ -132,6 +137,7 @@ class IGMedia(_IGBaseTable):
     timestamp = db.Column(db.DateTime, nullable=False)
     like_count = db.Column(db.Integer, nullable=False, default=0)
     comments_count = db.Column(db.Integer, nullable=False, default=0)
+    media_type = db.Column(db.String, nullable=False)
     
     caption = db.Column(db.String)
     

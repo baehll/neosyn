@@ -256,7 +256,7 @@ def getBusinessAccounts(access_token, page):
     return new_bz_accs
 
 def getMedia(access_token, bz_acc):
-    _fields = "media_url,timestamp,permalink,comments_count,like_count,caption"
+    _fields = "media_url,timestamp,permalink,comments_count,like_count,caption,media_type"
     medias = db.session.execute(db.select(IGMedia).filter(IGMedia.bzacc.has(id=bz_acc.id))).scalars().all()
     new_medias = []
     
@@ -284,7 +284,8 @@ def getMedia(access_token, bz_acc):
                             fb_id=body["id"],
                             like_count=body["like_count"],
                             comments_count=body["comments_count"],
-                            caption=body["caption"])
+                            caption=body["caption"],
+                            media_type=body["media_type"])
         
         new_medias.append(new_media)
         bz_acc.medias.append(new_media)

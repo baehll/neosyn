@@ -5,17 +5,17 @@ import os
 import requests
 from flask_login import login_required, current_user
 from decouple import config
-from ..models import db, User , _PlatformEnum, Organization, OAuth, Platform
+from ..models import db, User , _PlatformEnum, Organization, OAuth, Platform, IGThread
+from ..models import db, User , _PlatformEnum, Organization, OAuth, Platform, IGThread
 from pathvalidate import replace_symbol
-from ...utils import file_utils, IGApiFetcher
+from ...utils import file_utils, IGApiFetcher, assistant_utils
+from ...utils import file_utils, IGApiFetcher, assistant_utils
 from werkzeug.utils import secure_filename
 import traceback
+from .data.threads import isThreadByUser
+from .data.threads import isThreadByUser
 
 api_bp = Blueprint('api', __name__)
-
-def GPTModel():
-    from server import chatGPTModel
-    return chatGPTModel()
 
 @api_bp.route("/supported_platforms", methods=["GET"])
 @login_required
@@ -125,12 +125,86 @@ def company_files():
                 
                 # abspeichern im Upload Ordner
                 file.save(os.path.join(upload_folder_path, filename))
-                successful.append(file.filename)
+                successful.append(filename)
+            
+            assistant_utils.init_assistant(config("COMPANY_FILE_UPLOAD_FOLDER"), successful, orga)
+            
+            db.session.add(orga)
+            db.session.commit()
+            
+                successful.append(filename)
+            
+            assistant_utils.init_assistant(config("COMPANY_FILE_UPLOAD_FOLDER"), successful, orga)
+            
+            db.session.add(orga)
+            db.session.commit()
+            
             if len(errors) > 0:
                 return jsonify({"error": errors, "successful":", ".join(successful) }), 422
             else:
                 return jsonify({"successful":", ".join(successful)}), 200
+
+
         return jsonify({}), 200
+    except Exception:
+        print(traceback.format_exc())
+  
+@api_bp.route("/data/threads/<id>/post", methods=["GET"])
+@login_required
+def get_post_information(id):
+    try:
+        if not isThreadByUser(int(id), current_user):
+            return jsonify(), 204
+        
+        # jeweiliges media objekt raussuchen und zurückgeben
+        thread = db.session.execute(db.select(IGThread).filter(IGThread.id == id)).scalar_one_or_none()
+        
+        if thread is None:
+            return jsonify({"error":"No thread with the specified ID found"})
+
+        return jsonify({
+            "id": thread.media.id,
+            "threadId": thread.id,
+            "permalink": thread.media.permalink,
+            "mediaType": thread.media.media_type,
+            "postMedia": thread.media.media_url,
+            "postContent": thread.media.caption,
+            "platform": _PlatformEnum.Instagram.name,
+            "likes": thread.media.like_count,
+            "comments": thread.media.comments_count,
+            "shares": None,
+            "timestamp": thread.media.timestamp
+        })
+    except Exception:
+        print(traceback.format_exc())
+        return jsonify({"error":"An exception has occoured"}), 500
+  
+@api_bp.route("/data/threads/<id>/post", methods=["GET"])
+@login_required
+def get_post_information(id):
+    try:
+        if not isThreadByUser(int(id), current_user):
+            return jsonify(), 204
+        
+        # jeweiliges media objekt raussuchen und zurückgeben
+        thread = db.session.execute(db.select(IGThread).filter(IGThread.id == id)).scalar_one_or_none()
+        
+        if thread is None:
+            return jsonify({"error":"No thread with the specified ID found"})
+
+        return jsonify({
+            "id": thread.media.id,
+            "threadId": thread.id,
+            "permalink": thread.media.permalink,
+            "mediaType": thread.media.media_type,
+            "postMedia": thread.media.media_url,
+            "postContent": thread.media.caption,
+            "platform": _PlatformEnum.Instagram.name,
+            "likes": thread.media.like_count,
+            "comments": thread.media.comments_count,
+            "shares": None,
+            "timestamp": thread.media.timestamp
+        })
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occoured"}), 500
