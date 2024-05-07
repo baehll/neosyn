@@ -132,13 +132,6 @@ def company_files():
             db.session.add(orga)
             db.session.commit()
             
-                successful.append(filename)
-            
-            assistant_utils.init_assistant(config("COMPANY_FILE_UPLOAD_FOLDER"), successful, orga)
-            
-            db.session.add(orga)
-            db.session.commit()
-            
             if len(errors) > 0:
                 return jsonify({"error": errors, "successful":", ".join(successful) }), 422
             else:
