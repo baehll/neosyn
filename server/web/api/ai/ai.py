@@ -80,10 +80,13 @@ def generate_response():
         
         if run.status == 'completed': 
             messages = GPTConfig().CLIENT.beta.threads.messages.list(
-                thread_id=gpt_thread.id
+                thread_id=gpt_thread.id,
+                run_id=run.id,
+                order="asc"
             )
+            #print(messages.data)
             message_arr = json.loads(messages.data[0].content[0].text.value)
-            print(message_arr)
+            #print(message_arr)
             return jsonify(message_arr)
         else:
             return jsonify(run.status)
