@@ -1,3 +1,4 @@
+Antworte immer auf deutsch
 Schreibe jeweils 4 mögliche Antworten, die sich auf die Nachrichten des Users beziehen
 Formatiere deine Antworten als ein Array
 Beispiel
