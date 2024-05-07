@@ -5,7 +5,7 @@ from operator import attrgetter
 import os
 import requests
 from flask_login import login_required, current_user
-from ...models import db, User , _PlatformEnum, Organization, OAuth, Platform, IGThread
+from ...models import db, User , _PlatformEnum, Organization, OAuth, Platform, IGThread, OpenAI_Run
 from ....utils import assistant_utils as gpt_assistant
 from ..data.threads import isThreadByUser
 import traceback
@@ -33,17 +33,7 @@ def generate_response():
         if thread is None:
             return jsonify({"error":"No thread found"}), 500
         
-        gpt_thread = None
-        
-        # Hat IGThread gpt_thread ?
-        if thread.gpt_thread == "":
-            # Wenn nicht, neuen Thread erstellen 
-            gpt_thread = GPTConfig().CLIENT.beta.threads.create()
-            thread.gpt_thread = gpt_thread.id
-            db.session.add(thread)
-            db.session.commit()
-        else:
-            gpt_thread = GPTConfig().CLIENT.beta.threads.retrieve(thread.gpt_thread)
+        gpt_thread = GPTConfig().CLIENT.beta.threads.retrieve(current_user.organization.gpt_thread_id)
         
         # Überprüfen, ob in metadata der aktuellste kommentar steht
         if "last_comment_id" not in gpt_thread.metadata:
@@ -77,15 +67,17 @@ def generate_response():
                         "last_comment_id":str(last_comment.id)
                     }
                 )
-        # Antworten Generieren
-        orga = db.session.execute(db.select(Organization).filter(Organization.users.any(id=current_user.id))).scalar_one_or_none()
-        
+                
+        # Antworten Generieren        
         run = GPTConfig().CLIENT.beta.threads.runs.create(
             thread_id=gpt_thread.id,
-            assistant_id=orga.assistant_id,
-            instructions="Answer questions about the included files"
+            assistant_id=current_app.config["GPT_ASSISTANT_ID"],
+            instructions="" #TODO Instruction File
         )
+        db_run = OpenAI_Run(run_id=run.id, organization=current_user.organization)
         print(run)
+        db.session.add(db_run)
+        db.session.commit()
         
         if run.status == 'completed': 
             messages = GPTConfig().CLIENT.beta.threads.messages.list(

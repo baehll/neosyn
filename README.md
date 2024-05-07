@@ -42,6 +42,7 @@
     FACEBOOK_OAUTH_CLIENT_SECRET=<KEY>
     COMPANY_FILE_UPLOAD_FOLDER=./UPLOADS/COMPANY_FOLDERS
     IMPLEMENTED_PLATFORMS=Instagram
+    GPT_ASSISTANT_ID=asst_71TD5Qg6iTIy75t2k8hVWrwj
     ```
 
 5. For local testing, run the following command to start flask as HTTPS and self signed cert in DEBUG mode

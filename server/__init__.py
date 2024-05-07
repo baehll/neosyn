@@ -16,11 +16,13 @@ ENV = EnvManager()
 class GPTConfig():
     EMBEDDING_MODEL="text-embedding-ada-002" 
     GPT_MODEL="gpt-4-turbo"
-    CLIENT=OpenAI(api_key=config("OPENAI_API_KEY"))
+    CLIENT=OpenAI()
 
 
 def create_app() -> Flask:
     app = Flask(__name__)
+    
+    app.config["GPT_ASSISTANT_ID"] = config("GPT_ASSISTANT_ID")
     
     app.config['SECRET_KEY'] = config("FLASK_SECRET_KEY")
     app.config['FACEBOOK_OAUTH_CLIENT_ID'] = config("FACEBOOK_OAUTH_CLIENT_ID")
