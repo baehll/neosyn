@@ -6,7 +6,7 @@ from datetime import datetime
 
 _URL = "https://graph.facebook.com/v19.0"
 # TASKS = ["ADVERTISE", "ANALYZE", "CREATE_CONTENT", "MESSAGING", "MODERATE", "MANAGE"]
-_UPDATE_OFFSET = 1
+_UPDATE_OFFSET = 20
 # request gegen IG Graph API für die IDs (pre Batches)
 def _getIDs(access_token, path, fields="", url=""):
     request_url = _URL + path
@@ -256,7 +256,7 @@ def getBusinessAccounts(access_token, page):
     return new_bz_accs
 
 def getMedia(access_token, bz_acc):
-    _fields = "media_url,timestamp,permalink,comments_count,like_count,caption"
+    _fields = "media_url,timestamp,permalink,comments_count,like_count,caption,media_type"
     medias = db.session.execute(db.select(IGMedia).filter(IGMedia.bzacc.has(id=bz_acc.id))).scalars().all()
     new_medias = []
     
@@ -284,7 +284,8 @@ def getMedia(access_token, bz_acc):
                             fb_id=body["id"],
                             like_count=body["like_count"],
                             comments_count=body["comments_count"],
-                            caption=body["caption"])
+                            caption=body["caption"],
+                            media_type=body["media_type"])
         
         new_medias.append(new_media)
         bz_acc.medias.append(new_media)
