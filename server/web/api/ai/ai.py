@@ -2,13 +2,12 @@ from flask import (
     Blueprint, jsonify, request, session, current_app
 )
 from operator import attrgetter
-import os
-import requests
 from flask_login import login_required, current_user
 from ...models import db, User , _PlatformEnum, Organization, OAuth, Platform, IGThread, OpenAI_Run
 from ....utils import assistant_utils as gpt_assistant
 from ..data.threads import isThreadByUser
-import traceback
+import traceback, json, os, requests
+
 
 def GPTConfig():
     from server import GPTConfig
@@ -69,21 +68,26 @@ def generate_response():
                 )
                 
         # Antworten Generieren        
-        run = GPTConfig().CLIENT.beta.threads.runs.create(
+        run = GPTConfig().CLIENT.beta.threads.runs.create_and_poll(
             thread_id=gpt_thread.id,
             assistant_id=current_app.config["GPT_ASSISTANT_ID"],
-            instructions="" #TODO Instruction File
+            instructions=open(os.path.join(current_app.config["CONFIG_FOLDER"], "instruction_template.txt"),"r", encoding="utf-8").read()
         )
         db_run = OpenAI_Run(run_id=run.id, organization=current_user.organization)
-        print(run)
+        
         db.session.add(db_run)
         db.session.commit()
         
         if run.status == 'completed': 
             messages = GPTConfig().CLIENT.beta.threads.messages.list(
-                thread_id=thread.id
+                thread_id=gpt_thread.id,
+                run_id=run.id,
+                order="asc"
             )
-            return jsonify(messages)
+            #print(messages.data)
+            message_arr = json.loads(messages.data[0].content[0].text.value)
+            #print(message_arr)
+            return jsonify(message_arr)
         else:
             return jsonify(run.status)
     

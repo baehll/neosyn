@@ -169,10 +169,10 @@ cython_debug/
 /server/static/*
 !/server/static/.gitkeep
 # Ignore contents of UPLOADS FOLDER
-/UPLOADS/COMPANY_FOLDERS/*
+/UPLOADS/*
+!/UPLOADS/.gitkeep
 
 /.vscode/
-/.UPLOADS/*
 /.idea/
 client/package-lock.json
 
