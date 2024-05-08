@@ -123,6 +123,10 @@ def company_files():
                     errors.append(f"File {file.filename} too big, only {current_app.config['MAX_FILE_SIZE']} allowed ({filesize})")
                     continue
                 
+                # sicher stellen, dass der Upload Path existiert 
+                if not os.path.exists(upload_folder_path):
+                    os.makedirs(upload_folder_path)
+                
                 # abspeichern im Upload Ordner
                 file.save(os.path.join(upload_folder_path, filename))
                 successful.append(filename)
