@@ -44,7 +44,7 @@
         :upload-started="uploadStarted"
       />
     </div>
-    <Logo class="absolute top-8 right-8 w-6 header-left text-lightgray-10" />
+    <Logo class="absolute top-8 right-8 w-28 h-28 header-left text-lightgray-10" />
   </div>
 </template>
 <script>
