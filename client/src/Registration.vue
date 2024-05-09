@@ -114,12 +114,12 @@ export default {
         return
       }
 
-      if(this.currentStep === 2){
-        const res = await RegistrationService.register(this.userStore.name, this.userStore.company, this.userStore.companyImage)
-        if(res.status > 300){
-          // show error message
-        }
-      }
+      // if(this.currentStep === 2){
+      //   const res = await RegistrationService.register(this.userStore.name, this.userStore.company, this.userStore.companyImage)
+      //   if(res.status > 300){
+      //     // show error message
+      //   }
+      // }
 
       this.currentStep++;
       this.currentStepComponent = this.steps[this.currentStep].component;
@@ -132,10 +132,10 @@ export default {
       this.currentStepComponent = this.steps[this.currentStep].component;
     },
     async finishRegistration() {
-        const res = await RegistrationService.companyFiles(this.userStore.companyFiles)
-        if(res.status > 300){
-          // show error
-        }
+      // const res = await RegistrationService.companyFiles(this.userStore.companyFiles)
+      // if(res.status > 300){
+      //   // show error
+      // }
       this.$router.push('company-info')
     }
   },
