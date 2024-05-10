@@ -19,3 +19,7 @@ def app_html():
 @views.route("/registration.html")
 def registration():
     return send_from_directory("static", "registration.html")
+
+@views.route("/login.html")
+def login():
+    return send_from_directory("static", "login.html")
