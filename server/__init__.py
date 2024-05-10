@@ -32,7 +32,7 @@ def create_app() -> Flask:
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=31)
     app.config["MAX_FILE_SIZE"] = 8 * 64 * 1024 * 1024 # 8 Dateien mit jeweils 64MB = 512 MB
     
-    CORS(app)
+    CORS(app, resources={r"/api/*": {"origins": "https://unaite.ai"}})
     csp = {
         'default-src': [
             '\'self\'', 
