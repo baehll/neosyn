@@ -78,6 +78,7 @@ def init_user():
                 return jsonify({"error":"Filename invalid"}), 500
             
             file.save(os.path.join(upload_folder_path, filename))
+            print("file saved under " + str(os.path.join(upload_folder_path, filename)))
             new_orga.logo_file = filename
             
         db.session.add(new_orga)
@@ -172,6 +173,19 @@ def get_post_information(id):
             "comments": thread.media.comments_count,
             "shares": None,
             "timestamp": thread.media.timestamp
+        })
+    except Exception:
+        print(traceback.format_exc())
+        return jsonify({"error":"An exception has occoured"}), 500
+    
+@api_bp.route("/me", methods=["GET"])
+@login_required
+def me():
+    try:
+        return jsonify({
+            "logoURL": "",
+            "name": "",
+            "companyName": ""
         })
     except Exception:
         print(traceback.format_exc())

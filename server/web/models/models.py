@@ -77,6 +77,7 @@ class User(_Base, UserMixin):
     
     name = db.Column(db.String)
     pages = db.relationship("IGPage", back_populates="user")
+
     platform_id = db.Column(db.Integer, db.ForeignKey("platforms.id"))
     platform = db.relationship("Platform")
     

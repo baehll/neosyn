@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, jsonify, request, current_app, redirect
+    Blueprint, jsonify, request, current_app, send_from_directory, redirect
 )
 from flask_login import current_user, login_user, login_required, logout_user
 from flask_dance.consumer import oauth_authorized, oauth_error
@@ -7,6 +7,7 @@ from flask_dance.consumer.storage.sqla import SQLAlchemyStorage
 from sqlalchemy.orm.exc import NoResultFound
 from ..models import db, User, OAuth, EarlyAccessKeys, Platform
 from ...utils import IGApiFetcher, Blueprint
+import traceback
 
 authenticate = Blueprint.make_facebook_blueprint(
     storage=SQLAlchemyStorage(OAuth, db.session, user=current_user),
@@ -27,9 +28,10 @@ def early_access():
         # Abgleich von Key mit Einträgen in Secret_Access Tabelle
             if saved_key.check_key(access_key):
             # Bei richtigen Key: OK
-                return jsonify({}), 200
-    except Exception as e:
-        return jsonify({"error": f"{e} missing in Request"}), 500
+                return send_from_directory("static", "login.html")
+    except Exception:
+        print(traceback.format_exc())
+        return jsonify({"error":"An exception has occurred"}), 500
     return jsonify({}), 400
 
 @authenticate.route("/logout")
