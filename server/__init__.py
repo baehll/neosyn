@@ -25,6 +25,7 @@ def create_app() -> Flask:
     app.config["CONFIG_FOLDER"] = config("CONFIG_FOLDER")
     app.config["GPT_ASSISTANT_ID"] = config("GPT_ASSISTANT_ID")
     
+    app.config["SESSION_COOKIE_SAMESITE"] = None
     app.config['SECRET_KEY'] = config("FLASK_SECRET_KEY")
     app.config['FACEBOOK_OAUTH_CLIENT_ID'] = config("FACEBOOK_OAUTH_CLIENT_ID")
     app.config["FACEBOOK_OAUTH_CLIENT_SECRET"] = config("FACEBOOK_OAUTH_CLIENT_SECRET")
@@ -64,7 +65,7 @@ def create_app() -> Flask:
         csp["default-src"].append("https://localhost:5000")
         csp["default-src"].append("http://localhost:5000")
         
-    Talisman(app, content_security_policy=csp)
+    Talisman(app, content_security_policy=csp, session_cookie_samesite=app.config["SESSION_COOKIE_SAMESITE"])
     app.config["UPLOAD_FOLDER"] = config("COMPANY_FILE_UPLOAD_FOLDER")
     if not os.path.exists(app.config["UPLOAD_FOLDER"]):
         os.makedirs(app.config["UPLOAD_FOLDER"])
