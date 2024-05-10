@@ -36,8 +36,7 @@ def create_app() -> Flask:
     CORS(app,
         origins=cors_domains,
         resources={
-            r"/api/*": {"origins": cors_domains}, 
-            r"/auth/*": {"origins": cors_domains}},
+            r"/*": {"origins": cors_domains}},
         supports_credentials=True
     )
 
