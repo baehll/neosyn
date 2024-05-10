@@ -5,13 +5,13 @@ import vue from '@vitejs/plugin-vue'
 
 // https://vitejs.dev/config/
 export default defineConfig( async ({command, mode}) => {
-    console.log(mode)
     let configObj = {
         plugins: [vue()],
         build:{
             rollupOptions: {
                 input: {
                     comingsoon: resolve(__dirname, `./index.html`),
+                    login: resolve(__dirname, `./login.html`),
                     registration: resolve(__dirname, './registration.html'),
                     app: resolve(__dirname, './app.html'),
                 }
