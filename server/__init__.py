@@ -34,6 +34,7 @@ def create_app() -> Flask:
 
     cors_domains = ["https://unaite.ai", "http://unaite.ai", "https://quiet-mountain-69143-51eb8184b186.herokuapp.com", "http://quiet-mountain-69143-51eb8184b186.herokuapp.com"]
     CORS(app,
+        origins=cors_domains,
         resources={
             r"/api/*": {"origins": cors_domains}, 
             r"/auth/*": {"origins": cors_domains}},
