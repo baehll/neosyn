@@ -33,8 +33,8 @@ def create_app() -> Flask:
     app.config["MAX_FILE_SIZE"] = 8 * 64 * 1024 * 1024 # 8 Dateien mit jeweils 64MB = 512 MB
     
     CORS(app, resources={
-            r"/api/*": {"origins": ["https://unaite.ai", "https://quiet-mountain-69143-51eb8184b186.herokuapp.com/"]},
-            r"/auth/*": {"origins": ["https://unaite.ai", "https://quiet-mountain-69143-51eb8184b186.herokuapp.com/"]}
+            r"/api/*": {"origins": "*"},
+            r"/auth/*": {"origins": "*"}
         })
     csp = {
         'default-src': [
