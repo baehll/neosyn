@@ -145,7 +145,8 @@ def company_files():
         return jsonify({}), 200
     except Exception:
         print(traceback.format_exc())
-  
+        return jsonify({"error":"An exception has occured"}), 500
+    
 @api_bp.route("/data/threads/<id>/post", methods=["GET"])
 @login_required
 def get_post_information(id):
