@@ -11,6 +11,7 @@ export default defineConfig( async ({command, mode}) => {
             rollupOptions: {
                 input: {
                     comingsoon: resolve(__dirname, `./index.html`),
+                    login: resolve(__dirname, `./login.html`),
                     registration: resolve(__dirname, './registration.html'),
                     app: resolve(__dirname, './app.html'),
                 }

@@ -15,7 +15,10 @@
       <div class="flex flex-row justify-between items-center">
         <ProgressBar class="basis-1/4" :percentage="(currentStep + 1) / ((steps.length) / 100)" />
         <div>
-          <Button class="ghost" @click="nextStep" v-if="steps[currentStep].hasSkipOption">
+          <Button class="ghost" @click="finishRegistrationWithoutFileUpload" v-if="steps[currentStep].finishRegistration">
+            {{ $t('Later') }}
+          </Button>
+          <Button class="ghost" @click="skipStep" v-if="steps[currentStep].hasSkipOption">
             {{ $t('Skip') }}
           </Button>
           <Button class="basis-1/4 bg-lightgray-60 text-darkgray" :disabled="!isValid"
@@ -33,9 +36,15 @@
       <div class="absolute w-full h-full top-0 left-0">
 
       </div>
-      <IdCard />
+      <IdCard
+        v-if="currentStep < steps.length - 1"
+      />
+      <UploadProgressIndicator
+        v-if="currentStep === steps.length - 1"
+        :upload-started="uploadStarted"
+      />
     </div>
-    <Logo class="absolute top-8 right-8 w-6 header-left text-lightgray-10" />
+    <Logo class="absolute top-8 right-8 w-28 h-28 header-left text-lightgray-10" />
   </div>
 </template>
 <script>
@@ -52,10 +61,13 @@ import { useUserStore } from './stores/user.js';
 import Step4 from './components/registration/Step4.vue';
 import Logo from './components/global/logo.vue';
 import Step5 from './components/registration/Step5.vue';
+import RegistrationService from './services/RegistrationService';
+import UploadProgressIndicator from './components/registration/UploadProgressIndicator.vue';
 
 export default {
   name: 'Registration',
   components: {
+    UploadProgressIndicator,
     Logo,
     ChevronLeft,
     IdCard,
@@ -64,6 +76,7 @@ export default {
   },
   data: () => {
     return {
+      uploadStarted: false,
       steps: [
         {
           component: Step1,
@@ -92,6 +105,7 @@ export default {
         },
         {
           component: Step5,
+          finishRegistration: true,
           validation: () => {
             return true
           }
@@ -108,10 +122,26 @@ export default {
     },
   },
   methods: {
-    nextStep() {
+    async skipStep() {
       if (this.currentStep === this.steps.length - 1) {
         return
       }
+
+      this.currentStep++;
+      this.currentStepComponent = this.steps[this.currentStep].component;
+    },
+    async nextStep() {
+      if (this.currentStep === this.steps.length - 1) {
+        return
+      }
+
+      if(this.currentStep === 2){
+        const res = await RegistrationService.register(this.userStore.name, this.userStore.company, this.userStore.companyImage)
+        if(res.status > 300){
+          // show error message
+        }
+      }
+
       this.currentStep++;
       this.currentStepComponent = this.steps[this.currentStep].component;
     },
@@ -122,8 +152,17 @@ export default {
       this.currentStep--;
       this.currentStepComponent = this.steps[this.currentStep].component;
     },
-    finishRegistration() {
-      this.$router.push('company-info')
+    finishRegistrationWithoutFileUpload(){
+      window.location = '/app.html'
+    },
+    async finishRegistration() {
+      this.uploadStarted = true
+      const res = await RegistrationService.companyFiles(this.userStore.companyFiles)
+      this.uploadStarted = false
+      if(res.status > 300){
+        // show error
+      }
+      this.finishRegistrationWithoutFileUpload()
     }
   },
   created: () => {
@@ -133,6 +172,24 @@ export default {
 </script>
 
 <style lang="scss">
+html{
+  #app {
+    height: 100vh;
+  }
+
+  @media (min-width: 1024px) and (max-width: 1530px) {
+    -moz-transform: scale(0.8, 0.8);
+    -ms-transform: scale(0.8);
+    -webkit-transform: scale(0.8);
+    transform: scale(0.8);
+
+    width:125%; /* to compensate for the 0.8 scale */
+    transform-origin:0 0; /* to move it back to the top left of the window */
+    #app {
+      height: 125vh;
+    }
+  }
+}
 .registration {
   p {
     @apply mb-8;
@@ -145,7 +202,7 @@ export default {
   }
 
   input {
-    @apply border border-lightgray focus:border-primary ring-0 focus:outline-0 outline-0 focus:ring-0 focus:ring-offset-0 rounded-lg w-full bg-transparent;
+    @apply border border-lightgray focus:border-primary ring-0 focus:outline-0 outline-0 focus:ring-0 focus:ring-offset-0 rounded-lg w-full bg-transparent py-2 px-4;
   }
 
   label {

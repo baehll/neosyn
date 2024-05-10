@@ -4,11 +4,17 @@ from flask_login import LoginManager, UserMixin
 from flask_dance.consumer.storage.sqla import OAuthConsumerMixin
 from enum import Enum, auto
 from werkzeug.security import generate_password_hash, check_password_hash
+from sqlalchemy.sql import func
 
 db = SQLAlchemy()
 
 class _PlatformEnum(Enum):
-    Meta = auto()
+    Instagram = auto()
+    TikTok = auto()
+    YouTube = auto()
+    Whatsapp = auto()
+    LinkedIn = auto()
+    X = auto()
 
 class _Base(db.Model):
     __abstract__ = True
@@ -27,6 +33,13 @@ class _IGBaseTable(_Base):
     etag = db.Column(db.String, nullable=True)
     fb_id = db.Column(db.String, nullable=False)
 
+class Platform(_Base):
+    __tablename__ = "platforms"
+    
+    name = db.Column(db.Enum(_PlatformEnum))
+    is_implemented = db.Column(db.String, default=False)
+    icon = db.Column(db.String)
+
 class EarlyAccessKeys(_Base):
     hashed_key = db.Column(db.String, nullable=False)
 
@@ -39,11 +52,22 @@ class EarlyAccessKeys(_Base):
 class Organization(_Base):
     __tablename__ = "organizations"
     name = db.Column(db.String)
-    users = db.relationship("User", back_populates="")
-
-    assistant_id = db.Column(db.String)
+    users = db.relationship("User", back_populates="organization")
+    generated_runs = db.relationship("OpenAI_Run", back_populates="organization")
+    
+    gpt_thread_id = db.Column(db.String)
+    vec_storage_id = db.Column(db.String)
+    
     folder_path = db.Column(db.String, unique=True)
     logo_file = db.Column(db.String)
+
+class OpenAI_Run(_Base):
+    __tablename__ = "openai_runs"
+    run_id = db.Column(db.String)
+    timestamp = db.Column(db.DateTime, default=func.now())
+    
+    orga_id = db.Column(db.Integer, db.ForeignKey("organizations.id"))
+    organization = db.relationship("Organization", back_populates="generated_runs")
 
 class User(_Base, UserMixin):
     __tablename__ = "users"
@@ -53,7 +77,8 @@ class User(_Base, UserMixin):
     
     name = db.Column(db.String)
     pages = db.relationship("IGPage", back_populates="user")
-    platform = db.Column(db.Enum(_PlatformEnum))
+    platform_id = db.Column(db.Integer, db.ForeignKey("platforms.id"))
+    platform = db.relationship("Platform")
     
 class OAuth(OAuthConsumerMixin, _Base):
     provider_user_id = db.Column(db.String, unique=True, nullable=False)
@@ -102,7 +127,9 @@ class IGThread(_Base):
     media_id = db.Column(db.ForeignKey("ig_medias.id"))
     customer_id = db.Column(db.ForeignKey("ig_customers.id"))
     
-    is_read = db.Column(db.Boolean, nullable=False, default=False)
+    is_unread = db.Column(db.Boolean, nullable=False, default=True)
+    
+    gpt_thread = db.Column(db.String, default="")
     
     media = db.relationship("IGMedia", back_populates="thread_association")
     customer = db.relationship("IGCustomer", back_populates="thread_association")
@@ -120,6 +147,7 @@ class IGMedia(_IGBaseTable):
     timestamp = db.Column(db.DateTime, nullable=False)
     like_count = db.Column(db.Integer, nullable=False, default=0)
     comments_count = db.Column(db.Integer, nullable=False, default=0)
+    media_type = db.Column(db.String, nullable=False)
     
     caption = db.Column(db.String)
     

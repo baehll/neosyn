@@ -2,14 +2,15 @@ from flask import (
     Blueprint, jsonify, request, current_app, redirect
 )
 from flask_login import current_user, login_user, login_required, logout_user
-from flask_dance.contrib.facebook import make_facebook_blueprint
 from flask_dance.consumer import oauth_authorized, oauth_error
 from flask_dance.consumer.storage.sqla import SQLAlchemyStorage
 from sqlalchemy.orm.exc import NoResultFound
-from ..models import db, User, OAuth, EarlyAccessKeys, _PlatformEnum
+from ..models import db, User, OAuth, EarlyAccessKeys, Platform
+from ...utils import IGApiFetcher, Blueprint
 
-authenticate = make_facebook_blueprint(
-    storage=SQLAlchemyStorage(OAuth, db.session, user=current_user)
+authenticate = Blueprint.make_facebook_blueprint(
+    storage=SQLAlchemyStorage(OAuth, db.session, user=current_user),
+    config_id="1002221764623878"
 )
 
 @authenticate.route("/early_access", methods=["POST"])
@@ -62,10 +63,11 @@ def facebook_logged_in(blueprint, token):
     if oauth.user:
         login_user(oauth.user)
         print("Successfully signed in.")
-
+        return redirect("/app.html")
     else:
+        instagram_platform = Platform.query.filter_by(name="Instagram").one()
         # Create a new local user account for this user
-        user = User(platform=_PlatformEnum.Meta)
+        user = User(platform=instagram_platform)
         # Associate the new local user account with the OAuth token
         oauth.user = user
         # Save and commit our database models
@@ -74,7 +76,11 @@ def facebook_logged_in(blueprint, token):
         # Log in the new local user account
         login_user(user)
         print("New User created and successfully signed in.")
+        return redirect("/registration.html")
 
+    # im Hintergrund update der Interactions und User Daten triggern
+    #IGApiFetcher.updateAllEntries(oauth.token["access_token"], oauth.user)
+    
     # Disable Flask-Dance's default behavior for saving the OAuth token
     return False
 
