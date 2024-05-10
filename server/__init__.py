@@ -25,7 +25,7 @@ def create_app() -> Flask:
     app.config["CONFIG_FOLDER"] = config("CONFIG_FOLDER")
     app.config["GPT_ASSISTANT_ID"] = config("GPT_ASSISTANT_ID")
     
-    app.config["SESSION_COOKIE_SAMESITE"] = None
+    app.config["SESSION_COOKIE_SAMESITE"] = "None"
     app.config['SECRET_KEY'] = config("FLASK_SECRET_KEY")
     app.config['FACEBOOK_OAUTH_CLIENT_ID'] = config("FACEBOOK_OAUTH_CLIENT_ID")
     app.config["FACEBOOK_OAUTH_CLIENT_SECRET"] = config("FACEBOOK_OAUTH_CLIENT_SECRET")
