@@ -31,8 +31,9 @@ def create_app() -> Flask:
     
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=31)
     app.config["MAX_FILE_SIZE"] = 8 * 64 * 1024 * 1024 # 8 Dateien mit jeweils 64MB = 512 MB
-    
-    CORS(app, origins=["https://unaite.ai", "http://unaite.ai", "https://quiet-mountain-69143-51eb8184b186.herokuapp.com/", "http://quiet-mountain-69143-51eb8184b186.herokuapp.com/"])
+
+    cors_domains = ["https://unaite.ai/", "http://unaite.ai/", "https://quiet-mountain-69143-51eb8184b186.herokuapp.com/", "http://quiet-mountain-69143-51eb8184b186.herokuapp.com/"]
+    CORS(app, origins=cors_domains, supports_credentials=True)
     csp = {
         'default-src': [
             '\'self\'', 
