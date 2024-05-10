@@ -292,15 +292,12 @@ Sample JSON Antwort:
 
 ### POST /api/data/ai/generate_responses
 
-**Nicht implementiert**
-
 Generiert Antworten zu den inhalten eines Threads
 
 Datenstruktur im JSON Body:
 ```bash
     {
-        threadId int,
-        (oder andere mögliche weitere Anfrageparameter) 
+        threadId int
     }
 ```
 
