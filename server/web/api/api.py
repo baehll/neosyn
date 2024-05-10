@@ -62,7 +62,7 @@ def init_user():
         if os.path.exists(upload_folder_path):
             return jsonify({"error": f"Folder already exists for companyname {form_data['companyname']}, path: '{new_folder}'"}), 500
         else:
-            os.makedirs(upload_folder_path)
+            os.makedirs(upload_folder_path, mode=0o777)
             new_orga.folder_path = new_folder
         
         # Logo im upload ordner abspeichern
@@ -126,7 +126,7 @@ def company_files():
                 
                 # sicher stellen, dass der Upload Path existiert 
                 if not os.path.exists(upload_folder_path):
-                    os.makedirs(upload_folder_path)
+                    os.makedirs(upload_folder_path, mode=0o777)
                 
                 # abspeichern im Upload Ordner
                 file.save(os.path.join(upload_folder_path, filename))

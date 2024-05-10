@@ -68,7 +68,7 @@ def create_app() -> Flask:
     Talisman(app, content_security_policy=csp, session_cookie_samesite=app.config["SESSION_COOKIE_SAMESITE"])
     app.config["UPLOAD_FOLDER"] = config("COMPANY_FILE_UPLOAD_FOLDER")
     if not os.path.exists(app.config["UPLOAD_FOLDER"]):
-        os.makedirs(app.config["UPLOAD_FOLDER"])
+        os.makedirs(app.config["UPLOAD_FOLDER"], mode=0o777, exist_ok=True)
         print(f"Upload Folder created under {app.config['UPLOAD_FOLDER']}")
         
     uri = config("DATABASE_URL")
