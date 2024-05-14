@@ -28,7 +28,7 @@ def early_access():
         # Abgleich von Key mit Einträgen in Secret_Access Tabelle
             if saved_key.check_key(access_key):
             # Bei richtigen Key: login.html redirect
-                return send_from_directory("static", "login.html")
+                return jsonify({}), 200
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occurred"}), 500
