@@ -14,6 +14,7 @@ from werkzeug.utils import secure_filename
 import traceback
 from .data.threads import isThreadByUser
 from .data.threads import isThreadByUser
+from ..tasks import add
 
 api_bp = Blueprint('api', __name__)
 
@@ -190,3 +191,7 @@ def me():
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occoured"}), 500
+    
+@api_bp.route("/add/<a>/<b>", methods=["GET"])
+def add_route(a, b):
+    return jsonify(add.delay(a,b))
