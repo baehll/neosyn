@@ -27,7 +27,7 @@ def early_access():
         for saved_key in keys:
         # Abgleich von Key mit Einträgen in Secret_Access Tabelle
             if saved_key.check_key(access_key):
-            # Bei richtigen Key: OK
+            # Bei richtigen Key: login.html redirect
                 return send_from_directory("static", "login.html")
     except Exception:
         print(traceback.format_exc())

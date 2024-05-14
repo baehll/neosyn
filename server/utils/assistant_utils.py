@@ -1,13 +1,14 @@
 import os
+from io import BytesIO
 def GPTConfig():
     from server import GPTConfig
     return GPTConfig
 
-def upload_files_to_openai(upload_folder, filenames):
+def upload_files_to_openai(file_blobs):
     file_ids = []
-    for file in filenames:
+    for file in file_blobs:
         file_ids.append(GPTConfig().CLIENT.files.create(
-            file=open(os.path.join(upload_folder, file),"rb"),
+            file=(file.filename, BytesIO(file.data)),
             purpose="assistants"            
         ).id)
     return file_ids
@@ -18,13 +19,18 @@ def init_vector_storage(vector_store_name, file_ids):
         file_ids=file_ids
     )
 
-def init_assistant(upload_folder, filenames, orga):
+def init_assistant(orga):
     if orga.vec_storage_id is not None:
         deleted_store = GPTConfig().CLIENT.beta.vector_stores.delete(vector_store_id=orga.vec_storage_id)    
     
+    print(orga.logo().filename)
     # dateien hochladen 
-    file_ids = upload_files_to_openai(os.path.join(upload_folder, orga.folder_path), filenames)
-    vec_storage = init_vector_storage(orga.folder_path + "_VECTOR_STORE", file_ids)
+    orga_files = list(orga.files)
+    orga_files.remove(orga.logo())
+    for f in orga_files:
+        print(f.filename)
+    file_ids = upload_files_to_openai(orga_files)
+    vec_storage = init_vector_storage(orga.name + "_VECTOR_STORE", file_ids)
     
     # neuen Thread erstellen
     thread = GPTConfig().CLIENT.beta.threads.create(
