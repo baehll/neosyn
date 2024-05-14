@@ -31,6 +31,7 @@ def get_file_size(fobj):
     return 0
 
 def save_corrected_messages(old_msg, new_msg, folder):
+    # TODO in Tabelle umwandeln
     current_id = 0
     current_file = folder + CORRECTED_FILE_NAME.format(id = current_id)
     if os.path.isfile(folder + current_file):

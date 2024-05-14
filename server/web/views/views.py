@@ -13,6 +13,11 @@ def catch_all(path):
 def serve_static_assets(filename):
     return send_from_directory('static/assets', filename)
 
+# TODO entfernen
+@views.route("/login.html")
+def login():
+    return send_from_directory("static", "login.html")
+
 @views.route("/app.html")
 @login_required
 def app_html():

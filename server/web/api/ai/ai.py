@@ -3,7 +3,7 @@ from flask import (
 )
 from operator import attrgetter
 from flask_login import login_required, current_user
-from ...models import db, User , _PlatformEnum, Organization, OAuth, Platform, IGThread, OpenAI_Run
+from ...models import db, User , _PlatformEnum, Organization, OAuth, Platform, IGThread, OpenAIRun
 from ....utils import assistant_utils as gpt_assistant
 from ..data.threads import isThreadByUser
 import traceback, json, os, requests
@@ -73,7 +73,7 @@ def generate_response():
             assistant_id=current_app.config["GPT_ASSISTANT_ID"],
             instructions=open(os.path.join(current_app.config["CONFIG_FOLDER"], "instruction_template.txt"),"r", encoding="utf-8").read()
         )
-        db_run = OpenAI_Run(run_id=run.id, organization=current_user.organization)
+        db_run = OpenAIRun(run_id=run.id, organization=current_user.organization)
         
         db.session.add(db_run)
         db.session.commit()
