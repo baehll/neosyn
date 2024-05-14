@@ -6,10 +6,10 @@ from flask_dance.consumer import oauth_authorized, oauth_error
 from flask_dance.consumer.storage.sqla import SQLAlchemyStorage
 from sqlalchemy.orm.exc import NoResultFound
 from ..models import db, User, OAuth, EarlyAccessKeys, Platform
-from ...utils import IGApiFetcher, Blueprint
+from ...utils import FB_Blueprint, IGApiFetcher
 import traceback
 
-authenticate = Blueprint.make_facebook_blueprint(
+authenticate = FB_Blueprint.make_facebook_blueprint(
     storage=SQLAlchemyStorage(OAuth, db.session, user=current_user),
     config_id="1002221764623878"
 )
