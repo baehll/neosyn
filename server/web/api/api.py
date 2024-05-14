@@ -14,6 +14,7 @@ from werkzeug.utils import secure_filename
 import traceback
 from .data.threads import isThreadByUser
 from .data.threads import isThreadByUser
+from ..tasks import add
 
 api_bp = Blueprint('api', __name__)
 
@@ -62,7 +63,7 @@ def init_user():
         if os.path.exists(upload_folder_path):
             return jsonify({"error": f"Folder already exists for companyname {form_data['companyname']}, path: '{new_folder}'"}), 500
         else:
-            os.makedirs(upload_folder_path)
+            os.makedirs(upload_folder_path, mode=0o777)
             new_orga.folder_path = new_folder
         
         # Logo im upload ordner abspeichern
@@ -78,6 +79,7 @@ def init_user():
                 return jsonify({"error":"Filename invalid"}), 500
             
             file.save(os.path.join(upload_folder_path, filename))
+            print("file saved under " + str(os.path.join(upload_folder_path, filename)))
             new_orga.logo_file = filename
             
         db.session.add(new_orga)
@@ -125,7 +127,7 @@ def company_files():
                 
                 # sicher stellen, dass der Upload Path existiert 
                 if not os.path.exists(upload_folder_path):
-                    os.makedirs(upload_folder_path)
+                    os.makedirs(upload_folder_path, mode=0o777)
                 
                 # abspeichern im Upload Ordner
                 file.save(os.path.join(upload_folder_path, filename))
@@ -176,3 +178,20 @@ def get_post_information(id):
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occoured"}), 500
+    
+@api_bp.route("/me", methods=["GET"])
+@login_required
+def me():
+    try:
+        return jsonify({
+            "logoURL": "",
+            "name": "",
+            "companyName": ""
+        })
+    except Exception:
+        print(traceback.format_exc())
+        return jsonify({"error":"An exception has occoured"}), 500
+    
+@api_bp.route("/add/<a>/<b>", methods=["GET"])
+def add_route(a, b):
+    return jsonify(add.delay(a,b))
