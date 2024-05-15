@@ -44,7 +44,7 @@
 
     <IconResolver
       :class="{'text-lightgray-10 absolute right-3 bottom-4 transition-all opacity-100': true, }"
-      :icon-name="platform"
+      :icon-name="platform.toLowerCase()"
     />
   </div>
 </template>
