@@ -1,14 +1,15 @@
 from flask import (
-    Blueprint, jsonify, request, current_app, redirect
+    Blueprint, jsonify, request, current_app, send_from_directory, redirect
 )
 from flask_login import current_user, login_user, login_required, logout_user
 from flask_dance.consumer import oauth_authorized, oauth_error
 from flask_dance.consumer.storage.sqla import SQLAlchemyStorage
 from sqlalchemy.orm.exc import NoResultFound
 from ..models import db, User, OAuth, EarlyAccessKeys, Platform
-from ...utils import IGApiFetcher, Blueprint
+from ...utils import FB_Blueprint, IGApiFetcher
+import traceback
 
-authenticate = Blueprint.make_facebook_blueprint(
+authenticate = FB_Blueprint.make_facebook_blueprint(
     storage=SQLAlchemyStorage(OAuth, db.session, user=current_user),
     config_id="1002221764623878"
 )
@@ -26,11 +27,33 @@ def early_access():
         for saved_key in keys:
         # Abgleich von Key mit Einträgen in Secret_Access Tabelle
             if saved_key.check_key(access_key):
-            # Bei richtigen Key: OK
+            # Bei richtigen Key: login.html redirect
                 return jsonify({}), 200
-    except Exception as e:
-        return jsonify({"error": f"{e} missing in Request"}), 500
+    except Exception:
+        print(traceback.format_exc())
+        return jsonify({"error":"An exception has occurred"}), 500
     return jsonify({}), 400
+
+@authenticate.route("/early_access_redirect", methods=["POST"])
+def early_access_redirect():
+    try:
+        access_key = request.get_json()["access_key"]
+        
+        if access_key is None or access_key == "":
+            return jsonify({"error": "No access_key specified or missing in request"}), 400
+        
+        keys = db.session.execute(db.select(EarlyAccessKeys)).scalars()
+        
+        for saved_key in keys:
+        # Abgleich von Key mit Einträgen in Secret_Access Tabelle
+            if saved_key.check_key(access_key):
+            # Bei richtigen Key: login.html redirect
+                return send_from_directory("static", "login.html")
+    except Exception:
+        print(traceback.format_exc())
+        return jsonify({"error":"An exception has occurred"}), 500
+    return jsonify({}), 400
+
 
 @authenticate.route("/logout")
 @login_required

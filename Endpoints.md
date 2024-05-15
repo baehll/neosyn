@@ -18,6 +18,15 @@ Sample Response:
 
 **403**, wenn der Key nicht authentifiziert werden kann
 
+### POST /auth/early_access_redirect
+
+```bash
+    {
+        "access_key": "...."
+    }
+```
+
+Weiterleitung zu ```/login.html```, wenn access_key authentifiziert wurde, ansonsten **keine** Weiterleitung
 
 ## S1
 Meta Auth Redirect für Login
@@ -224,7 +233,7 @@ Sample JSON Array mit platform Objekten:
 
 Aktualisiert einen Thread (gerade nur um den Read Status auf gelesen/ungelesen zu setzen)
 
-JSON Post Body für Filterung / Paging:
+JSON Post Body:
 ```bash
     {
         unread bool
@@ -270,18 +279,73 @@ Liefert den zugrundeliegenden Social Media Post eines Threads
 **200**, wenn die Anfrage erfolgreich war
 Sample JSON Antwort:
 ```bash
-    "comments": 58,
-    "id": 23,
-    "likes": 1,
-    "mediaType": "IMAGE",
-    "permalink": "https://www.instagram.com/p/C3AVzmrCawb/",
-    "platform": "Instagram",
-    "postContent": "Heute lernen wir die Zahlen",
-    "postMedia": "https://...",
-    "shares": null,
-    "threadId": 1,
-    "timestamp": "Tue, 06 Feb 2024 12:02:42 GMT"
+    {
+        "comments": 58,
+        "id": 23,
+        "likes": 1,
+        "mediaType": "IMAGE",
+        "permalink": "https://www.instagram.com/p/C3AVzmrCawb/",
+        "platform": "Instagram",
+        "postContent": "Heute lernen wir die Zahlen",
+        "postMedia": "https://...",
+        "shares": null,
+        "threadId": 1,
+        "timestamp": "Tue, 06 Feb 2024 12:02:42 GMT"
+    }
 ```
+
+**500**, wenn ein Fehler aufgetreten ist mit
+```bash
+    {
+        "error": "error_message"
+    }
+```
+
+### GET /api/data/threads/bookmarks
+
+Liefert **20** bookmarked Threads eines Users 
+Query Parameter
+```bash
+    ?page=threadId int (ThreadID, ab dem geladen werden soll, default: 1) 
+```
+
+**200**, wenn die Anfrage erfolgreich war
+Sample JSON Response
+```bash
+    [
+          {
+              id int,
+              username string,
+              avatar url string,
+              message string,
+              platform int,
+              lastUpdated datetime,
+              unread bool,
+              interactions int
+          }
+    ]
+```
+
+
+**500**, wenn ein Fehler aufgetreten ist mit
+```bash
+    {
+        "error": "error_message"
+    }
+```
+
+### PUT /api/data/threads/bookmarks/<threadId>
+
+Setzt einen Thread auf den definierten Bookmarked Status
+
+JSON Post Body:
+```bash
+    {
+        bookmarked bool
+    }
+```
+
+**200**, wenn die Anfrage erfolgreich war ohne response body
 
 **500**, wenn ein Fehler aufgetreten ist mit
 ```bash
@@ -292,15 +356,12 @@ Sample JSON Antwort:
 
 ### POST /api/data/ai/generate_responses
 
-**Nicht implementiert**
-
 Generiert Antworten zu den inhalten eines Threads
 
 Datenstruktur im JSON Body:
 ```bash
     {
-        threadId int,
-        (oder andere mögliche weitere Anfrageparameter) 
+        threadId int
     }
 ```
 
@@ -315,8 +376,16 @@ Sample JSON Array Antwort:
     ]
 ```
 
-### GET /api/data/bookmarks
+**400**, wenn OpenAI Probleme mit dem erstellen einer Antwort hat
+```bash
+    {
+        "error": "error_message"
+    }
+```
 
-**Nicht implementiert**
-
-Bookmarks zu Interaktionen mit bestimmten Kunden
+**500**, wenn ein Fehler aufgetreten ist mit
+```bash
+    {
+        "error": "error_message"
+    }
+```

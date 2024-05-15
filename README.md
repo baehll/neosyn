@@ -58,6 +58,11 @@
     ```
     flask run --cert=adhoc --debug
     ```
+    If running redis in WSL, run following command in WSL
+    ```
+    sudo service redis-server start
+    ```
+
 ### DB Migration
 
 1. migrations-folder initialisieren in ./

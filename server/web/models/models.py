@@ -20,7 +20,9 @@ class _Base(db.Model):
     __abstract__ = True
     
     id = db.Column(db.Integer, primary_key=True) 
-    
+    created_at = db.Column(db.DateTime, nullable=False, default=func.now())
+    updated_at = db.Column(db.DateTime, nullable=False, default=func.now(), onupdate=func.now())
+
     def to_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
     
@@ -49,22 +51,44 @@ class EarlyAccessKeys(_Base):
     def check_key(self, key):
         return check_password_hash(self.hashed_key, key)
 
+class File(_Base):
+    __tablename__ = "files"
+    
+    orga_id = db.Column(db.Integer, db.ForeignKey("organizations.id"))
+    organization = db.relationship("Organization", back_populates="files", foreign_keys=[orga_id])
+    
+    data = db.Column(db.LargeBinary)
+    filename = db.Column(db.String)
+
+class PromptChange(_Base):
+    __tablename__ = "prompt_changes"
+    old = db.Column(db.String)
+    new = db.Column(db.String)
+    
+    orga_id = db.Column(db.Integer, db.ForeignKey("organizations.id"))
+    organization = db.relationship("Organization", back_populates="prompt_changes")
+
 class Organization(_Base):
     __tablename__ = "organizations"
     name = db.Column(db.String)
+    
     users = db.relationship("User", back_populates="organization")
-    generated_runs = db.relationship("OpenAI_Run", back_populates="organization")
+    generated_runs = db.relationship("OpenAIRun", back_populates="organization")
+    files = db.relationship("File", back_populates="organization", foreign_keys=[File.orga_id])
+    prompt_changes = db.relationship("PromptChange", back_populates="organization")
     
     gpt_thread_id = db.Column(db.String)
     vec_storage_id = db.Column(db.String)
-    
-    folder_path = db.Column(db.String, unique=True)
-    logo_file = db.Column(db.String)
 
-class OpenAI_Run(_Base):
+    logo_id = db.Column(db.Integer)
+    logo = db.relationship("File", back_populates="organization", uselist=False, overlaps="files")
+
+    def logo(self):
+        return File.query.filter_by(id=self.logo_id).first()
+
+class OpenAIRun(_Base):
     __tablename__ = "openai_runs"
     run_id = db.Column(db.String)
-    timestamp = db.Column(db.DateTime, default=func.now())
     
     orga_id = db.Column(db.Integer, db.ForeignKey("organizations.id"))
     organization = db.relationship("Organization", back_populates="generated_runs")
@@ -77,8 +101,11 @@ class User(_Base, UserMixin):
     
     name = db.Column(db.String)
     pages = db.relationship("IGPage", back_populates="user")
+
     platform_id = db.Column(db.Integer, db.ForeignKey("platforms.id"))
     platform = db.relationship("Platform")
+    
+    answer_improvements = db.relationship("AnswerImprovements", back_populates="user")
     
 class OAuth(OAuthConsumerMixin, _Base):
     provider_user_id = db.Column(db.String, unique=True, nullable=False)
@@ -128,13 +155,14 @@ class IGThread(_Base):
     customer_id = db.Column(db.ForeignKey("ig_customers.id"))
     
     is_unread = db.Column(db.Boolean, nullable=False, default=True)
-    
-    gpt_thread = db.Column(db.String, default="")
+    is_bookmarked = db.Column(db.Boolean, default=False)
     
     media = db.relationship("IGMedia", back_populates="thread_association")
     customer = db.relationship("IGCustomer", back_populates="thread_association")
     
     comments = db.relationship("IGComment", back_populates="thread")
+    
+    answer_improvements = db.relationship("AnswerImprovements", back_populates="thread")
     
 class IGMedia(_IGBaseTable):
     __tablename__ = "ig_medias"
@@ -187,6 +215,18 @@ class IGComment(_IGBaseTable):
 
     text = db.Column(db.String)
 
+class AnswerImprovements(_Base):
+    __tablename__ = "answer_improvements"
+    
+    generated_answer = db.Column(db.String)
+    improved_answer = db.Column(db.String)
+    
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    user = db.relationship("User", back_populates="answer_improvements")
+    
+    thread_id = db.Column(db.Integer, db.ForeignKey("ig_threads.id"))
+    thread = db.relationship("IGThread", back_populates="answer_improvements")
+    
 login_manager = LoginManager()
 login_manager.login_view = "facebook.login"
 

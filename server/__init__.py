@@ -9,7 +9,8 @@ from .utils.env_utils import EnvManager
 from flask_migrate import Migrate
 from flask_talisman import Talisman
 from datetime import timedelta
-import os
+from celery import Celery, Task
+from celery import current_app as current_celery_app
 
 ENV = EnvManager()
 
@@ -17,22 +18,55 @@ class GPTConfig():
     EMBEDDING_MODEL="text-embedding-ada-002" 
     GPT_MODEL="gpt-4-turbo"
     CLIENT=OpenAI(api_key=config("OPENAI_API_KEY"))
+     
+def celery_init_app(app: Flask) -> Celery:
+    class FlaskTask(Task):
+        def __call__(self, *args: object, **kwargs: object) -> object:
+            with app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery_app = Celery(app.name, task_cls=FlaskTask)
+    #celery_app.config_from_object("celeryconfig")
+    celery_app.conf.update(BROKER_URL=config("REDIS_URL"), CELERY_RESULT_BACKEND=config("REDIS_URL"))
+    celery_app.set_default()
+    app.extensions["celery"] = celery_app
+    return celery_app
 
 
 def create_app() -> Flask:
     app = Flask(__name__)
     
+    if app.debug == False:
+        app.config.from_mapping(
+            CELERY=dict(
+                BROKER_URL=config('REDIS_URL'),
+                CELERY_RESULT_BACKEND=config('REDIS_URL'),
+                BROKER_CONNECTION_RETRY_ON_STARTUP=True
+            )
+        )
+        app.config['CELERY_BROKER_URL'] = config('REDIS_URL')
+        app.config['CELERY_RESULT_BACKEND'] = config('REDIS_URL')
+        app.config['broker_connection_retry_on_startup'] = True
+        
     app.config["CONFIG_FOLDER"] = config("CONFIG_FOLDER")
     app.config["GPT_ASSISTANT_ID"] = config("GPT_ASSISTANT_ID")
     
+    app.config["SESSION_COOKIE_SAMESITE"] = "None"
     app.config['SECRET_KEY'] = config("FLASK_SECRET_KEY")
     app.config['FACEBOOK_OAUTH_CLIENT_ID'] = config("FACEBOOK_OAUTH_CLIENT_ID")
     app.config["FACEBOOK_OAUTH_CLIENT_SECRET"] = config("FACEBOOK_OAUTH_CLIENT_SECRET")
     
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=31)
     app.config["MAX_FILE_SIZE"] = 8 * 64 * 1024 * 1024 # 8 Dateien mit jeweils 64MB = 512 MB
-    
-    CORS(app)
+
+    cors_domains = ["https://unaite.ai", "http://unaite.ai", "https://quiet-mountain-69143-51eb8184b186.herokuapp.com", "http://quiet-mountain-69143-51eb8184b186.herokuapp.com"]
+    CORS(app,
+        origins=cors_domains,
+        resources={
+            r"/*": {"origins": cors_domains}},
+        supports_credentials=True
+    )
+
     csp = {
         'default-src': [
             '\'self\'', 
@@ -57,11 +91,7 @@ def create_app() -> Flask:
         csp["default-src"].append("https://localhost:5000")
         csp["default-src"].append("http://localhost:5000")
         
-    Talisman(app, content_security_policy=csp)
-    app.config["UPLOAD_FOLDER"] = config("COMPANY_FILE_UPLOAD_FOLDER")
-    if not os.path.exists(app.config["UPLOAD_FOLDER"]):
-        os.makedirs(app.config["UPLOAD_FOLDER"])
-        print(f"Upload Folder created under {app.config['UPLOAD_FOLDER']}")
+    Talisman(app, content_security_policy=csp, session_cookie_samesite=app.config["SESSION_COOKIE_SAMESITE"])
         
     uri = config("DATABASE_URL")
     if uri.startswith("postgres://"):
@@ -70,6 +100,7 @@ def create_app() -> Flask:
     
     db.init_app(app)
     login_manager.init_app(app)
+    celery_init_app(app)
     # Migration Script for DB
     migrate = Migrate(app, db)
     
