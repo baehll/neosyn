@@ -5,14 +5,11 @@ import os
 import requests
 from flask_login import login_required, current_user
 from decouple import config
-from ..models import db, User , _PlatformEnum, Organization, OAuth, Platform, IGThread
-from ..models import db, User , _PlatformEnum, Organization, OAuth, Platform, IGThread
+from ..models import db, User , _PlatformEnum, Organization, OAuth, Platform, IGThread, File
 from pathvalidate import replace_symbol
-from ...utils import file_utils, IGApiFetcher, assistant_utils
 from ...utils import file_utils, IGApiFetcher, assistant_utils
 from werkzeug.utils import secure_filename
 import traceback
-from .data.threads import isThreadByUser
 from .data.threads import isThreadByUser
 from ..tasks import add
 
@@ -47,24 +44,17 @@ def init_user():
         if "companyname" not in form_data or form_data["companyname"] == "":
             return jsonify({"error": "No companyname specified"}), 400
         
+        if current_user.organization is not None:
+            return jsonify({"error": "User already associated with organization"}), 500
+        
         # Neues Organization DB Objekt initialisieren
         new_orga = Organization(name=form_data["companyname"])
         
         # User updaten, verknüpft mit Orga
         new_orga.users.append(current_user)
         current_user.name = form_data["username"]
-        # aus companyname einen ordner ableiten
-        new_folder = replace_symbol(form_data["companyname"].upper() + "/")
         
-        upload_folder_path = os.path.join(current_app.config["UPLOAD_FOLDER"], new_folder)
-        
-        # Upload Ordner Name sollte abhängig von Orga ID in DB sein ??
-        # upload ordner für Orga erstellen, Pfad für Orga speichern
-        if os.path.exists(upload_folder_path):
-            return jsonify({"error": f"Folder already exists for companyname {form_data['companyname']}, path: '{new_folder}'"}), 500
-        else:
-            os.makedirs(upload_folder_path, mode=0o777)
-            new_orga.folder_path = new_folder
+        logo = None
         
         # Logo im upload ordner abspeichern
         if 'file' in request.files:
@@ -78,17 +68,23 @@ def init_user():
             if filename == "":
                 return jsonify({"error":"Filename invalid"}), 500
             
-            file.save(os.path.join(upload_folder_path, filename))
-            print("file saved under " + str(os.path.join(upload_folder_path, filename)))
-            new_orga.logo_file = filename
+            logo = File(filename=filename, data=file.read())
+            logo.organization = new_orga
+            db.session.add(logo)
             
         db.session.add(new_orga)
         db.session.add(current_user)
         db.session.commit()
+        
+        if logo is not None:
+            new_orga.logo_id = logo.id
+            db.session.add(new_orga)
+            db.session.commit()
+        
+        return jsonify(), 200
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occurred"}), 500
-    return jsonify({}), 200
 
 @api_bp.route("/company_files", methods=["POST"])
 @login_required
@@ -98,10 +94,6 @@ def company_files():
         orga = db.session.execute(db.select(Organization).filter(Organization.users.any(id=current_user.id))).scalar_one_or_none()
         if orga is None:
             return jsonify({"error":"No Organization for User found"}), 500
-        elif orga.folder_path == "":
-            return jsonify({"error":"No Organization Folder defined"}), 500  
-        
-        upload_folder_path = os.path.join(current_app.config["UPLOAD_FOLDER"], orga.folder_path)
         
         if request.files:
             errors = []
@@ -125,15 +117,13 @@ def company_files():
                     errors.append(f"File {file.filename} too big, only {current_app.config['MAX_FILE_SIZE']} allowed ({filesize})")
                     continue
                 
-                # sicher stellen, dass der Upload Path existiert 
-                if not os.path.exists(upload_folder_path):
-                    os.makedirs(upload_folder_path, mode=0o777)
-                
-                # abspeichern im Upload Ordner
-                file.save(os.path.join(upload_folder_path, filename))
+                new_file = File(filename=filename, data=file.read())
+                orga.files.append(new_file)
+                new_file.organization = orga
                 successful.append(filename)
+                db.session.add(new_file)
             
-            assistant_utils.init_assistant(config("COMPANY_FILE_UPLOAD_FOLDER"), successful, orga)
+            assistant_utils.init_assistant(orga)
             
             db.session.add(orga)
             db.session.commit()
@@ -143,41 +133,10 @@ def company_files():
             else:
                 return jsonify({"successful":", ".join(successful)}), 200
 
-
-        return jsonify({}), 200
+        return jsonify(), 200
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occured"}), 500
-    
-@api_bp.route("/data/threads/<id>/post", methods=["GET"])
-@login_required
-def get_post_information(id):
-    try:
-        if not isThreadByUser(int(id), current_user):
-            return jsonify(), 204
-        
-        # jeweiliges media objekt raussuchen und zurückgeben
-        thread = db.session.execute(db.select(IGThread).filter(IGThread.id == id)).scalar_one_or_none()
-        
-        if thread is None:
-            return jsonify({"error":"No thread with the specified ID found"})
-
-        return jsonify({
-            "id": thread.media.id,
-            "threadId": thread.id,
-            "permalink": thread.media.permalink,
-            "mediaType": thread.media.media_type,
-            "postMedia": thread.media.media_url,
-            "postContent": thread.media.caption,
-            "platform": _PlatformEnum.Instagram.name,
-            "likes": thread.media.like_count,
-            "comments": thread.media.comments_count,
-            "shares": None,
-            "timestamp": thread.media.timestamp
-        })
-    except Exception:
-        print(traceback.format_exc())
-        return jsonify({"error":"An exception has occoured"}), 500
     
 @api_bp.route("/me", methods=["GET"])
 @login_required
@@ -187,7 +146,7 @@ def me():
             "logoURL": "",
             "name": "",
             "companyName": ""
-        })
+        }), 200
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occoured"}), 500

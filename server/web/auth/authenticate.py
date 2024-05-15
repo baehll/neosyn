@@ -27,12 +27,33 @@ def early_access():
         for saved_key in keys:
         # Abgleich von Key mit Einträgen in Secret_Access Tabelle
             if saved_key.check_key(access_key):
-            # Bei richtigen Key: OK
+            # Bei richtigen Key: login.html redirect
+                return jsonify({}), 200
+    except Exception:
+        print(traceback.format_exc())
+        return jsonify({"error":"An exception has occurred"}), 500
+    return jsonify({}), 400
+
+@authenticate.route("/early_access_redirect", methods=["POST"])
+def early_access_redirect():
+    try:
+        access_key = request.get_json()["access_key"]
+        
+        if access_key is None or access_key == "":
+            return jsonify({"error": "No access_key specified or missing in request"}), 400
+        
+        keys = db.session.execute(db.select(EarlyAccessKeys)).scalars()
+        
+        for saved_key in keys:
+        # Abgleich von Key mit Einträgen in Secret_Access Tabelle
+            if saved_key.check_key(access_key):
+            # Bei richtigen Key: login.html redirect
                 return send_from_directory("static", "login.html")
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occurred"}), 500
     return jsonify({}), 400
+
 
 @authenticate.route("/logout")
 @login_required
