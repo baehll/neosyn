@@ -54,6 +54,8 @@ def init_user():
         new_orga.users.append(current_user)
         current_user.name = form_data["username"]
         
+        logo = None
+        
         # Logo im upload ordner abspeichern
         if 'file' in request.files:
             file = request.files["file"]
@@ -73,13 +75,16 @@ def init_user():
         db.session.add(new_orga)
         db.session.add(current_user)
         db.session.commit()
-        new_orga.logo_id = logo.id
-        db.session.add(new_orga)
-        db.session.commit()
+        
+        if logo is not None:
+            new_orga.logo_id = logo.id
+            db.session.add(new_orga)
+            db.session.commit()
+        
+        return jsonify(), 200
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occurred"}), 500
-    return jsonify({}), 200
 
 @api_bp.route("/company_files", methods=["POST"])
 @login_required
@@ -128,8 +133,7 @@ def company_files():
             else:
                 return jsonify({"successful":", ".join(successful)}), 200
 
-
-        return jsonify({}), 200
+        return jsonify(), 200
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occured"}), 500
@@ -159,7 +163,7 @@ def get_post_information(id):
             "comments": thread.media.comments_count,
             "shares": None,
             "timestamp": thread.media.timestamp
-        })
+        }), 200
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occoured"}), 500
@@ -172,7 +176,7 @@ def me():
             "logoURL": "",
             "name": "",
             "companyName": ""
-        })
+        }), 200
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occoured"}), 500

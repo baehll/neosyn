@@ -84,12 +84,14 @@ def generate_response():
                 run_id=run.id,
                 order="asc"
             )
-            #print(messages.data)
-            message_arr = json.loads(messages.data[0].content[0].text.value)
-            #print(message_arr)
-            return jsonify(message_arr)
+            try:
+                message_arr = json.loads(messages.data[0].content[0].text.value)
+                #print(message_arr)
+                return jsonify(message_arr), 200
+            except:
+                return jsonify({"error":"Problem generating answers for this Thread"}), 400
         else:
-            return jsonify(run.status)
+            return jsonify(run.status), 400
     
     except Exception:
         print(traceback.format_exc())

@@ -1,12 +1,13 @@
 from flask import (
     Blueprint, jsonify, request, session, current_app
 )
-from ...models import db, User , _PlatformEnum, Organization, OAuth, IGPage, IGBusinessAccount, IGMedia, IGComment, IGThread, IGCustomer
+from ...models import db, _PlatformEnum, OAuth, IGPage, IGThread, AnswerImprovements
 from pathvalidate import replace_symbol
 from ....utils import file_utils, IGApiFetcher
 from flask_login import login_required, current_user
 import traceback, requests
 from urllib.parse import quote
+
 
 threads_bp = Blueprint('threads', __name__)
 
@@ -24,7 +25,7 @@ def thread_result_obj(at, comment_timestamp, comment_message):
         "interactions": len(at.comments)
     }
 
-def message_result_obj(comment):
+def serialize_comment(comment):
     return {
         "id": comment.id,
         "threadId": comment.thread_id,
@@ -82,7 +83,7 @@ def all_threads():
                 results.sort(key=lambda x: x["interactions"])
             else:
                 return jsonify({"error":"Unspecified sorting argument, only 'new' (default), 'old', 'most-interaction', 'least-interaction' allowed"}), 500
-            return jsonify([r for r in results])
+            return jsonify([r for r in results]), 200
         
         if request.method == "POST":
             # pages für den user finden
@@ -90,7 +91,7 @@ def all_threads():
             pages = db.session.execute(db.select(IGPage).filter_by(user=current_user)).scalars().all()
             
             if len(pages) == 0:
-                return jsonify({"error":"No pages associated with user"})
+                return jsonify({"error":"No pages associated with user"}), 500
 
             media_ids = []
             for p in pages:
@@ -102,10 +103,11 @@ def all_threads():
                 # suchsstring anwenden auf IGComment.text
                 # pagination anwenden
             stmt = db.select(IGThread).filter(IGThread.media_id.in_(media_ids))
+            offset = 1
             if "offset" in request.get_json():
-                stmt.where(IGThread.id > request.get_json()["offset"])
+                offset = request.get_json()["offset"]
                 
-            associated_threads = db.session.execute(stmt).scalars().all()
+            associated_threads = db.paginate(stmt, page=offset,max_per_page=20).scalars().all()
             if len(associated_threads) == 0:
                 return jsonify([]), 204
             
@@ -129,14 +131,24 @@ def all_threads():
 def get_messages_by_threadid(id):
     try:
         if request.method == "GET":                        
-            associated_threads = getThreadsByUser(current_user)
-            if len(associated_threads) == 0:
-                return jsonify([]), 204
+            pages = db.session.execute(db.select(IGPage).filter_by(user=current_user)).scalars().all()
+            media_ids = []
+            for p in pages:
+                for b in p.business_accounts:
+                    for m in b.medias:
+                        media_ids.append(m.id)
+            
+            # alle Threads finden            
+            thread = db.session.execute(db.select(IGThread)
+                                         .filter(IGThread.media_id.in_(media_ids))
+                                         .filter_by(id=id)).scalar_one_or_none()
+            if thread is None:
+                return jsonify(), 204
             
             results = []
-            for at in associated_threads:
-                for com in at.comments:
-                    results.append(message_result_obj(com))
+            at_comments = sorted(thread.comments, key=lambda x: x.timestamp)
+            for com in at_comments:
+                results.append(serialize_comment(com))
             
             return jsonify(results), 200
 
@@ -159,7 +171,7 @@ def get_messages_by_threadid(id):
                 thread.is_unread = status
                 db.session.add(thread)
                 db.session.commit()
-                return jsonify({}), 200
+                return jsonify(), 200
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occoured"}), 500
@@ -182,17 +194,78 @@ def post_message(id):
                 return jsonify({"error": "Thread not associated with user"}), 500
             
             oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()
-            print(current_user.organization)
+            #print(current_user.organization)
             last_comment = thread.comments[-1]
             res = requests.post(_URL + f"/{last_comment.fb_id}/replies?message={quote(body['message'])}&access_token={oauth.token['access_token']}")
-            IGApiFetcher.getComments(oauth.token['access_token'], thread.media)
-            # file mit Verbesserungen erweitern
+            IGApiFetcher.getComments(oauth.token['access_token'], thread.media) # TODO über celery updaten lassen
+            
+            # tabelle mit Verbesserungen erweitern
             if "generated_message" in body:
-                file_utils.save_corrected_messages(body["generated_message"], body["message"], f'{current_app.config["UPLOAD_FOLDER"]}/{current_user.organization.folder_path}/')
-            return jsonify({}), 200
+                improvement = AnswerImprovements(generated_answer=body["generated_message"], improved_answer=body["message"], user=current_user, thread=thread)
+                db.session.add(improvement)
+                db.session.commit()
+            return jsonify(), 200
         else:
             return jsonify({"error":"Can't post in thread if thread is not associated with user"}), 500
         
+    except Exception:
+        print(traceback.format_exc())
+        return jsonify({"error":"An exception has occoured"}), 500
+    
+@threads_bp.route("/bookmarks", methods=["GET"])
+@login_required
+def get_bookmarked_threads():
+    try:
+        # pages für den user finden
+        pages = db.session.execute(db.select(IGPage).filter_by(user=current_user)).scalars().all()
+        media_ids = []
+        for p in pages:
+            for b in p.business_accounts:
+                for m in b.medias:
+                    media_ids.append(m.id)
+        
+        # alle Threads finden  
+        stmt = db.select(IGThread).filter(IGThread.media_id.in_(media_ids)).filter_by(is_bookmarked=True)   
+           
+        threads = db.paginate(stmt, max_per_page=20)
+        
+        # Response Objekt bauen, thread um Customer Daten und letzte aktuelle message des Threads + lastUpdated (= zeitpunkt der letzten aktuellen message)
+        results = []
+        for at in threads:
+            last_comment = sorted(at.comments, key=lambda x: x.timestamp)[-1]
+            results.append(thread_result_obj(at, last_comment.timestamp, last_comment.text))
+            
+        return jsonify(results)
+    except Exception:
+        print(traceback.format_exc())
+        return jsonify({"error":"An exception has occoured"}), 500
+
+@threads_bp.route("/bookmarks/<threadId>", methods=["PUT"])
+@login_required
+def update_bookmarks(threadId):
+    try:
+        if request.method == "PUT":
+            pages = db.session.execute(db.select(IGPage).filter_by(user=current_user)).scalars().all()
+            media_ids = []
+            for p in pages:
+                for b in p.business_accounts:
+                    for m in b.medias:
+                        media_ids.append(m.id)
+            
+            # alle Threads finden            
+            thread = db.session.execute(db.select(IGThread)
+                                         .filter(IGThread.media_id.in_(media_ids))
+                                         .filter_by(id=threadId)).scalar_one_or_none()
+            if thread is None:
+                return jsonify({"error":"Thread ID not associated with user"}), 500
+            
+            if "bookmarked" not in request.get_json():
+                return jsonify({"error", "Illegal bookmarked status"}), 500
+            
+            thread.is_bookmarked = request.get_json()["bookmarked"]
+            db.session.add(thread)
+            db.session.commit()
+            return jsonify(), 200
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occoured"}), 500

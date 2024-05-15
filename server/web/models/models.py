@@ -105,6 +105,8 @@ class User(_Base, UserMixin):
     platform_id = db.Column(db.Integer, db.ForeignKey("platforms.id"))
     platform = db.relationship("Platform")
     
+    answer_improvements = db.relationship("AnswerImprovements", back_populates="user")
+    
 class OAuth(OAuthConsumerMixin, _Base):
     provider_user_id = db.Column(db.String, unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)
@@ -153,13 +155,14 @@ class IGThread(_Base):
     customer_id = db.Column(db.ForeignKey("ig_customers.id"))
     
     is_unread = db.Column(db.Boolean, nullable=False, default=True)
-    
-    gpt_thread = db.Column(db.String, default="")
+    is_bookmarked = db.Column(db.Boolean, default=False)
     
     media = db.relationship("IGMedia", back_populates="thread_association")
     customer = db.relationship("IGCustomer", back_populates="thread_association")
     
     comments = db.relationship("IGComment", back_populates="thread")
+    
+    answer_improvements = db.relationship("AnswerImprovements", back_populates="thread")
     
 class IGMedia(_IGBaseTable):
     __tablename__ = "ig_medias"
@@ -212,6 +215,18 @@ class IGComment(_IGBaseTable):
 
     text = db.Column(db.String)
 
+class AnswerImprovements(_Base):
+    __tablename__ = "answer_improvements"
+    
+    generated_answer = db.Column(db.String)
+    improved_answer = db.Column(db.String)
+    
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    user = db.relationship("User", back_populates="answer_improvements")
+    
+    thread_id = db.Column(db.Integer, db.ForeignKey("ig_threads.id"))
+    thread = db.relationship("IGThread", back_populates="answer_improvements")
+    
 login_manager = LoginManager()
 login_manager.login_view = "facebook.login"
 
