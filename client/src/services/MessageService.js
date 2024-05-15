@@ -2,12 +2,7 @@ import * as API from './API';
 
 export default {
     sendMessage(msg) {
-       return new Promise((resolve, reject) => {
-           const rand = Math.random() * 1900;
-           setTimeout(resolve, rand)
-       })
-      return API.client.post('tbd', {
-          threadId: msg.threadId,
+      return API.client.post(`/api/data/threads/${msg.threadId}/message`, {
           message: msg.message,
       })
     },
@@ -28,8 +23,6 @@ export default {
     *
     */
     getMessages(threadId){
-        return API.client.post('tbd', {
-            threadId
-        });
+        return API.client.get(`/api/data/threads/${threadId}`)
     }
 }
