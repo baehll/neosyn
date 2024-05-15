@@ -176,6 +176,35 @@ def get_messages_by_threadid(id):
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occoured"}), 500
 
+@threads_bp.route("/<id>/post", methods=["GET"])
+@login_required
+def get_post_information(id):
+    try:
+        if not isThreadByUser(int(id), current_user):
+            return jsonify(), 204
+        
+        # jeweiliges media objekt raussuchen und zurückgeben
+        thread = db.session.execute(db.select(IGThread).filter(IGThread.id == id)).scalar_one_or_none()
+        
+        if thread is None:
+            return jsonify({"error":"No thread with the specified ID found"})
+
+        return jsonify({
+            "id": thread.media.id,
+            "threadId": thread.id,
+            "permalink": thread.media.permalink,
+            "mediaType": thread.media.media_type,
+            "postMedia": thread.media.media_url,
+            "postContent": thread.media.caption,
+            "platform": _PlatformEnum.Instagram.name,
+            "likes": thread.media.like_count,
+            "comments": thread.media.comments_count,
+            "shares": None,
+            "timestamp": thread.media.timestamp
+        }), 200
+    except Exception:
+        print(traceback.format_exc())
+        return jsonify({"error":"An exception has occoured"}), 500
 
 @threads_bp.route("/<id>/message", methods=["POST"])
 @login_required
