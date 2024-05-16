@@ -8,7 +8,6 @@ from flask_login import login_required, current_user
 import traceback, requests
 from urllib.parse import quote
 
-
 threads_bp = Blueprint('threads', __name__)
 
 _URL = "https://graph.facebook.com/v19.0"
@@ -22,7 +21,8 @@ def thread_result_obj(at, comment_timestamp, comment_message):
         "lastUpdated": comment_timestamp,
         "message": comment_message,
         "unread": at.is_unread,
-        "interactions": len(at.comments)
+        "interactions": len(at.comments),
+        "bookmarked": at.is_bookmarked
     }
 
 def serialize_comment(comment):
@@ -107,9 +107,7 @@ def all_threads():
             if "offset" in request.get_json():
                 offset = request.get_json()["offset"]
                 
-            associated_threads = db.paginate(stmt, page=offset,max_per_page=20).scalars().all()
-            if len(associated_threads) == 0:
-                return jsonify([]), 204
+            associated_threads = db.paginate(stmt, page=offset,max_per_page=20)
             
             results = []
             for at in associated_threads:            

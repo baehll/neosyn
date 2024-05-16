@@ -11,7 +11,6 @@ from ...utils import file_utils, IGApiFetcher, assistant_utils
 from werkzeug.utils import secure_filename
 import traceback
 from .data.threads import isThreadByUser
-from ..tasks import add
 
 api_bp = Blueprint('api', __name__)
 
