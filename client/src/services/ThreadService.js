@@ -37,5 +37,10 @@ export default {
     },
     deleteThread(id){
         return API.client.delete('tbd', id);
+    },
+    bookmarkThread(id, bookmarked){
+        return API.client.put(`/api/data/threads/bookmark/${id}`, {
+            bookmarked
+        })
     }
 }

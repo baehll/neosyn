@@ -99,6 +99,8 @@ import {useMessageStore} from '../../stores/message.js';
 import {useThreadStore} from '../../stores/thread.js';
 import SuggestService from '../../services/SuggestService.js';
 import MessageBody from './MessageBody.vue';
+import ThreadService from '../../services/ThreadService';
+import MessageService from '../../services/MessageService';
 
 export default {
   name: 'MessageContainer',
@@ -161,7 +163,10 @@ export default {
       if(!this.currentThreadId) {
         return
       }
-      this.suggestions = await SuggestService.generateSuggestions(this.threadId)
+      const res = await SuggestService.generateSuggestions(this.threadId)
+      if(res.status === 200){
+        this.suggestions = res.data
+      }
     },
     selectQuickAction(message, i) {
       this.selectedQuickAction = i
@@ -185,19 +190,30 @@ export default {
         threadId: this.currentThreadId,
         date: Date.now(),
       }
+      let selectedSuggestionMessage = null
+      if(this.selectedSuggestion && this.suggestions[this.selectedSuggestion] !== this.messageInput){
+        selectedSuggestionMessage = this.suggestions[this.selectedSuggestion]
+      }
       this.selectedSuggestion = null
       this.selectedQuickAction = null
       this.suggestions = []
-      this.messageStore.messages[this.currentThreadId].push(message)
-      setTimeout(() => {
-        this.$refs.messageScroller.scrollTo({top: this.$refs.messageScroller.scrollHeight, behavior: 'smooth'})
-        this.messageStore.sendMessage(message)
-        this.messageInput = ''
-        this.$refs.msgInput.innerText = ''
-      }, 250)
+
+      const res = MessageService.sendMessage(this.messageInput, selectedSuggestionMessage)
+      if(res.status === 200){
+        this.messageStore.messages[this.currentThreadId].push(message)
+        setTimeout(() => {
+          this.$refs.messageScroller.scrollTo({top: this.$refs.messageScroller.scrollHeight, behavior: 'smooth'})
+          this.messageStore.sendMessage(message)
+          this.messageInput = ''
+          this.$refs.msgInput.innerText = ''
+        }, 250)
+      }
     },
-    bookmarkThread(){
-      this.threadStore.threads[this.currentThreadId].bookmark = !this.threadStore.threads[this.currentThreadId].bookmark
+    async bookmarkThread(){
+      const res = await ThreadService.bookmarkThread(this.currentThreadId, !this.threadStore.threads[this.currentThreadId].bookmark)
+      if(res.status === 200){
+        this.threadStore.threads[this.currentThreadId].bookmark = !this.threadStore.threads[this.currentThreadId].bookmark
+      }
     }
   },
   created: function() {
