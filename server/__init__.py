@@ -25,9 +25,9 @@ def celery_init_app(app: Flask) -> Celery:
             with app.app_context():
                 return self.run(*args, **kwargs)
 
-    celery_app = Celery(app.name, task_cls=FlaskTask)
-    #celery_app.config_from_object("celeryconfig")
-    celery_app.conf.update(BROKER_URL=config("REDIS_URL"), CELERY_RESULT_BACKEND=config("REDIS_URL"))
+    celery_app = Celery(app.name)
+    celery_app.Task = FlaskTask
+    celery_app.config_from_object(app.config["CELERY"])
     celery_app.set_default()
     app.extensions["celery"] = celery_app
     return celery_app
@@ -35,18 +35,6 @@ def celery_init_app(app: Flask) -> Celery:
 
 def create_app() -> Flask:
     app = Flask(__name__)
-    
-    if app.debug == False:
-        app.config.from_mapping(
-            CELERY=dict(
-                BROKER_URL=config('REDIS_URL'),
-                CELERY_RESULT_BACKEND=config('REDIS_URL'),
-                BROKER_CONNECTION_RETRY_ON_STARTUP=True
-            )
-        )
-        app.config['CELERY_BROKER_URL'] = config('REDIS_URL')
-        app.config['CELERY_RESULT_BACKEND'] = config('REDIS_URL')
-        app.config['broker_connection_retry_on_startup'] = True
         
     app.config["CONFIG_FOLDER"] = config("CONFIG_FOLDER")
     app.config["GPT_ASSISTANT_ID"] = config("GPT_ASSISTANT_ID")
@@ -100,10 +88,25 @@ def create_app() -> Flask:
     
     db.init_app(app)
     login_manager.init_app(app)
-    celery_init_app(app)
     # Migration Script for DB
     migrate = Migrate(app, db)
     
+    # Celery Stuff
+    if app.debug == False:
+        app.config.from_mapping(
+            CELERY=dict(
+                broker_url=config('REDIS_URL'),
+                result_backend=config('REDIS_URL'),
+                task_ignore_result=True,
+                broker_connection_retry_on_startup=True
+            ),
+        )
+        app.config['BROKER_URL'] = config('REDIS_URL')
+        app.config['RESULT_BACKEND'] = config('REDIS_URL')
+    
+        app.config.from_prefixed_env()
+        celery_init_app(app)
+        
     with app.app_context():
         db.create_all()
         

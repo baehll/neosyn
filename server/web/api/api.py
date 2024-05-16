@@ -153,4 +153,5 @@ def me():
     
 @api_bp.route("/add/<a>/<b>", methods=["GET"])
 def add_route(a, b):
-    return jsonify(add.delay(a,b))
+    result = add.delay(a,b)
+    return jsonify(result.get())
