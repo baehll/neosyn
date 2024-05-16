@@ -3909,7 +3909,9 @@ export const useMessageStore = defineStore('message', {
          * Sets the current thread id and fetches the messages from this thread
          * @param threadId
          */
-        getMessagesForThread(threadId) {
+        async getMessagesForThread(threadId) {
+            const { data } = await MessageService.getMessages(threadId)
+            this.messages[threadId] = data
             return this.messages[threadId]
         }
     }

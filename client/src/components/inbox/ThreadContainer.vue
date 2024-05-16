@@ -12,7 +12,7 @@
         :id="thread.id"
         :is-selected="selectedThreadId === thread.id"
         :username="thread.username"
-        :message="thread.last_message"
+        :message="thread.message"
         :lastUpdated="thread.last_updated"
         :platform="thread.platform"
         :unread="thread.unread"
@@ -48,13 +48,13 @@ export default {
   },
   methods: {
     async toggleUnreadStatus(id) {
+      const thread = this.threadStore.threads.find(t => t.id === id)
       try{
-        await ThreadService.toggleUnreadStatus(id)
+        await ThreadService.toggleUnreadStatus(id, !thread.unread)
+        this.threadStore.threads.find(t => t.id === id).unread = !thread.unread
       } catch (e){
 
       }
-      const thread = this.threadStore.threads.find(t => t.id === id)
-      this.threadStore.threads.find(t => t.id === id).unread = !thread.unread
     },
     async deleteThread(id){
       try{
@@ -81,7 +81,7 @@ export default {
     }
   },
   async created() {
-    this.fetchThreads()
+    await this.fetchThreads()
   }
 }
 </script>

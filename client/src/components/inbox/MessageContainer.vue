@@ -22,14 +22,14 @@
           :message="message.message"
           :from="message.from"
           :id="message.id"
-          :date="message.date"
+          :date="message.messageDate"
           :state="message.state"
         />
         </div>
-        <div 
+        <div
           :class="{'h-full flex-col grow shrink-0 justify-end items-end suggestions absolute bottom-0 right-0 transform transition-transform': true, 'translate-x-100': suggestions.length === 0, 'translate-x-0': suggestions.length > 0}"
         >
-        <div 
+        <div
           @click="closeSuggestions"
           :class="{'message-curtain absolute top-0 left-0 transition-all h-full w-full bg-black': true, 'opacity-0 pointer-events-none': suggestions.length === 0, 'opacity-60 pointer-events-all': suggestions.length}"
         >
@@ -125,8 +125,8 @@ export default {
     }
   },
   watch: {
-    threadId(newVal, oldVal) {
-      this.messageStore.getMessagesForThread(newVal)
+    async threadId(newVal, oldVal) {
+      await this.messageStore.getMessagesForThread(newVal)
       this.suggestions = []
       this.selectedQuickAction = null
       this.selectedSuggestion = null

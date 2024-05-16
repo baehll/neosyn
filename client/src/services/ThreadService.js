@@ -25,13 +25,15 @@ export default {
      * Value of new, most-interaction, old or least-interaction
      */
     getThreads(filterOptions, sorting){
-        return API.client.post('tbd', {
+        return API.client.post('/api/data/threads', {
             filterOptions,
             sorting
         });
     },
-    toggleUnreadStatus(id){
-        return API.client.patch('tbd', id);
+    toggleUnreadStatus(id, unread){
+        return API.client.put(`/api/data/threads/${id}`, {
+            unread
+        });
     },
     deleteThread(id){
         return API.client.delete('tbd', id);

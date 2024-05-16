@@ -18,7 +18,6 @@ export default {
      * }
      */
     async getPostForThread(threadId){
-        const {res} = API.client.get(`/v1/thread/post/${threadId}`)
-        return res
+        return API.client.get(`/api/data/threads/${threadId}/post`)
     }
 }
