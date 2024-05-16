@@ -25,7 +25,7 @@
                   v-if="currentStep < steps.length - 1" @click="nextStep">
             {{ $t('Continue') }}
           </Button>
-          <Button class="basis-1/4" v-if="currentStep === steps.length - 1" @click="finishRegistration">
+          <Button class="basis-1/4" v-if="currentStep === steps.length - 1" :disabled="!isValid" @click="finishRegistration">
             {{ $t('Continue') }}
           </Button>
         </div>
@@ -106,8 +106,8 @@ export default {
         {
           component: Step5,
           finishRegistration: true,
-          validation: () => {
-            return true
+          validation: (store) => {
+            return store.companyFiles.length
           }
         },
       ],

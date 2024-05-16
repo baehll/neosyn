@@ -1,5 +1,6 @@
+from dateutil import parser as date_parser
 from ..web.models import db, IGPage, IGBusinessAccount, IGMedia, IGComment, IGCustomer, IGThread
-import requests, json
+import requests, json, traceback
 from datetime import datetime
 
 # UTILITY FUNCTIONS UND VARIABLEN
@@ -70,10 +71,7 @@ def _batchRequest(access_token, payload):
                     if(len(paging_results) > 0):
                         payload.extend(paging_results)
                     
-                    results.append({
-                            #"etag": etag,
-                            "body": body
-                        })
+                    results.append(body)
                 elif entry["code"] == 304:
                     # Ein ETag Header war gesetzt und nichts hat sich verändert
                     continue
@@ -121,6 +119,15 @@ def _commitToDB(data):
         db.session.commit()
     except Exception as e:
         print(e)
+        db.session.rollback()
+
+def _deleteFromDB(data):
+    try:
+        for d in data:
+            db.session.delete(d)
+        db.session.commit()
+    except Exception:
+        print(traceback.format_exc())
         db.session.rollback()
 
 # Holt alle ETags für die db_objs, die noch nicht in der Datenbank sind
@@ -198,12 +205,11 @@ def getPages(access_token, user):
         page_res_filtered = page_res.copy()
         
         for all_pages in page_res_filtered:
-            p = all_pages["body"]
+            p = all_pages
             if p["id"] in existing_pages_fb_ids:
                 page_res.remove(all_pages)
     
-    for all_pages in page_res:
-        p = all_pages["body"]
+    for p in page_res:
         new_page = IGPage(name=p["name"], category=p["category"], fb_id=p["id"], followers_count=p["followers_count"])
         # # Tasks befüllen
         # for pt in p["tasks"]:
@@ -273,12 +279,11 @@ def getMedia(access_token, bz_acc):
         existing_medias_fb_ids = [m.fb_id for m in medias]
         media_res_filtered = media_res.copy()
         for m in media_res_filtered:
-            if m["body"]["id"] in existing_medias_fb_ids:
+            if m["id"] in existing_medias_fb_ids:
                 media_res.remove(m)
     
-    for m in media_res:
-        body = m["body"]
-        new_media = IGMedia(timestamp=datetime.strptime(body["timestamp"], "%Y-%m-%dT%H:%M:%S%z"), 
+    for body in media_res:
+        new_media = IGMedia(timestamp=date_parser.isoparse(body["timestamp"]), 
                             permalink=body["permalink"], 
                             media_url=body["media_url"], 
                             fb_id=body["id"],
@@ -294,41 +299,53 @@ def getMedia(access_token, bz_acc):
     return new_medias
     
 def getComments(access_token, media):
-    _fields = "replies{from, parent, timestamp, username,text},id,timestamp,from,text"
-    comments = db.session.execute(db.select(IGComment).filter(IGComment.media.has(id=media.id))).scalars().all()
+    _fields = "replies{from, parent, timestamp, username,text,like_count},id,timestamp,from,text,like_count"
+    db_comments = db.session.execute(db.select(IGComment).filter(IGComment.media.has(id=media.id))).scalars().all()
 
     res = _getInstagramData(access_token, f"/{media.fb_id}/comments")
     
     payload = []
     
-    #print(res)
     for com in res:
         payload.append({"method": "GET", "relative_url": f"{com['id']}?fields=" + _fields})
     com_res = _batchRequest(access_token, payload)
     
-    if len(comments) > 0:
-        # bereits vorhandene Einträge nicht einfügen
-        existing_medias_fb_ids = [m.fb_id for m in comments]
-        com_res_filtered = com_res.copy()
-        
-        for m in com_res_filtered:
-            if "body" in m and m["body"]["id"] in existing_medias_fb_ids:
-                com_res.remove(m)
+    deletable_comment_ids, new_comment_ids, updateable_comment_ids, comment_customer, new_comments = [], [], [], [], []
 
-    new_comments, comment_customer = [], []
-    #print("BATCH RES SIZE: " + str(len(batchRes)))
+    db_comment_dict = dict([(c.fb_id, c) for c in db_comments])
+    fb_comment_dict = dict()
     for c in com_res:
-        body = c["body"]
-        new_comm = IGComment(timestamp=datetime.strptime(body["timestamp"], "%Y-%m-%dT%H:%M:%S%z"), fb_id=body["id"], text=body["text"])
+        fb_comment_dict[c["id"]] = c
+        if "replies" in c:
+            for r in c["replies"]["data"]:
+                fb_comment_dict[r["id"]] = r
+    '''	
+    Welche Kommentare sind in fb_comments, aber nicht in db_comments -> hinzufügen
+    Welche Kommentare sind in db_comments, aber nicht in fb_comments -> delete
+    Schnittmenge fb_comments db_comments -> update
+    '''
+    # Sets zur Anwendung von Mengenoperatoren
+    db_comments_fb_ids = set(db_comment_dict.keys())
+    fb_comment_ids = set(fb_comment_dict.keys()) 
+    
+    if len(db_comments) > 0:
+        deletable_comment_ids = db_comments_fb_ids - fb_comment_ids
+        updateable_comment_ids = db_comments_fb_ids & fb_comment_ids
+    
+    new_comment_ids = fb_comment_ids - db_comments_fb_ids
+    
+    print("creating comments " + str(len(new_comment_ids)))
+    for id in new_comment_ids:
+        body = fb_comment_dict[id]
+        print(body)
+        new_comm = IGComment(timestamp=date_parser.isoparse(body["timestamp"]), fb_id=body["id"], text=body["text"], like_count=body["like_count"])
         
         # User mit Media und Comment verknüpfen
         comment_customer.append((new_comm, body["from"]))
         new_comments.append(new_comm)
         if "replies" in body:
-            #print("REPLY SIZE: " + str(len(body["replies"]["data"])))
             for r in body["replies"]["data"]:
-                #print("-" + str(r))
-                reply = IGComment(timestamp=datetime.strptime(r["timestamp"], "%Y-%m-%dT%H:%M:%S%z"), fb_id=r["id"], text=r["text"])
+                reply = IGComment(timestamp=date_parser.isoparse(r["timestamp"]), fb_id=r["id"], text=r["text"], like_count=r["like_count"])
                 comment_customer.append((reply, r["from"]))
                 reply.parent = new_comm
                 new_comments.append(reply)
@@ -357,6 +374,23 @@ def getComments(access_token, media):
         media.comments.append(comment)
         db_customer.comments.append(comment)
     
+    if len(deletable_comment_ids) > 0:
+        print("deleting comments " + str(len(deletable_comment_ids)))
+        print(deletable_comment_ids)
+        db_deletable_comments = [c for c in db_comments if c.fb_id in deletable_comment_ids]
+        _deleteFromDB(db_deletable_comments)
+    
+    if len(updateable_comment_ids) > 0:
+        print("updating comments " + str(len(updateable_comment_ids)))
+        db_updateable_comments = [c for c in db_comments if c.fb_id in updateable_comment_ids]
+        for com in db_updateable_comments:
+            #print(fb_comment_dict[com.fb_id])
+            fb_com_body = fb_comment_dict[com.fb_id]
+            if fb_com_body is not None:
+                com.text = fb_com_body["text"]
+                com.timestamp = date_parser.isoparse(fb_com_body["timestamp"])
+                com.like_count = fb_com_body["like_count"]
+        
     _commitToDB([media])
     getCustomers(access_token, media)
     
@@ -373,8 +407,7 @@ def getCustomers(access_token, media):
         payload.append({"method": "GET", "relative_url": f"{customer.fb_id}?fields=" + _fields})
     customer_res = _batchRequest(access_token, payload)
 
-    for res in customer_res:
-        body = res["body"]
+    for body in customer_res:
         for c in media.customers:
             if c.fb_id == body["id"]:
                 c.profile_picture_url = body["profile_picture_url"]

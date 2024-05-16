@@ -27,7 +27,6 @@ def early_access():
         for saved_key in keys:
         # Abgleich von Key mit Einträgen in Secret_Access Tabelle
             if saved_key.check_key(access_key):
-            # Bei richtigen Key: login.html redirect
                 return jsonify({}), 200
     except Exception:
         print(traceback.format_exc())
@@ -99,6 +98,9 @@ def facebook_logged_in(blueprint, token):
         # Log in the new local user account
         login_user(user)
         print("New User created and successfully signed in.")
+        
+        # trigger async DB Update
+        
         return redirect("/registration.html")
 
     # im Hintergrund update der Interactions und User Daten triggern

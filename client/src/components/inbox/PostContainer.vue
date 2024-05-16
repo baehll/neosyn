@@ -11,25 +11,35 @@
     </div>
 </template>
 <script>
+import { mapStores } from 'pinia';
 import MessageInsights from './MessageInsights.vue';
 import MessagePost from './MessagePost.vue';
+import {useMessagePostStore} from '../../stores/messagepost.js'
 
 export default {
 	name: 'PostContainer',
+	components: {
+		MessagePost,
+		MessageInsights,
+	},
 	props: {
 		threadId: {
 			type: Number
 		},
 	},
-	computed: {
-		messagePost(){
-
+	data: () => {
+		return {
+			messagePost: null,
 		}
 	},
-	components: {
-		MessagePost,
-		MessageInsights,
+	computed: {
+		...mapStores(useMessagePostStore),
 	},
+  watch: {
+    async threadId(newVal, oldVal) {
+      this.messagePost = await this.messagePostStore.getPostForThread(newVal)
+    }
+  },
 }
 </script>
 <style lang="scss">

@@ -46,7 +46,8 @@
           </ul>
         </div>
       </div>
-    </FileUpload>  </div>
+    </FileUpload>
+  </div>
 </template>
 <script>
 
@@ -80,7 +81,6 @@ export default {
     },
     companyFileAdded(files) {
       this.uploadedFiles.push(...files)
-      console.log(this.uploadedFiles);
       this.userStore.companyFiles = this.uploadedFiles
     }
   },

@@ -22,14 +22,14 @@
           :message="message.message"
           :from="message.from"
           :id="message.id"
-          :date="message.date"
+          :date="message.messageDate"
           :state="message.state"
         />
         </div>
-        <div 
+        <div
           :class="{'h-full flex-col grow shrink-0 justify-end items-end suggestions absolute bottom-0 right-0 transform transition-transform': true, 'translate-x-100': suggestions.length === 0, 'translate-x-0': suggestions.length > 0}"
         >
-        <div 
+        <div
           @click="closeSuggestions"
           :class="{'message-curtain absolute top-0 left-0 transition-all h-full w-full bg-black': true, 'opacity-0 pointer-events-none': suggestions.length === 0, 'opacity-60 pointer-events-all': suggestions.length}"
         >
@@ -40,7 +40,7 @@
               v-for="(suggestion, i) in suggestions"
               :class="{'relative mb-6 mr-6 left-full w-6/12 transform -translate-x-full': true}"
               :selectable="true"
-              :message="suggestion.message"
+              :message="suggestion"
               :from="0"
               :message-subline="`Suggestion ${i+1}`"
               :selected="i === selectedSuggestion"
@@ -99,6 +99,8 @@ import {useMessageStore} from '../../stores/message.js';
 import {useThreadStore} from '../../stores/thread.js';
 import SuggestService from '../../services/SuggestService.js';
 import MessageBody from './MessageBody.vue';
+import ThreadService from '../../services/ThreadService';
+import MessageService from '../../services/MessageService';
 
 export default {
   name: 'MessageContainer',
@@ -125,8 +127,8 @@ export default {
     }
   },
   watch: {
-    threadId(newVal, oldVal) {
-      this.messageStore.getMessagesForThread(newVal)
+    async threadId(newVal, oldVal) {
+      await this.messageStore.getMessagesForThread(newVal)
       this.suggestions = []
       this.selectedQuickAction = null
       this.selectedSuggestion = null
@@ -155,13 +157,16 @@ export default {
         return
       }
       this.selectedSuggestion = i
-      this.insertResponse(this.suggestions[i].message)
+      this.insertResponse(this.suggestions[i])
     },
     async generateSuggestions() {
       if(!this.currentThreadId) {
         return
       }
-      this.suggestions = await SuggestService.generateSuggestions(this.threadId)
+      const res = await SuggestService.generateSuggestions(this.threadId)
+      if(res.status === 200){
+        this.suggestions = res.data
+      }
     },
     selectQuickAction(message, i) {
       this.selectedQuickAction = i
@@ -185,19 +190,30 @@ export default {
         threadId: this.currentThreadId,
         date: Date.now(),
       }
+      let selectedSuggestionMessage = null
+      if(this.selectedSuggestion && this.suggestions[this.selectedSuggestion] !== this.messageInput){
+        selectedSuggestionMessage = this.suggestions[this.selectedSuggestion]
+      }
       this.selectedSuggestion = null
       this.selectedQuickAction = null
       this.suggestions = []
-      this.messageStore.messages[this.currentThreadId].push(message)
-      setTimeout(() => {
-        this.$refs.messageScroller.scrollTo({top: this.$refs.messageScroller.scrollHeight, behavior: 'smooth'})
-        this.messageStore.sendMessage(message)
-        this.messageInput = ''
-        this.$refs.msgInput.innerText = ''
-      }, 250)
+
+      const res = await MessageService.sendMessage(this.currentThreadId, this.messageInput, selectedSuggestionMessage)
+      if(res.status === 200){
+        this.messageStore.messages[this.currentThreadId].push(message)
+        setTimeout(() => {
+          this.messageStore.messages[message.threadId][this.messages[message.threadId].length - 1].state = 'received'
+          this.$refs.messageScroller.scrollTo({top: this.$refs.messageScroller.scrollHeight, behavior: 'smooth'})
+          this.messageInput = ''
+          this.$refs.msgInput.innerText = ''
+        }, 250)
+      }
     },
-    bookmarkThread(){
-      this.threadStore.threads[this.currentThreadId].bookmark = !this.threadStore.threads[this.currentThreadId].bookmark
+    async bookmarkThread(){
+      const res = await ThreadService.bookmarkThread(this.currentThreadId, !this.threadStore.threads[this.currentThreadId].bookmark)
+      if(res.status === 200){
+        this.threadStore.threads[this.currentThreadId].bookmark = !this.threadStore.threads[this.currentThreadId].bookmark
+      }
     }
   },
   created: function() {

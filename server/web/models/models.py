@@ -214,6 +214,7 @@ class IGComment(_IGBaseTable):
     timestamp = db.Column(db.DateTime, nullable=False)
 
     text = db.Column(db.String)
+    like_count = db.Column(db.Integer, default=0)
 
 class AnswerImprovements(_Base):
     __tablename__ = "answer_improvements"

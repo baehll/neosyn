@@ -15,7 +15,7 @@ def GPTConfig():
 
 ai_bp = Blueprint('ai_bp', __name__)
 
-@ai_bp.route("/generate_response", methods=["POST"])
+@ai_bp.route("/generate_responses", methods=["POST"])
 @login_required
 def generate_response():
     try:

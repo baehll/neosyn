@@ -14,24 +14,30 @@ def upload_files_to_openai(file_blobs):
     return file_ids
     
 def init_vector_storage(vector_store_name, file_ids):
-    return GPTConfig().CLIENT.beta.vector_stores.create(
-        name=vector_store_name,
-        file_ids=file_ids
-    )
+    if file_ids is None:
+        return GPTConfig().CLIENT.beta.vector_stores.create(
+            name=vector_store_name
+        )
+    else:
+        return GPTConfig().CLIENT.beta.vector_stores.create(
+            name=vector_store_name,
+            file_ids=file_ids
+        )
 
 def init_assistant(orga):
     if orga.vec_storage_id is not None:
-        deleted_store = GPTConfig().CLIENT.beta.vector_stores.delete(vector_store_id=orga.vec_storage_id)    
-    
-    print(orga.logo().filename)
+        deleted_store = GPTConfig().CLIENT.beta.vector_stores.delete(vector_store_id=orga.vec_storage_id) 
+           
     # dateien hochladen 
     orga_files = list(orga.files)
     orga_files.remove(orga.logo())
-    for f in orga_files:
-        print(f.filename)
-    file_ids = upload_files_to_openai(orga_files)
-    vec_storage = init_vector_storage(orga.name + "_VECTOR_STORE", file_ids)
     
+    if len(orga_files) != 0:
+        file_ids = upload_files_to_openai(orga_files)
+        vec_storage = init_vector_storage(orga.name + "_VECTOR_STORE", file_ids)
+    else:
+        vec_storage = init_vector_storage(orga.name + "_VECTOR_STORE", None)
+        
     # neuen Thread erstellen
     thread = GPTConfig().CLIENT.beta.threads.create(
         tool_resources={

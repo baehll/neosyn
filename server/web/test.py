@@ -1,20 +1,10 @@
 from flask import Blueprint, jsonify, request, current_app
 from .models import db, IGPage, IGMedia, IGBusinessAccount, IGComment, OAuth
-from flask_jwt_extended import get_jwt_identity, jwt_required, create_access_token
 from ..utils.IGApiFetcher import getPages, getComments, getBusinessAccounts, getMedia, updateAllEntries
 from flask_login import current_user, login_required
-from .tasks import add
 
 
 test = Blueprint('test', __name__)
-
-def GPTConfig():
-    from server import GPTConfig
-    return GPTConfig
-
-def GPTConfig():
-    from server import GPTConfig
-    return GPTConfig
 
 def GPTConfig():
     from server import GPTConfig
@@ -80,7 +70,3 @@ def thread_run_status(thread_id, run_id):
     else:
         print(run)
         return jsonify(run.status)
-    
-@test.route("/add/<a>/<b>", methods=["GET"])
-def add_route(a, b):
-    return jsonify(add.delay(a,b))
