@@ -6,6 +6,7 @@
     :thread-id="currentThreadId"
   />
   <PostContainer
+    v-if="minScreenWidth"
     :thread-id="currentThreadId"
   />
 </template>
@@ -30,7 +31,10 @@ export default {
     }
   },
   computed: {
-    ...mapStores(useThreadStore)
+    ...mapStores(useThreadStore),
+    minScreenWidth(){
+      return window.innerWidth > 1400
+    }
   },
   methods: {
     setSelectedThread(id) {

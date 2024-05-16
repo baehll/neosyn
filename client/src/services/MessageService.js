@@ -1,9 +1,10 @@
 import * as API from './API';
 
 export default {
-    sendMessage(msg) {
+    sendMessage(message, generated_message) {
       return API.client.post(`/api/data/threads/${msg.threadId}/message`, {
-          message: msg.message,
+            message,
+            generated_message
       })
     },
 
