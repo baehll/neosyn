@@ -115,7 +115,8 @@ Sample JSON Array mit bis zu **20** Thread Objekten:
               platform int,
               lastUpdated datetime,
               unread bool,
-              interactions int
+              interactions int, 
+              bookmarked bool
           }
     ]
 ```
@@ -155,7 +156,8 @@ Sample JSON Array mit bis zu **20** Thread Objekten:
               platform int,
               lastUpdated datetime,
               unread bool,
-              interactions int
+              interactions int,
+              bookmarked bool
           }
     ]
 ```
@@ -306,7 +308,7 @@ Sample JSON Antwort:
 Liefert **20** bookmarked Threads eines Users 
 Query Parameter
 ```bash
-    ?page=threadId int (ThreadID, ab dem geladen werden soll, default: 1) 
+    ?offset=threadId int (ThreadID, ab dem geladen werden soll, default: 1) 
 ```
 
 **200**, wenn die Anfrage erfolgreich war
@@ -321,7 +323,8 @@ Sample JSON Response
               platform int,
               lastUpdated datetime,
               unread bool,
-              interactions int
+              interactions int,
+              bookmarked bool
           }
     ]
 ```
