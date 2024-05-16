@@ -282,7 +282,7 @@ def update_bookmarks(threadId):
             # alle Threads finden            
             thread = db.session.execute(db.select(IGThread)
                                          .filter(IGThread.media_id.in_(media_ids))
-                                         .filter_by(id=threadId)).scalar_one_or_none()
+                                         .filter_by(id=int(threadId))).scalar_one_or_none()
             if thread is None:
                 return jsonify({"error":"Thread ID not associated with user"}), 500
             

@@ -149,8 +149,3 @@ def me():
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occoured"}), 500
-    
-@api_bp.route("/add/<a>/<b>", methods=["GET"])
-def add_route(a, b):
-    result = add.delay(a,b)
-    return jsonify(result.get())
