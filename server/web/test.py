@@ -10,14 +10,6 @@ def GPTConfig():
     from server import GPTConfig
     return GPTConfig
 
-def GPTConfig():
-    from server import GPTConfig
-    return GPTConfig
-
-def GPTConfig():
-    from server import GPTConfig
-    return GPTConfig
-
 @test.route("/pages", methods=["GET"])
 @login_required
 def pages():
