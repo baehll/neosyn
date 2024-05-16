@@ -102,12 +102,14 @@ def all_threads():
             # alle Threads für die posts finden
                 # suchsstring anwenden auf IGComment.text
                 # pagination anwenden
-            stmt = db.select(IGThread).filter(IGThread.media_id.in_(media_ids))
-            offset = 1
+            stmt = db.select(IGThread).filter(IGThread.media_id.in_(media_ids)).limit(20)
             if "offset" in request.get_json():
-                offset = request.get_json()["offset"]
+                try:
+                    stmt.offset((int(request.get_json()["offset"] - 1) * 20))
+                except:
+                    return jsonify({"error":"Offset is not a number"}), 500
                 
-            associated_threads = db.paginate(stmt, page=offset,max_per_page=20)
+            associated_threads = db.session.execute(stmt).scalars().all()
             
             results = []
             for at in associated_threads:            
@@ -252,10 +254,13 @@ def get_bookmarked_threads():
                     media_ids.append(m.id)
         
         # alle Threads finden  
-        stmt = db.select(IGThread).filter(IGThread.media_id.in_(media_ids)).filter_by(is_bookmarked=True)   
-           
-        threads = db.paginate(stmt, max_per_page=20)
-        
+        stmt = db.select(IGThread).filter(IGThread.media_id.in_(media_ids)).filter_by(is_bookmarked=True).limit(20)
+        if request.args.get("offset"):
+            try:
+                stmt.offset((int(request.args.get("offset")) - 1) * 20)
+            except Exception:
+                return jsonify({"error" : "Offset is not a number"}), 500
+        threads = db.session.execute(stmt).scalars().all()
         # Response Objekt bauen, thread um Customer Daten und letzte aktuelle message des Threads + lastUpdated (= zeitpunkt der letzten aktuellen message)
         results = []
         for at in threads:
