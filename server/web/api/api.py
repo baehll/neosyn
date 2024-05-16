@@ -122,7 +122,6 @@ def company_files():
                 successful.append(filename)
                 db.session.add(new_file)
             
-            assistant_utils.init_assistant(orga)
             
             db.session.add(orga)
             db.session.commit()
@@ -131,7 +130,9 @@ def company_files():
                 return jsonify({"error": errors, "successful":", ".join(successful) }), 422
             else:
                 return jsonify({"successful":", ".join(successful)}), 200
-
+        
+        assistant_utils.init_assistant(orga)
+        
         return jsonify(), 200
     except Exception:
         print(traceback.format_exc())
