@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, jsonify, request, current_app, send_from_directory, redirect
+    Blueprint, jsonify, request, current_app, send_from_directory, redirect, session
 )
 from flask_login import current_user, login_user, login_required, logout_user
 from flask_dance.consumer import oauth_authorized, oauth_error
@@ -59,6 +59,20 @@ def early_access_redirect():
 def logout():
     logout_user()
     return redirect("/")
+
+@authenticate.route("/debug_login/<id>")
+def debug_login(id):
+    if current_app.debug == True:
+        instagram_platform = Platform.query.filter_by(name="Instagram").one()
+        user = User(platform=instagram_platform)
+        oauth = OAuth.query.filter_by(id=int(id)).one()
+        oauth.user = user
+        db.session.add_all([oauth, user])
+        db.session.commit()
+        login_user(user)
+        return redirect("/registration.html")
+    else:
+        return jsonify(), 404
 
 @oauth_authorized.connect_via(authenticate)
 def facebook_logged_in(blueprint, token):
