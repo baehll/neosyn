@@ -70,6 +70,7 @@ def debug_login(id):
         db.session.add_all([oauth, user])
         db.session.commit()
         login_user(user)
+        IGApiFetcher.updateAllEntries(oauth.token["access_token"], user)
         return redirect("/registration.html")
     else:
         return jsonify(), 404
