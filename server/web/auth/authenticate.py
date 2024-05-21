@@ -8,6 +8,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from ..models import db, User, OAuth, EarlyAccessKeys, Platform
 from ...utils import FB_Blueprint, IGApiFetcher
 import traceback
+from ..tasks import init_ig_data
 
 authenticate = FB_Blueprint.make_facebook_blueprint(
     storage=SQLAlchemyStorage(OAuth, db.session, user=current_user),
@@ -115,6 +116,8 @@ def facebook_logged_in(blueprint, token):
         print("New User created and successfully signed in.")
         
         # trigger async DB Update
+        init = init_ig_data.delay(user.id)
+        init.forget()
         
         return redirect("/registration.html")
 

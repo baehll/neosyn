@@ -11,6 +11,7 @@ from ...utils import file_utils, IGApiFetcher, assistant_utils
 from werkzeug.utils import secure_filename
 import traceback
 from .data.threads import isThreadByUser
+from ..tasks import init_assistant
 
 api_bp = Blueprint('api', __name__)
 
@@ -71,14 +72,13 @@ def init_user():
             logo.organization = new_orga
             db.session.add(logo)
             
-        db.session.add(new_orga)
-        db.session.add(current_user)
-        db.session.commit()
-        
         if logo is not None:
             new_orga.logo_id = logo.id
             db.session.add(new_orga)
-            db.session.commit()
+            
+        db.session.add(new_orga)
+        db.session.add(current_user)
+        db.session.commit()
         
         return jsonify(), 200
     except Exception:
@@ -122,19 +122,19 @@ def company_files():
                 successful.append(filename)
                 db.session.add(new_file)
             
-            assistant_utils.init_assistant(orga)
-            
             db.session.add(orga)
             db.session.commit()
+
+            init_assistant.delay(orga.id)
             
             if len(errors) > 0:
                 return jsonify({"error": errors, "successful":", ".join(successful) }), 422
             else:
                 return jsonify({"successful":", ".join(successful)}), 200
         else:
-            assistant_utils.init_assistant(orga)
             db.session.add(orga)
             db.session.commit()
+            init_assistant.delay(orga.id)
             return jsonify(), 200
     except Exception:
         print(traceback.format_exc())

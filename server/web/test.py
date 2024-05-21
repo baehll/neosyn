@@ -2,7 +2,8 @@ from flask import Blueprint, jsonify, request, current_app
 from .models import db, IGPage, IGMedia, IGBusinessAccount, IGComment, OAuth
 from ..utils.IGApiFetcher import getPages, getComments, getBusinessAccounts, getMedia, updateAllEntries
 from flask_login import current_user, login_required
-
+from .tasks import init_ig_data
+from celery.result import AsyncResult
 
 test = Blueprint('test', __name__)
 
@@ -70,3 +71,21 @@ def thread_run_status(thread_id, run_id):
     else:
         print(run)
         return jsonify(run.status)
+    
+@test.route("/task", methods=["GET"])
+@login_required
+def task():
+    task = init_ig_data.delay(current_user.id)
+    print(task.backend)
+    return jsonify(task.id)
+
+@test.route("/task_status/<id>", methods=["GET"])
+@login_required
+def task_status(id):
+    task = AsyncResult(id)
+    response = {
+        'task_id': task.id,
+        'status': task.status,
+        'result': task.result if task.status == 'SUCCESS' else None
+    }
+    return jsonify(response)
