@@ -54,5 +54,8 @@ export default {
 	@media (min-width: 1650px) {
 		width: 405px;
 	}
+	@media (max-width: 1300px) {
+		@apply hidden;
+	}
 }
 </style>

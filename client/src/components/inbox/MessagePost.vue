@@ -10,15 +10,15 @@
           <heart
           class="text-red-600"
         />
-          <span v-text="likes"></span> <span class="hide-on-small">Likes</span>
+          <span v-text="getLikes"></span> <span class="hide-on-small" v-text="$t('Likes')"></span>
         </div>
         <div class="flex gap-1 items-center">
           <comments/>
-          <span v-text="comments"></span> <span class="hide-on-small">Comments</span>
+          <span v-text="getComments"></span> <span class="hide-on-small" v-text="$t('Comments')"></span>
         </div>
         <div class="flex gap-1 items-center">
           <retweets/>
-          <span v-text="shares"></span> <span class="hide-on-small">Retweets</span>
+          <span v-text="getShares"></span> <span class="hide-on-small" v-text="$t('Retweets')"></span>
         </div>
       </div>
       <div class="overflow-y-scroll px-4 pt-2 mb-2 text-white grow-0">
@@ -29,8 +29,7 @@
       class="relative h-full"
       v-else
     >
-      <div class="absolute text-white top-1/2 left-1/2 transform -translate-y-1/2 -translate-x-1/2">
-        No message selected
+      <div class="absolute text-white top-1/2 left-1/2 transform -translate-y-1/2 -translate-x-1/2" v-text="$t('No message selected')">
       </div>
     </div>
   </div>
@@ -63,13 +62,24 @@ export default {
       type: Number
     },
     shares: {
-      type: Number
+      type: Number,
+      default: 0
     }
   },
   data: () => {
     return {}
   },
-  computed: {},
+  computed: {
+    getShares(){
+      return this.shares || 0
+    },
+    getComments(){
+      return this.comments || 0
+    },
+    getLikes(){
+      return this.likes || 0
+    }
+  },
   methods: {},
   created: () => {
 

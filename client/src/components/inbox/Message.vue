@@ -1,8 +1,8 @@
 <template>
   <div
-    :class="{'h-full w-full flex': true, 'justify-begin': from !== 0, 'justify-end': from === 0, 'opacity-30': state === 'sending'}"
+    :class="{'w-full flex': true, 'justify-begin': from !== 0, 'justify-end': from === 0, 'opacity-30': state === 'sending'}"
   >
-    <div :class="{'w-5/12 flex gap-4 justify-end': true,  'cursor-pointer': selectable }">
+    <div :class="{'flex gap-4 message-wrap': true, 'cursor-pointer': selectable }">
       <div class="flex flex-col ">
         <div class="flex justify-end items-end gap-4 mb-2">
           <div
@@ -85,6 +85,9 @@ export default {
 }
 </script>
 <style lang="scss" scoped>
+.message-wrap {
+  max-width: 65%;
+}
 .body {
   @apply pl-1;
   margin-left: 26px;
