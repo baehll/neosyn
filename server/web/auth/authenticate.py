@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, jsonify, request, current_app, send_from_directory, redirect
+    Blueprint, jsonify, request, current_app, send_from_directory, redirect, session
 )
 from flask_login import current_user, login_user, login_required, logout_user
 from flask_dance.consumer import oauth_authorized, oauth_error
@@ -27,7 +27,6 @@ def early_access():
         for saved_key in keys:
         # Abgleich von Key mit Einträgen in Secret_Access Tabelle
             if saved_key.check_key(access_key):
-            # Bei richtigen Key: login.html redirect
                 return jsonify({}), 200
     except Exception:
         print(traceback.format_exc())
@@ -60,6 +59,21 @@ def early_access_redirect():
 def logout():
     logout_user()
     return redirect("/")
+
+@authenticate.route("/debug_login/<id>")
+def debug_login(id):
+    if current_app.debug == True:
+        instagram_platform = Platform.query.filter_by(name="Instagram").one()
+        user = User(platform=instagram_platform)
+        oauth = OAuth.query.filter_by(id=int(id)).one()
+        oauth.user = user
+        db.session.add_all([oauth, user])
+        db.session.commit()
+        login_user(user)
+        IGApiFetcher.updateAllEntries(oauth.token["access_token"], user)
+        return redirect("/registration.html")
+    else:
+        return jsonify(), 404
 
 @oauth_authorized.connect_via(authenticate)
 def facebook_logged_in(blueprint, token):
@@ -99,6 +113,9 @@ def facebook_logged_in(blueprint, token):
         # Log in the new local user account
         login_user(user)
         print("New User created and successfully signed in.")
+        
+        # trigger async DB Update
+        
         return redirect("/registration.html")
 
     # im Hintergrund update der Interactions und User Daten triggern

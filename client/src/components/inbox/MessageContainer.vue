@@ -40,7 +40,7 @@
               v-for="(suggestion, i) in suggestions"
               :class="{'relative mb-6 mr-6 left-full w-6/12 transform -translate-x-full': true}"
               :selectable="true"
-              :message="suggestion.message"
+              :message="suggestion"
               :from="0"
               :message-subline="`Suggestion ${i+1}`"
               :selected="i === selectedSuggestion"
@@ -157,7 +157,7 @@ export default {
         return
       }
       this.selectedSuggestion = i
-      this.insertResponse(this.suggestions[i].message)
+      this.insertResponse(this.suggestions[i])
     },
     async generateSuggestions() {
       if(!this.currentThreadId) {
@@ -198,12 +198,12 @@ export default {
       this.selectedQuickAction = null
       this.suggestions = []
 
-      const res = MessageService.sendMessage(this.messageInput, selectedSuggestionMessage)
+      const res = await MessageService.sendMessage(this.currentThreadId, this.messageInput, selectedSuggestionMessage)
       if(res.status === 200){
         this.messageStore.messages[this.currentThreadId].push(message)
         setTimeout(() => {
+          this.messageStore.messages[message.threadId][this.messages[message.threadId].length - 1].state = 'received'
           this.$refs.messageScroller.scrollTo({top: this.$refs.messageScroller.scrollHeight, behavior: 'smooth'})
-          this.messageStore.sendMessage(message)
           this.messageInput = ''
           this.$refs.msgInput.innerText = ''
         }, 250)

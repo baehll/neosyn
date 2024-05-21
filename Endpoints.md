@@ -67,13 +67,13 @@ Company Styleguides mit File Upload
 
 ### POST /api/company_files
 
-Request mit allen Company Files (Styleguides, Product Information etc.) als multipart/form-data
+Request mit allen Company Files (Styleguides, Product Information etc.) als multipart/form-data. Muss aufgerufen werden (selbst ohne files), um benötigte OpenAI Entitäten zu generieren 
 
 **files[]**, wenn Company Files mitgesendet wurden
 
 Sample Response:
 
-**200**, wenn alle Dateien das richtige Format hatten und abgespeichert wurden
+**200**, wenn alle Dateien das richtige Format hatten und abgespeichert wurden oder es keine Dateien gab
 
 **422**, wenn mindestens ein Fehler aufgetreten ist bei der Verarbeitung der Dateien mit
 ```bash
@@ -115,7 +115,8 @@ Sample JSON Array mit bis zu **20** Thread Objekten:
               platform int,
               lastUpdated datetime,
               unread bool,
-              interactions int
+              interactions int, 
+              bookmarked bool
           }
     ]
 ```
@@ -155,7 +156,8 @@ Sample JSON Array mit bis zu **20** Thread Objekten:
               platform int,
               lastUpdated datetime,
               unread bool,
-              interactions int
+              interactions int,
+              bookmarked bool
           }
     ]
 ```
@@ -306,7 +308,7 @@ Sample JSON Antwort:
 Liefert **20** bookmarked Threads eines Users 
 Query Parameter
 ```bash
-    ?page=threadId int (ThreadID, ab dem geladen werden soll, default: 1) 
+    ?offset=threadId int (ThreadID, ab dem geladen werden soll, default: 1) 
 ```
 
 **200**, wenn die Anfrage erfolgreich war
@@ -321,7 +323,8 @@ Sample JSON Response
               platform int,
               lastUpdated datetime,
               unread bool,
-              interactions int
+              interactions int,
+              bookmarked bool
           }
     ]
 ```

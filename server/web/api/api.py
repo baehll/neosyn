@@ -11,7 +11,6 @@ from ...utils import file_utils, IGApiFetcher, assistant_utils
 from werkzeug.utils import secure_filename
 import traceback
 from .data.threads import isThreadByUser
-from ..tasks import add
 
 api_bp = Blueprint('api', __name__)
 
@@ -132,8 +131,11 @@ def company_files():
                 return jsonify({"error": errors, "successful":", ".join(successful) }), 422
             else:
                 return jsonify({"successful":", ".join(successful)}), 200
-
-        return jsonify(), 200
+        else:
+            assistant_utils.init_assistant(orga)
+            db.session.add(orga)
+            db.session.commit()
+            return jsonify(), 200
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occured"}), 500
@@ -151,6 +153,9 @@ def me():
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occoured"}), 500
     
-@api_bp.route("/add/<a>/<b>", methods=["GET"])
-def add_route(a, b):
-    return jsonify(add.delay(a,b))
+@api_bp.route("/update_all_entries", methods=["GET"])
+@login_required
+def update_all_entries():
+    oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()
+    IGApiFetcher.updateAllEntries(oauth.token["access_token"], current_user)
+    return jsonify({}), 200
