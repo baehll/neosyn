@@ -8,9 +8,10 @@ export const useMessagePostStore = defineStore('messagePost', {
     getters: {},
     actions: {
         async getPostForThread(threadId) {
-            let post = this.messagePosts.find(i => i.id === threadId)
+            let post = this.messagePosts.find(i => i.threadId === threadId)
             if(!post) {
-                post = await MessagePostService.getPostForThread(threadId)
+                const {data} = await MessagePostService.getPostForThread(threadId)
+                post = data
                 this.messagePosts.push(post)
             }
             return post
