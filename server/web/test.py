@@ -4,7 +4,8 @@ from ..utils.IGApiFetcher import getPages, getComments, getBusinessAccounts, get
 from flask_login import current_user, login_required
 from .tasks import init_ig_data
 from celery.result import AsyncResult
-
+from datetime import datetime
+from zoneinfo import ZoneInfo
 test = Blueprint('test', __name__)
 
 def GPTConfig():
@@ -88,4 +89,6 @@ def task_status(id):
         'status': task.status,
         'result': task.result if task.status == 'SUCCESS' else None
     }
+    print(datetime.now())
+    print(datetime.now().astimezone(ZoneInfo("Europe/Berlin")))
     return jsonify(response)

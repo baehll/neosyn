@@ -33,7 +33,7 @@ class _IGBaseTable(_Base):
     __abstract__ = True
     
     etag = db.Column(db.String, nullable=True)
-    fb_id = db.Column(db.String, nullable=False)
+    fb_id = db.Column(db.String, nullable=False, unique=True)
 
 class Platform(_Base):
     __tablename__ = "platforms"

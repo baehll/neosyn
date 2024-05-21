@@ -211,8 +211,8 @@ def getPages(access_token, user):
         deletable_page_ids = db_page_fb_ids - fb_page_ids
         updateable_page_ids = db_page_fb_ids & fb_page_ids
     
-    new_bzacc_ids = fb_page_ids - db_page_fb_ids  
-    for id in new_bzacc_ids:
+    new_page_ids = fb_page_ids - db_page_fb_ids  
+    for id in new_page_ids:
         p = fb_page_dict[id]
         new_page = IGPage(name=p["name"], category=p["category"], fb_id=p["id"], followers_count=p["followers_count"])
         # # Tasks befüllen
@@ -266,20 +266,20 @@ def getBusinessAccounts(access_token, page):
     bs_res = _batchRequest(access_token, payload)
     
     db_bzacc_dict = dict([(bz.fb_id, bz) for bz in db_bzaccs])
-    fb_bzacc_dict = dict([(bz["id"], bz) for bz in bs_res])
+    fb_bzacc_dict = dict([(bz["instagram_business_account"]["id"], bz) for bz in bs_res])
     
     # Sets zur Anwendung von Mengenoperatoren
     db_bzacc_fb_ids = set(db_bzacc_dict.keys())
     fb_bzacc_ids = set(fb_bzacc_dict.keys()) 
     
     deletable_bzacc_ids, updateable_bzacc_ids = [], []
-    
+
     if len(db_bzaccs) > 0:
         deletable_bzacc_ids = db_bzacc_fb_ids - fb_bzacc_ids
         updateable_bzacc_ids = db_bzacc_fb_ids & fb_bzacc_ids
     
     new_bzacc_ids = fb_bzacc_ids - db_bzacc_fb_ids  
-            
+    
     # aus der Antwort neue BZ_Accs erstellen
     for id in new_bzacc_ids:
         bz = fb_bzacc_dict[id]
@@ -332,7 +332,6 @@ def getMedia(access_token, bz_acc):
         updateable_media_ids = db_media_fb_ids & fb_media_ids
     
     new_media_ids = fb_media_ids - db_media_fb_ids
-    
     for id in new_media_ids:
         body = fb_media_dict[id]
         new_media = IGMedia(timestamp=date_parser.isoparse(body["timestamp"]), 
@@ -359,14 +358,14 @@ def getMedia(access_token, bz_acc):
         for media in db_updateable_medias:
             fb_media_body = fb_media_dict[media.fb_id]
             if fb_media_body is not None:
-                media.timestamp=date_parser.isoparse(body["timestamp"])
-                media.permalink=body["permalink"]
-                media.media_url=body["media_url"] 
-                media.fb_id=body["id"]
-                media.like_count=body["like_count"]
-                media.comments_count=body["comments_count"]
-                media.caption=body["caption"]
-                media.media_type=body["media_type"]
+                media.timestamp=date_parser.isoparse(fb_media_body["timestamp"])
+                media.permalink=fb_media_body["permalink"]
+                media.media_url=fb_media_body["media_url"] 
+                media.fb_id=fb_media_body["id"]
+                media.like_count=fb_media_body["like_count"]
+                media.comments_count=fb_media_body["comments_count"]
+                media.caption=fb_media_body["caption"]
+                media.media_type=fb_media_body["media_type"]
                 updated_medias.append(media)
         _commitToDB(updated_medias)
 
@@ -405,10 +404,11 @@ def getComments(access_token, media):
     if len(db_comments) > 0:
         deletable_comment_ids = db_comments_fb_ids - fb_comment_ids
         updateable_comment_ids = db_comments_fb_ids & fb_comment_ids
-    
     new_comment_ids = fb_comment_ids - db_comments_fb_ids
     
-    print("creating comments " + str(len(new_comment_ids)))
+    print(deletable_comment_ids)
+    print(updateable_comment_ids)
+    print(new_comment_ids)
     for id in new_comment_ids:
         (fb_com, is_reply) = fb_comment_dict[id]
         # Replies werden nur zusammen mit dem Top Level Kommentar betrachtet, einzeln übersprungen
@@ -459,7 +459,7 @@ def getComments(access_token, media):
         db_updateable_comments = [c for c in db_comments if c.fb_id in updateable_comment_ids]
         for com in db_updateable_comments:
             #print(fb_comment_dict[com.fb_id])
-            fb_com_body = fb_comment_dict[com.fb_id]
+            (fb_com_body,_) = fb_comment_dict[com.fb_id]
             if fb_com_body is not None:
                 com.text = fb_com_body["text"]
                 com.timestamp = date_parser.isoparse(fb_com_body["timestamp"])
@@ -504,7 +504,7 @@ def updateAllEntries(access_token, user):
     
     pages = getPages(access_token, user)
     if len(pages) == 0:
-        pages = db.session.execute(db.select(IGPage).filter(IGPage.user.has(id=user.id))).scalars().all()
+        pages.extend(db.session.execute(db.select(IGPage).filter(IGPage.user.has(id=user.id))).scalars().all())
     for p in pages:
         bz_accs.extend(getBusinessAccounts(access_token, p))
     
@@ -512,7 +512,7 @@ def updateAllEntries(access_token, user):
     
     if len(bz_accs) == 0:
         for p in pages:
-            bz_accs = db.session.execute(db.select(IGBusinessAccount).filter(IGBusinessAccount.page.has(id=p.id))).scalars().all()
+            bz_accs.extend(db.session.execute(db.select(IGBusinessAccount).filter(IGBusinessAccount.page.has(id=p.id))).scalars().all())
     for b in bz_accs:
         medias.extend(getMedia(access_token, b))
         
@@ -520,6 +520,6 @@ def updateAllEntries(access_token, user):
     
     if len(medias) == 0:
         for b in bz_accs:
-            medias = db.session.execute(db.select(IGMedia).filter(IGMedia.bzacc.has(id=b.id))).scalars().all()
+            medias.extend(db.session.execute(db.select(IGMedia).filter(IGMedia.bzacc.has(id=b.id))).scalars().all())
     for m in medias:
         getComments(access_token, m)

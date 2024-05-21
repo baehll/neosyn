@@ -7,6 +7,7 @@ from ....utils import file_utils, IGApiFetcher
 from flask_login import login_required, current_user
 import traceback, requests
 from urllib.parse import quote
+from zoneinfo import ZoneInfo
 
 threads_bp = Blueprint('threads', __name__)
 
@@ -18,7 +19,7 @@ def thread_result_obj(at, comment_timestamp, comment_message):
         "username": at.customer.name,
         "avatar": at.customer.profile_picture_url,
         "platform": _PlatformEnum.Instagram.name,
-        "lastUpdated": comment_timestamp,
+        "lastUpdated": comment_timestamp.astimezone(ZoneInfo("Europe/Berlin")),
         "message": comment_message,
         "unread": at.is_unread,
         "interactions": len(at.comments),
@@ -31,7 +32,7 @@ def serialize_comment(comment):
         "threadId": comment.thread_id,
         "message": comment.text,
         "from": comment.customer_id,
-        "messageDate": comment.timestamp
+        "messageDate": comment.timestamp.astimezone(ZoneInfo("Europe/Berlin"))
     }
 
 def getThreadsByUser(user):
