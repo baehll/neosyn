@@ -3,6 +3,11 @@
       <div class="overflow-hidden flex flex-col justify-between w-full h-full rounded-xl message gap-4">
 				<MessagePost
 					:message-post="messagePost"
+					:likes="messagePost?.likes"
+					:shares="messagePost?.shares"
+					:comments="messagePost?.comments"
+					:image="messagePost?.postMedia"
+					:content="messagePost?.postContent"
 				/>
 				<MessageInsights
 
