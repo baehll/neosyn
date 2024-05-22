@@ -1,7 +1,7 @@
 from flask import (
-    Blueprint, jsonify, request, session, current_app
+    Blueprint, jsonify, request, session, current_app, send_file
 )
-import os
+import io
 import requests
 from flask_login import login_required, current_user
 from decouple import config
@@ -75,6 +75,7 @@ def init_user():
             db.session.add(logo)
             
         if logo is not None:
+            db.session.commit()
             new_orga.logo_id = logo.id
             db.session.add(new_orga)
             
@@ -127,8 +128,8 @@ def company_files():
             db.session.add(orga)
             db.session.commit()
 
-            init_assistant.delay(orga.id).forget()
-            
+            res = init_assistant.delay(orga.id)
+            res.forget()
             if len(errors) > 0:
                 return jsonify({"error": errors, "successful":", ".join(successful) }), 422
             else:
@@ -136,7 +137,8 @@ def company_files():
         else:
             db.session.add(orga)
             db.session.commit()
-            init_assistant.delay(orga.id).forget()
+            res = init_assistant.delay(orga.id)
+            res.forget()
             return jsonify(), 200
     except Exception:
         print(traceback.format_exc())
@@ -147,14 +149,25 @@ def company_files():
 def me():
     try:
         return jsonify({
-            "logoURL": "",
-            "name": "",
-            "companyName": ""
+            "name": current_user.name,
+            "companyName": current_user.organization.name
         }), 200
-    except Exception:
+    except:
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occoured"}), 500
-    
+
+@api_bp.route("/me/logo")
+@login_required
+def logo():
+    try:
+        if current_user.organization.logo is None:
+            return jsonify(), 200
+        else:
+            return send_file(io.BytesIO(current_user.organization.logo().data), download_name=current_user.organization.logo().filename)
+    except:
+        print(traceback.format_exc())
+        return jsonify({"error":"An exception has occoured"}), 500
+
 @api_bp.route("/update_all_entries", methods=["GET"])
 @login_required
 def update_all_entries():

@@ -58,6 +58,10 @@
     ```
     flask run --cert=adhoc --debug
     ```
+    Additionally, a celery and redis instance is required to run all tasks. Celery is part of the requirements and should be installed alongside the other python modules. A redis instance can be run in a docker container e.g. .
+    ```
+    celery -A make_celery.celery_app worker -E
+    ```
 
 ### DB Migration
 

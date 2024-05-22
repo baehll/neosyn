@@ -203,6 +203,27 @@ Sample JSON Array mit Message/Comment Objekten:
     }
 ```
 
+### PUT /api/data/threads/{id}
+
+Aktualisiert einen Thread (gerade nur um den Read Status auf gelesen/ungelesen zu setzen)
+
+JSON Post Body:
+```bash
+    {
+        unread bool
+    }
+```
+
+**200**, wenn die Anfrage erfolgreich war ohne Response Body
+
+
+**500**, wenn ein Fehler aufgetreten ist mit
+```bash
+    {
+        "error": "error_message"
+    }
+```
+
 ### GET /api/supported_platforms
 
 Gibt die Liste der Plattformen zurück, die aktuell implementiert sind
@@ -223,27 +244,6 @@ Sample JSON Array mit platform Objekten:
     },...
 ]
 ```
-
-**500**, wenn ein Fehler aufgetreten ist mit
-```bash
-    {
-        "error": "error_message"
-    }
-```
-
-### PUT /api/data/threads/{id}
-
-Aktualisiert einen Thread (gerade nur um den Read Status auf gelesen/ungelesen zu setzen)
-
-JSON Post Body:
-```bash
-    {
-        unread bool
-    }
-```
-
-**200**, wenn die Anfrage erfolgreich war ohne Response Body
-
 
 **500**, wenn ein Fehler aufgetreten ist mit
 ```bash
@@ -385,6 +385,39 @@ Sample JSON Array Antwort:
         "error": "error_message"
     }
 ```
+
+**500**, wenn ein Fehler aufgetreten ist mit
+```bash
+    {
+        "error": "error_message"
+    }
+```
+
+### GET /api/me
+
+Liefert die Userinformationen zurück
+
+**200**, wenn die Anfrage erfolgreich war
+Sample JSON Antwort:
+```bash
+    {
+        "companyName": "...",
+        "name": "..."    
+    }
+```
+
+**500**, wenn ein Fehler aufgetreten ist mit
+```bash
+    {
+        "error": "error_message"
+    }
+```
+
+### GET /api/me/logo
+
+Liefert das Logo File des Unternehmens, zu dem der User gehört
+
+**200**, wenn die Anfrage erfolgreich war mit der Bild Datei als Content
 
 **500**, wenn ein Fehler aufgetreten ist mit
 ```bash

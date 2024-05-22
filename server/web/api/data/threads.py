@@ -14,27 +14,40 @@ threads_bp = Blueprint('threads', __name__)
 
 _URL = "https://graph.facebook.com/v19.0"
 
-def thread_result_obj(at, comment_timestamp, comment_message):
+def is_comment_by_user(pages, comment):
+    customer_bz_acc = comment.customer.bz_acc
+    for p in pages:
+        if customer_bz_acc.page in p:
+            return True
+    return False
+
+def thread_result_obj(at, comment):
     return {
         "id": at.id,
         "username": at.customer.name,
         "avatar": at.customer.profile_picture_url,
         "platform": _PlatformEnum.Instagram.name,
-        "lastUpdated": comment_timestamp.astimezone(ZoneInfo("Europe/Berlin")),
-        "message": comment_message,
+        "lastUpdated": comment.timestamp.astimezone(ZoneInfo("Europe/Berlin")),
+        "message": comment.text,
         "unread": at.is_unread,
         "interactions": len(at.comments),
         "bookmarked": at.is_bookmarked
     }
 
-def serialize_comment(comment):
-    return {
+
+def serialize_comment(comment, bz_accs):
+    result = {
         "id": comment.id,
         "threadId": comment.thread_id,
         "message": comment.text,
-        "from": comment.customer_id,
-        "messageDate": comment.timestamp.astimezone(ZoneInfo("Europe/Berlin"))
+        "messageDate": comment.timestamp.astimezone(ZoneInfo("Europe/Berlin")),
+        "from": None
     }
+    
+    if len(comment.customer.bz_acc) > 0 and comment.customer.bz_acc[0] not in bz_accs:
+        result["from"] = comment.customer.id
+        
+    return result
 
 def getThreadsByUser(user):
     # pages für den user finden
@@ -57,22 +70,20 @@ def isThreadByUser(threadId, user):
 def all_threads():
     try:
         oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()   
+        pages = db.session.execute(db.select(IGPage).filter_by(user=current_user)).scalars().all()
+        
+        if len(pages) == 0:
+            return jsonify({"error":"No pages associated with user"}), 500
+
+        media_ids = []
+        for p in pages:
+            for b in p.business_accounts:
+                for m in b.medias:
+                    media_ids.append(m.id)
+            
         if request.method == "GET":                  
             offset = int(request.args.get("offset")) if request.args.get("offset") is not None else 1
-            pages = db.session.execute(db.select(IGPage).filter_by(user=current_user)).scalars().all()
-            
-            if len(pages) == 0:
-                return jsonify({"error":"No pages associated with user"}), 500
 
-            media_ids = []
-            for p in pages:
-                for b in p.business_accounts:
-                    for m in b.medias:
-                        media_ids.append(m.id)
-                
-            # alle Threads für die posts finden
-                # suchsstring anwenden auf IGComment.text
-                # pagination anwenden
             stmt = db.select(IGThread).filter(IGThread.media_id.in_(media_ids)).limit(20).offset((offset - 1) * 20 )
             
             associated_threads = db.session.execute(stmt).scalars().all()
@@ -83,7 +94,6 @@ def all_threads():
             for at in associated_threads:
                 last_comment = sorted(at.comments, key=lambda x: x.timestamp)[-1]
                 threads.append((at, last_comment))
-                #threads.append(thread_result_obj(at, last_comment.timestamp, last_comment.text))
             
             sorting_option = request.args.get("sorting") 
             
@@ -103,28 +113,18 @@ def all_threads():
             thread_ids = [t[0].id for t in threads]
             IGApiFetcher.updateInteractions(oauth.token["access_token"], thread_ids[offset:offset+10])
             
-            if(offset+20 <= len(thread_ids)):
-                update_interactions.delay(oauth.token["access_token"], thread_ids[offset+10:offset+20]).forget()
-            elif (offset+10 <= len(thread_ids)):
-                update_interactions.delay(oauth.token["access_token"], thread_ids[offset+10:]).forget()
+            if len(thread_ids) > 10:
+                if(offset+20 <= len(thread_ids)):
+                    res = update_interactions.delay(oauth.token["access_token"], thread_ids[offset+10:offset+20])
+                    res.forget()
+                elif (offset+10 <= len(thread_ids)):
+                    res = update_interactions.delay(oauth.token["access_token"], thread_ids[offset+10:])
+                    res.forget()
                 
-            results = [thread_result_obj(t[0], t[1].timestamp, t[1].text) for t in threads]
+            results = [thread_result_obj(t[0], t[1]) for t in threads]
             return jsonify(results), 200
         
-        if request.method == "POST":
-            # pages für den user finden
-            # TODO platform beachten
-            pages = db.session.execute(db.select(IGPage).filter_by(user=current_user)).scalars().all()
-            
-            if len(pages) == 0:
-                return jsonify({"error":"No pages associated with user"}), 500
-
-            media_ids = []
-            for p in pages:
-                for b in p.business_accounts:
-                    for m in b.medias:
-                        media_ids.append(m.id)
-                
+        if request.method == "POST":                
             # alle Threads für die posts finden
                 # suchsstring anwenden auf IGComment.text
                 # pagination anwenden
@@ -158,12 +158,15 @@ def all_threads():
             thread_ids = [t[0].id for t in threads]
             IGApiFetcher.updateInteractions(oauth.token["access_token"], thread_ids[offset:offset+10])
             
-            if(offset+20 <= len(thread_ids)):
-                update_interactions.delay(oauth.token["access_token"], thread_ids[offset+10:offset+20]).forget()
-            elif (offset+10 <= len(thread_ids)):
-                update_interactions.delay(oauth.token["access_token"], thread_ids[offset+10:]).forget()
-                
-            results = [thread_result_obj(t[0], t[1].timestamp, t[1].text) for t in threads]
+            if len(thread_ids) > 10:
+                if(offset+20 <= len(thread_ids)):
+                    res = update_interactions.delay(oauth.token["access_token"], thread_ids[offset+10:offset+20])
+                    res.forget()
+                elif (offset+10 <= len(thread_ids)):
+                    res = update_interactions.delay(oauth.token["access_token"], thread_ids[offset+10:])
+                    res.forget()
+            
+            results = [thread_result_obj(t[0], t[1]) for t in threads]
             return jsonify(results), 200
     except Exception:
         print(traceback.format_exc())
@@ -176,8 +179,10 @@ def get_messages_by_threadid(id):
         if request.method == "GET":                        
             pages = db.session.execute(db.select(IGPage).filter_by(user=current_user)).scalars().all()
             media_ids = []
+            user_bz_accs = []
             for p in pages:
                 for b in p.business_accounts:
+                    user_bz_accs.append(b)
                     for m in b.medias:
                         media_ids.append(m.id)
             
@@ -191,7 +196,7 @@ def get_messages_by_threadid(id):
             results = []
             at_comments = sorted(thread.comments, key=lambda x: x.timestamp)
             for com in at_comments:
-                results.append(serialize_comment(com))
+                results.append(serialize_comment(com, user_bz_accs))
             
             return jsonify(results), 200
 
@@ -308,7 +313,7 @@ def get_bookmarked_threads():
         results = []
         for at in threads:
             last_comment = sorted(at.comments, key=lambda x: x.timestamp)[-1]
-            results.append(thread_result_obj(at, last_comment.timestamp, last_comment.text))
+            results.append(thread_result_obj(at, last_comment))
             
         return jsonify(results)
     except Exception:

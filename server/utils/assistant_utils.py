@@ -30,8 +30,10 @@ def init_assistant(orga):
            
     # dateien hochladen 
     orga_files = list(orga.files)
+    # print(orga_files)
+    # print(orga.logo())
     orga_files.remove(orga.logo())
-    
+        
     if len(orga_files) != 0:
         file_ids = upload_files_to_openai(orga_files)
         vec_storage = init_vector_storage(orga.name + "_VECTOR_STORE", file_ids)

@@ -497,8 +497,18 @@ def updateInteractions(access_token, thread_ids):
     for t in threads:
         getComments(access_token, t.media)
         
+def connectCustomerBusinessAccounts(access_token, bz_accs):
+    bz_acc_set = dict([(b.fb_id, b) for b in bz_accs])
+    customers = db.session.execute(db.select(IGCustomer).filter(IGCustomer.fb_id.in_(bz_acc_set.keys()))).scalars().all()
+    connected = []
+    for c in customers:
+        bz_acc = bz_acc_set[c.fb_id]
+        bz_acc.customer = c
+        connected.append(bz_acc)
+    _commitToDB(connected)
     
-
+    print("Customer - Business-Account relationship created")
+    
 def updateAllEntries(access_token, user):
     pages, bz_accs, medias, comments = [], [], [], []
     
@@ -526,14 +536,5 @@ def updateAllEntries(access_token, user):
 
     print("media + comments done")
     
-    # customer suchen, der dem user entspricht und diese verknüpfen
-    bz_acc_set = dict([(b.fb_id, b) for b in bz_accs])
-    customers = db.session.execute(db.select(IGCustomer).filter(IGCustomer.fb_id.in_(bz_acc_set.keys()))).scalars().all()
-    connected = []
-    for c in customers:
-        (_, bz_acc) = bz_acc_set[c.fb_id]
-        bz_acc.customer = c
-        connected.append(bz_acc)
-    _commitToDB(connected)
+    connectCustomerBusinessAccounts(access_token, bz_accs)
     
-    print("Customer - Business-Account relationship created")
