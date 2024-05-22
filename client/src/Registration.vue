@@ -15,7 +15,7 @@
       <div class="flex flex-row justify-between items-center">
         <ProgressBar class="basis-1/4" :percentage="(currentStep + 1) / ((steps.length) / 100)" />
         <div>
-          <Button class="ghost" @click="finishRegistrationWithoutFileUpload" v-if="steps[currentStep].finishRegistration">
+          <Button class="ghost" @click="finishRegistration" v-if="steps[currentStep].finishRegistration">
             {{ $t('Later') }}
           </Button>
           <Button class="ghost" @click="nextStep" v-if="steps[currentStep].hasSkipOption">
@@ -144,15 +144,6 @@ export default {
       this.currentStep--;
       this.currentStepComponent = this.steps[this.currentStep].component;
     },
-    async finishRegistrationWithoutFileUpload(){
-      this.uploadStarted = true
-      const res = await RegistrationService.companyFiles([])
-      this.uploadStarted = false
-      if(res.status > 300){
-        // show error
-      }
-      this.finishRegistrationWithoutFileUpload()
-    },
     async finishRegistration() {
       this.uploadStarted = true
       const res = await RegistrationService.companyFiles(this.userStore.companyFiles)
@@ -160,7 +151,6 @@ export default {
       if(res.status > 300){
         // show error
       }
-      this.finishRegistrationWithoutFileUpload()
     }
   },
   created: () => {
