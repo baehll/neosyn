@@ -10,6 +10,7 @@ def init_ig_data(user_id, oauth_token):
 
 @shared_task
 def init_assistant(orga_id):
+    print("hallo")
     orga = db.session.execute(db.select(Organization).filter(Organization.id == orga_id)).scalar_one()
     return assistant_utils.init_assistant(orga)
 
