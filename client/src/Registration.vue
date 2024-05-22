@@ -18,7 +18,7 @@
           <Button class="ghost" @click="finishRegistrationWithoutFileUpload" v-if="steps[currentStep].finishRegistration">
             {{ $t('Later') }}
           </Button>
-          <Button class="ghost" @click="skipStep" v-if="steps[currentStep].hasSkipOption">
+          <Button class="ghost" @click="nextStep" v-if="steps[currentStep].hasSkipOption">
             {{ $t('Skip') }}
           </Button>
           <Button class="basis-1/4 bg-lightgray-60 text-darkgray" :disabled="!isValid"
@@ -122,14 +122,6 @@ export default {
     },
   },
   methods: {
-    async skipStep() {
-      if (this.currentStep === this.steps.length - 1) {
-        return
-      }
-
-      this.currentStep++;
-      this.currentStepComponent = this.steps[this.currentStep].component;
-    },
     async nextStep() {
       if (this.currentStep === this.steps.length - 1) {
         return
@@ -153,7 +145,13 @@ export default {
       this.currentStepComponent = this.steps[this.currentStep].component;
     },
     finishRegistrationWithoutFileUpload(){
-      window.location = '/app.html'
+      this.uploadStarted = true
+      const res = await RegistrationService.companyFiles([])
+      this.uploadStarted = false
+      if(res.status > 300){
+        // show error
+      }
+      this.finishRegistrationWithoutFileUpload()
     },
     async finishRegistration() {
       this.uploadStarted = true
