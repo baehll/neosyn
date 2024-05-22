@@ -13,7 +13,7 @@
         :is-selected="selectedThreadId === thread.id"
         :username="thread.username"
         :message="thread.message"
-        :lastUpdated="thread.last_updated"
+        :last-updated="thread.lastUpdated"
         :platform="thread.platform"
         :unread="thread.unread"
         @selected="setSelectedThread"
