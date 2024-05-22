@@ -4,7 +4,7 @@
       <div class="flex justify-between px-2 pt-2 pb-4">
         <span class="rounded-3xl border border-white px-4 text-white py-1" v-text="$t('Interaction')"></span>
         <button
-          :class="{'bookmark-button': true, 'bookmarked': currentThread && currentThread.bookmark}"
+          :class="{'bookmark-button': true, 'bookmarked': currentThread && currentThread.bookmarked}"
           @click="bookmarkThread"
         >
           <BookmarkOutline
@@ -14,7 +14,7 @@
       </div>
       <div class="messages flex-grow relative">
         <div
-          class="pl-2 pr-5 pt-4 pb-6 messages items-start flex flex-col h-full overflow-scroll absolute top-0 left-0 "
+          class="w-full pl-2 pr-5 pt-4 pb-6 messages items-start flex flex-col h-full overflow-scroll absolute top-0 left-0 "
           ref="messageScroller">
           <Message
           class="mb-6"
@@ -115,6 +115,7 @@ export default {
       selectedSuggestion: null,
       selectedQuickAction: null,
       currentThreadId: null,
+      currentThread: null,
       quickResponses: [
         'Thanks! 💚',
         'I agree!',
@@ -133,6 +134,7 @@ export default {
       this.selectedQuickAction = null
       this.selectedSuggestion = null
       this.currentThreadId = newVal
+      this.currentThread = this.threadStore.threads.find(t => t.id === this.currentThreadId)
       this.messageInput = ''
       setTimeout(() => {
         this.$refs.messageScroller.scrollTo({top: this.$refs.messageScroller.scrollHeight, behavior: 'smooth'})
@@ -141,9 +143,6 @@ export default {
   },
   computed: {
     ...mapStores(useThreadStore, useMessageStore),
-    currentThread(){
-      return this.threadStore.threads[this.currentThreadId] || null
-    }
   },
   methods: {
     closeSuggestions(){
@@ -210,9 +209,10 @@ export default {
       }
     },
     async bookmarkThread(){
-      const res = await ThreadService.bookmarkThread(this.currentThreadId, !this.threadStore.threads[this.currentThreadId].bookmark)
+      const thread = this.threadStore.threads.find(t => t.id === this.currentThreadId)
+      const res = await ThreadService.bookmarkThread(this.currentThreadId, !thread.bookmarked)
       if(res.status === 200){
-        this.threadStore.threads[this.currentThreadId].bookmark = !this.threadStore.threads[this.currentThreadId].bookmark
+        thread.bookmarked = !thread.bookmarked
       }
     }
   },

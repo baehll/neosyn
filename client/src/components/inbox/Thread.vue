@@ -19,7 +19,7 @@
       <TimeDifferenceDisplay
         class=""
         :class="{'text-lightgray-10 text-xs absolute right-0': true, 'opacity-0 pointer-events-none': threadActionVisible}"
-        :point-in-time="lastUpdated"
+        :point-in-time="getParsedPointInTime"
       />
       <div
         class=""
@@ -49,7 +49,7 @@
   </div>
 </template>
 <script>
-
+import moment from 'moment'
 import {mapStores} from 'pinia';
 import {useThreadStore} from '../../stores/thread.js';
 import IconResolver from '../global/IconResolver.vue';
@@ -97,6 +97,9 @@ export default {
       return this.isSelected ?
         'bg-lightgray' :
         'bg-transparent'
+    },
+    getParsedPointInTime(){
+      return moment(this.lastUpdated)
     },
     ...mapStores(useThreadStore, useTimerStore),
   },
