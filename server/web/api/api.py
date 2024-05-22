@@ -135,8 +135,6 @@ def company_files():
             else:
                 return jsonify({"successful":", ".join(successful)}), 200
         else:
-            db.session.add(orga)
-            db.session.commit()
             res = init_assistant.delay(orga.id)
             res.forget()
             return jsonify(), 200

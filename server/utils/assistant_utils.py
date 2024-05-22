@@ -1,5 +1,7 @@
 import os
 from io import BytesIO
+from ..web.models import db
+
 def GPTConfig():
     from server import GPTConfig
     return GPTConfig
@@ -32,7 +34,9 @@ def init_assistant(orga):
     orga_files = list(orga.files)
     # print(orga_files)
     # print(orga.logo())
-    orga_files.remove(orga.logo())
+    if len(orga_files) > 0:
+        if orga.logo_id is not None:
+            orga_files.remove(orga.logo())
         
     if len(orga_files) != 0:
         file_ids = upload_files_to_openai(orga_files)
@@ -51,7 +55,5 @@ def init_assistant(orga):
     # assistant mit vector storage verknüpfen
     orga.gpt_thread_id = thread.id
     orga.vec_storage_id = vec_storage.id
-    
-
-def generate_response_from_assistant(assistant_id):
-    pass
+    db.session.add(orga)
+    db.session.commit()
