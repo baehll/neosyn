@@ -56,21 +56,34 @@ def isThreadByUser(threadId, user):
 @login_required
 def all_threads():
     try:
-        if request.method == "GET":         
-            oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()            
+        oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()   
+        if request.method == "GET":                  
+            offset = int(request.args.get("offset")) if request.args.get("offset") is not None else 1
+            pages = db.session.execute(db.select(IGPage).filter_by(user=current_user)).scalars().all()
             
-            associated_threads = []
+            if len(pages) == 0:
+                return jsonify({"error":"No pages associated with user"}), 500
+
+            media_ids = []
+            for p in pages:
+                for b in p.business_accounts:
+                    for m in b.medias:
+                        media_ids.append(m.id)
+                
+            # alle Threads für die posts finden
+                # suchsstring anwenden auf IGComment.text
+                # pagination anwenden
+            stmt = db.select(IGThread).filter(IGThread.media_id.in_(media_ids)).limit(20).offset((offset - 1) * 20 )
+            
+            associated_threads = db.session.execute(stmt).scalars().all()
             if len(associated_threads) == 0:
                 return jsonify([]), 204
-      
-            #   
-            # IGApiFetcher.updateInteractions(oauth.token["access_token"], [t.id for t in associated_threads], query_offset)
-            
+
             threads = []
             for at in associated_threads:
                 last_comment = sorted(at.comments, key=lambda x: x.timestamp)[-1]
                 threads.append((at, last_comment))
-                threads.append(thread_result_obj(at, last_comment.timestamp, last_comment.text))
+                #threads.append(thread_result_obj(at, last_comment.timestamp, last_comment.text))
             
             sorting_option = request.args.get("sorting") 
             
@@ -86,7 +99,6 @@ def all_threads():
                 return jsonify({"error":"Unspecified sorting argument, only 'new' (default), 'old', 'most-interaction', 'least-interaction' allowed"}), 500
             
             # Ab offset die ersten 10 Threads synchron aktualisieren, die nächsten 10 asynchron als Task
-            offset = request.args.get("offset") if request.args.get("offset") is not None else 0
             
             thread_ids = [t[0].id for t in threads]
             IGApiFetcher.updateInteractions(oauth.token["access_token"], thread_ids[offset:offset+10])
@@ -97,7 +109,7 @@ def all_threads():
                 update_interactions.delay(oauth.token["access_token"], thread_ids[offset+10:]).forget()
                 
             results = [thread_result_obj(t[0], t[1].timestamp, t[1].text) for t in threads]
-            return jsonify([r for r in results]), 200
+            return jsonify(results), 200
         
         if request.method == "POST":
             # pages für den user finden
@@ -125,16 +137,33 @@ def all_threads():
                 
             associated_threads = db.session.execute(stmt).scalars().all()
             
-            results = []
+            threads = []
             for at in associated_threads:            
                 last_comment = sorted(at.comments, key=lambda x: x.timestamp)[-1]
                 if "q" in request.get_json() and request.get_json()["q"] != "":
                     query = replace_symbol(request.get_json()["q"])
                     for c in at.comments:
                         if query in c.text:
-                            results.append(thread_result_obj(at, last_comment.timestamp, last_comment.text))
+                            threads.append((at, last_comment))
+                            break
                 else:
-                    results.append(thread_result_obj(at, last_comment.timestamp, last_comment.text))
+                    threads.append((at, last_comment))
+            
+            threads.sort(key=lambda x: x[1].timestamp, reverse=True)
+            
+            offset = 0
+            if "offset" in request.get_json():
+                offset = request.get_json()["offset"]
+
+            thread_ids = [t[0].id for t in threads]
+            IGApiFetcher.updateInteractions(oauth.token["access_token"], thread_ids[offset:offset+10])
+            
+            if(offset+20 <= len(thread_ids)):
+                update_interactions.delay(oauth.token["access_token"], thread_ids[offset+10:offset+20]).forget()
+            elif (offset+10 <= len(thread_ids)):
+                update_interactions.delay(oauth.token["access_token"], thread_ids[offset+10:]).forget()
+                
+            results = [thread_result_obj(t[0], t[1].timestamp, t[1].text) for t in threads]
             return jsonify(results), 200
     except Exception:
         print(traceback.format_exc())

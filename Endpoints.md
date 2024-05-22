@@ -132,7 +132,7 @@ Sample JSON Array mit bis zu **20** Thread Objekten:
 
 ### POST /api/data/threads
 
-Liefert Threads aller Social Media Plattformen gefiltert nach JSON Request zurück
+Liefert Threads aller Social Media Plattformen gefiltert nach JSON Request zurück, mit der aktuellsten Interaktion zuerst
 
 JSON Post Body für Filterung / Paging:
 ```bash
@@ -213,12 +213,12 @@ Sample JSON Array mit platform Objekten:
 [
     {
         "id": 1,
-        "is_implemented": "1",
+        "is_implemented": True,
         "name": "Instagram"
     },
     {
         "id": 2,
-        "is_implemented": "0",
+        "is_implemented": False,
         "name": "TikTok"
     },...
 ]

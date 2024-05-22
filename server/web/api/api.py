@@ -45,7 +45,9 @@ def init_user():
             return jsonify({"error": "No companyname specified"}), 400
         
         if current_user.organization is not None:
-            return jsonify({"error": "User already associated with organization"}), 500
+            db.session.delete(current_user.organization)
+            db.session.commit()
+            #return jsonify({"error": "User already associated with organization"}), 500
         
         # Neues Organization DB Objekt initialisieren
         new_orga = Organization(name=form_data["companyname"])

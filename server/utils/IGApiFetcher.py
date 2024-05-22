@@ -183,11 +183,6 @@ def _updateExistingEntries(entries, changed_data):
         
 # FUNCTIONS
 
-def getIGUserInfo(access_token):
-    #_fields = ""
-    page_res = _getInstagramData(access_token, "/me")
-    print(page_res)
-
 # request mit dem jeweiligen ETag der Pages falls vorhanden. erstellt und updatet Pages für gegebenen Usertoken
 def getPages(access_token, user):
     _fields = "name,category,id,followers_count" # + ",tasks"
@@ -412,9 +407,9 @@ def getComments(access_token, media):
         updateable_comment_ids = db_comments_fb_ids & fb_comment_ids
     new_comment_ids = fb_comment_ids - db_comments_fb_ids
     
-    print(deletable_comment_ids)
-    print(updateable_comment_ids)
-    print(new_comment_ids)
+    # print(deletable_comment_ids)
+    # print(updateable_comment_ids)
+    # print(new_comment_ids)
     for id in new_comment_ids:
         (fb_com, is_reply) = fb_comment_dict[id]
         # Replies werden nur zusammen mit dem Top Level Kommentar betrachtet, einzeln übersprungen
@@ -532,4 +527,13 @@ def updateAllEntries(access_token, user):
     print("media + comments done")
     
     # customer suchen, der dem user entspricht und diese verknüpfen
+    bz_acc_set = dict([(b.fb_id, b) for b in bz_accs])
+    customers = db.session.execute(db.select(IGCustomer).filter(IGCustomer.fb_id.in_(bz_acc_set.keys()))).scalars().all()
+    connected = []
+    for c in customers:
+        (_, bz_acc) = bz_acc_set[c.fb_id]
+        bz_acc.customer = c
+        connected.append(bz_acc)
+    _commitToDB(connected)
     
+    print("Customer - Business-Account relationship created")

@@ -39,7 +39,7 @@ class Platform(_Base):
     __tablename__ = "platforms"
     
     name = db.Column(db.Enum(_PlatformEnum))
-    is_implemented = db.Column(db.String, default=False)
+    is_implemented = db.Column(db.Boolean, default=False)
     icon = db.Column(db.String)
 
 class EarlyAccessKeys(_Base):
@@ -147,6 +147,9 @@ class IGBusinessAccount(_IGBaseTable):
     followers_count = db.Column(db.Integer)
     
     medias = db.relationship("IGMedia", back_populates="bzacc")
+    
+    customer_id = db.Column(db.Integer, db.ForeignKey("ig_customers.id"))
+    customer = db.relationship("IGCustomer", back_populates="bz_acc")
 
 class IGThread(_Base):
     __tablename__ = "ig_threads"
@@ -194,6 +197,7 @@ class IGCustomer(_IGBaseTable):
     medias = association_proxy("thread_association", "media")
     
     comments = db.relationship("IGComment", back_populates="customer")
+    bz_acc = db.relationship("IGBusinessAccount", back_populates="customer")
     
 class IGComment(_IGBaseTable):
     __tablename__  = "ig_comments"

@@ -62,7 +62,8 @@ def create_app() -> Flask:
             ],
         'img-src':  [
             '\'self\'',
-            'data:'
+            'data:',
+            '*.cdninstagram.com'
             ],
         'script-src': [
             '\'self\'',

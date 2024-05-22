@@ -129,8 +129,9 @@ def facebook_logged_in(blueprint, token):
 
 # notify on OAuth provider error
 @oauth_error.connect_via(authenticate)
-def facebook_error(blueprint, message, response):
-    msg = ("OAuth error from {name}! " "message={message} response={response}").format(
-        name=blueprint.name, message=message, response=response
+def facebook_error(blueprint, error, error_description, error_uri):
+    msg = ("OAuth error from {name}! " "message={error} error_description={error_description}, error_uri={error_uri}").format(
+        name=blueprint.name, error=error, error_description=error_description, error_uri=error_uri
     )
     print(msg)
+    return redirect("/login.html")
