@@ -8,6 +8,7 @@ from flask_login import login_required, current_user
 import traceback, requests
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
+from ...tasks import update_interactions
 
 threads_bp = Blueprint('threads', __name__)
 
@@ -58,12 +59,12 @@ def all_threads():
         if request.method == "GET":         
             oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()
             
-            #query_offset = request.args.get("offset") if request.args.get("offset") is not None else 0  
-            #IGApiFetcher.updateInteractions(oauth.token["access_token"], media_ids, query_offset)
             associated_threads = getThreadsByUser(current_user)
             if len(associated_threads) == 0:
                 return jsonify([]), 204
             
+            query_offset = request.args.get("offset") if request.args.get("offset") is not None else 0  
+            IGApiFetcher.updateInteractions(oauth.token["access_token"], [t.id for t in associated_threads], query_offset)
             # Response Objekt bauen, thread um Customer Daten und letzte aktuelle message des Threads + lastUpdated (= zeitpunkt der letzten aktuellen message)
             results = []
             for at in associated_threads:

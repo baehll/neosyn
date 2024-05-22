@@ -493,7 +493,6 @@ def getCustomers(access_token, media):
 def updateInteractions(access_token, media_ids, interaction_id):
     # doppelter _UPDATE_OFFSET, um die eine hälfte jetzt zu updaten und die andere im Hintergrund zu updaten
     interactions = db.session.execute(db.select(IGThread).filter(IGThread.media_id.in_(media_ids)).offset(interaction_id).limit(_UPDATE_OFFSET*2)).scalars().all()
-    print(interactions)
     # ab der ersten Interaction die nächsten _UPDATE_OFFSET updaten
     
     # ab der ersten Interaction + _UPDATE_OFFSET die nächsten _UPDATE_OFFSET updaten im Hintergrund 

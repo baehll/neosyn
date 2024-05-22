@@ -15,5 +15,5 @@ def init_assistant(orga_id):
     return assistant_utils.init_assistant(orga)
 
 @shared_task
-def update_interactions(user_id):
+def update_interactions(user_id, thread_id, amount=10):
     pass

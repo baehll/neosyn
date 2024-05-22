@@ -4,7 +4,7 @@ from flask_login import LoginManager, UserMixin
 from flask_dance.consumer.storage.sqla import OAuthConsumerMixin
 from enum import Enum, auto
 from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy.sql import func
+from datetime import timezone, datetime
 
 db = SQLAlchemy()
 
@@ -20,8 +20,8 @@ class _Base(db.Model):
     __abstract__ = True
     
     id = db.Column(db.Integer, primary_key=True) 
-    created_at = db.Column(db.DateTime, nullable=False, default=func.now())
-    updated_at = db.Column(db.DateTime, nullable=False, default=func.now(), onupdate=func.now())
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
 
     def to_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}

@@ -83,12 +83,12 @@ def task():
 @test.route("/task_status/<id>", methods=["GET"])
 @login_required
 def task_status(id):
-    task = AsyncResult(id)
-    response = {
-        'task_id': task.id,
-        'status': task.status,
-        'result': task.result if task.status == 'SUCCESS' else None
-    }
+    # task = AsyncResult(id)
+    # response = {
+    #     'task_id': task.id,
+    #     'status': task.status,
+    #     'result': task.result if task.status == 'SUCCESS' else None
+    # }
     print(datetime.now())
     print(datetime.now().astimezone(ZoneInfo("Europe/Berlin")))
-    return jsonify(response)
+    return jsonify()
