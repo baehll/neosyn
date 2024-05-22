@@ -25,9 +25,8 @@ def celery_init_app(app: Flask) -> Celery:
             with app.app_context():
                 return self.run(*args, **kwargs)
 
-    celery_app = Celery(app.name)
+    celery_app = Celery(app.name, backend=config('REDIS_URL'), broker=config('REDIS_URL'))
     celery_app.Task = FlaskTask
-    celery_app.config_from_object(app.config["CELERY"])
     celery_app.set_default()
     app.extensions["celery"] = celery_app
     return celery_app
@@ -47,8 +46,7 @@ def create_app() -> Flask:
     app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(days=31)
     app.config["MAX_FILE_SIZE"] = 8 * 64 * 1024 * 1024 # 8 Dateien mit jeweils 64MB = 512 MB
 
-    cors_domains = ["https://unaite.ai", "http://unaite.ai", "https://quiet-mountain-69143-51eb8184b186.herokuapp.com", "http://quiet-mountain-69143-51eb8184b186.herokuapp.com"
-                    "https://127.0.0.1:3000", "https://127.0.0.1:5173"]
+    cors_domains = ["https://unaite.ai", "http://unaite.ai", "https://quiet-mountain-69143-51eb8184b186.herokuapp.com", "http://quiet-mountain-69143-51eb8184b186.herokuapp.com"]
     CORS(app,
         origins=cors_domains,
         resources={
@@ -64,7 +62,9 @@ def create_app() -> Flask:
             ],
         'img-src':  [
             '\'self\'',
-            'data:'
+            'data:',
+            '*.cdninstagram.com',
+            '*.fbcdn.net'
             ],
         'script-src': [
             '\'self\'',
@@ -92,21 +92,19 @@ def create_app() -> Flask:
     # Migration Script for DB
     migrate = Migrate(app, db)
     
-    # Celery Stuff
-    if app.debug == False:
-        app.config.from_mapping(
-            CELERY=dict(
-                broker_url=config('REDIS_URL'),
-                result_backend=config('REDIS_URL'),
-                task_ignore_result=True,
-                broker_connection_retry_on_startup=True
-            ),
-        )
-        app.config['BROKER_URL'] = config('REDIS_URL')
-        app.config['RESULT_BACKEND'] = config('REDIS_URL')
-    
-        app.config.from_prefixed_env()
-        celery_init_app(app)
+    # # Celery Stuff
+    # app.config.from_mapping(
+    #     CELERY=dict(
+    #         broker=config('REDIS_URL'),
+    #         backend=config('REDIS_URL'),
+    #         broker_connection_retry_on_startup=True
+    #     ),
+    # )
+    # app.config['BROKER_URL'] = config('REDIS_URL')
+    # app.config['RESULT_BACKEND'] = config('REDIS_URL')
+
+    app.config.from_prefixed_env()
+    celery_init_app(app)
         
     with app.app_context():
         db.create_all()

@@ -1,5 +1,5 @@
 from flask import (
-    Blueprint, jsonify, request, current_app, send_from_directory, redirect
+    Blueprint, jsonify, request, current_app, send_from_directory, redirect, session
 )
 from flask_login import current_user, login_user, login_required, logout_user
 from flask_dance.consumer import oauth_authorized, oauth_error
@@ -8,6 +8,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from ..models import db, User, OAuth, EarlyAccessKeys, Platform
 from ...utils import FB_Blueprint, IGApiFetcher
 import traceback
+from ..tasks import init_ig_data
 
 authenticate = FB_Blueprint.make_facebook_blueprint(
     storage=SQLAlchemyStorage(OAuth, db.session, user=current_user),
@@ -60,6 +61,21 @@ def logout():
     logout_user()
     return redirect("/")
 
+@authenticate.route("/debug_login/<id>")
+def debug_login(id):
+    if current_app.debug == True:
+        instagram_platform = Platform.query.filter_by(name="Instagram").one()
+        user = User(platform=instagram_platform)
+        oauth = OAuth.query.filter_by(id=int(id)).one()
+        oauth.user = user
+        db.session.add_all([oauth, user])
+        db.session.commit()
+        login_user(user)
+        IGApiFetcher.updateAllEntries(oauth.token["access_token"], user)
+        return redirect("/registration.html")
+    else:
+        return jsonify(), 404
+
 @oauth_authorized.connect_via(authenticate)
 def facebook_logged_in(blueprint, token):
     if not token:
@@ -100,6 +116,8 @@ def facebook_logged_in(blueprint, token):
         print("New User created and successfully signed in.")
         
         # trigger async DB Update
+        init = init_ig_data.delay(user.id, oauth.token)
+        init.forget()
         
         return redirect("/registration.html")
 
@@ -111,8 +129,9 @@ def facebook_logged_in(blueprint, token):
 
 # notify on OAuth provider error
 @oauth_error.connect_via(authenticate)
-def facebook_error(blueprint, message, response):
-    msg = ("OAuth error from {name}! " "message={message} response={response}").format(
-        name=blueprint.name, message=message, response=response
+def facebook_error(blueprint, error, error_description, error_uri):
+    msg = ("OAuth error from {name}! " "message={error} error_description={error_description}, error_uri={error_uri}").format(
+        name=blueprint.name, error=error, error_description=error_description, error_uri=error_uri
     )
     print(msg)
+    return redirect("/login.html")

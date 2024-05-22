@@ -4,7 +4,7 @@ from flask_login import LoginManager, UserMixin
 from flask_dance.consumer.storage.sqla import OAuthConsumerMixin
 from enum import Enum, auto
 from werkzeug.security import generate_password_hash, check_password_hash
-from sqlalchemy.sql import func
+from datetime import timezone, datetime
 
 db = SQLAlchemy()
 
@@ -20,8 +20,8 @@ class _Base(db.Model):
     __abstract__ = True
     
     id = db.Column(db.Integer, primary_key=True) 
-    created_at = db.Column(db.DateTime, nullable=False, default=func.now())
-    updated_at = db.Column(db.DateTime, nullable=False, default=func.now(), onupdate=func.now())
+    created_at = db.Column(db.DateTime, nullable=False, default=datetime.now)
+    updated_at = db.Column(db.DateTime, nullable=False, default=datetime.now, onupdate=datetime.now)
 
     def to_dict(self):
         return {c.name: getattr(self, c.name) for c in self.__table__.columns}
@@ -33,13 +33,13 @@ class _IGBaseTable(_Base):
     __abstract__ = True
     
     etag = db.Column(db.String, nullable=True)
-    fb_id = db.Column(db.String, nullable=False)
+    fb_id = db.Column(db.String, nullable=False, unique=True)
 
 class Platform(_Base):
     __tablename__ = "platforms"
     
     name = db.Column(db.Enum(_PlatformEnum))
-    is_implemented = db.Column(db.String, default=False)
+    is_implemented = db.Column(db.Boolean, default=False)
     icon = db.Column(db.String)
 
 class EarlyAccessKeys(_Base):
@@ -147,6 +147,9 @@ class IGBusinessAccount(_IGBaseTable):
     followers_count = db.Column(db.Integer)
     
     medias = db.relationship("IGMedia", back_populates="bzacc")
+    
+    customer_id = db.Column(db.Integer, db.ForeignKey("ig_customers.id"))
+    customer = db.relationship("IGCustomer", back_populates="bz_acc")
 
 class IGThread(_Base):
     __tablename__ = "ig_threads"
@@ -194,6 +197,7 @@ class IGCustomer(_IGBaseTable):
     medias = association_proxy("thread_association", "media")
     
     comments = db.relationship("IGComment", back_populates="customer")
+    bz_acc = db.relationship("IGBusinessAccount", back_populates="customer")
     
 class IGComment(_IGBaseTable):
     __tablename__  = "ig_comments"

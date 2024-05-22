@@ -6,7 +6,6 @@
     :thread-id="currentThreadId"
   />
   <PostContainer
-    v-if="minScreenWidth"
     :thread-id="currentThreadId"
   />
 </template>
