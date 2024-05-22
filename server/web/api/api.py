@@ -1,7 +1,7 @@
 from flask import (
-    Blueprint, jsonify, request, session, current_app
+    Blueprint, jsonify, request, session, current_app, send_file
 )
-import os
+import io
 import requests
 from flask_login import login_required, current_user
 from decouple import config
@@ -11,6 +11,7 @@ from ...utils import file_utils, IGApiFetcher, assistant_utils
 from werkzeug.utils import secure_filename
 import traceback
 from .data.threads import isThreadByUser
+from ..tasks import init_assistant
 
 api_bp = Blueprint('api', __name__)
 
@@ -44,7 +45,9 @@ def init_user():
             return jsonify({"error": "No companyname specified"}), 400
         
         if current_user.organization is not None:
-            return jsonify({"error": "User already associated with organization"}), 500
+            db.session.delete(current_user.organization)
+            db.session.commit()
+            #return jsonify({"error": "User already associated with organization"}), 500
         
         # Neues Organization DB Objekt initialisieren
         new_orga = Organization(name=form_data["companyname"])
@@ -71,14 +74,14 @@ def init_user():
             logo.organization = new_orga
             db.session.add(logo)
             
+        if logo is not None:
+            db.session.commit()
+            new_orga.logo_id = logo.id
+            db.session.add(new_orga)
+            
         db.session.add(new_orga)
         db.session.add(current_user)
         db.session.commit()
-        
-        if logo is not None:
-            new_orga.logo_id = logo.id
-            db.session.add(new_orga)
-            db.session.commit()
         
         return jsonify(), 200
     except Exception:
@@ -122,19 +125,18 @@ def company_files():
                 successful.append(filename)
                 db.session.add(new_file)
             
-            assistant_utils.init_assistant(orga)
-            
             db.session.add(orga)
             db.session.commit()
-            
+
+            res = init_assistant.delay(orga.id)
+            res.forget()
             if len(errors) > 0:
                 return jsonify({"error": errors, "successful":", ".join(successful) }), 422
             else:
                 return jsonify({"successful":", ".join(successful)}), 200
         else:
-            assistant_utils.init_assistant(orga)
-            db.session.add(orga)
-            db.session.commit()
+            res = init_assistant.delay(orga.id)
+            res.forget()
             return jsonify(), 200
     except Exception:
         print(traceback.format_exc())
@@ -145,14 +147,25 @@ def company_files():
 def me():
     try:
         return jsonify({
-            "logoURL": "",
-            "name": "",
-            "companyName": ""
+            "name": current_user.name,
+            "companyName": current_user.organization.name
         }), 200
-    except Exception:
+    except:
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occoured"}), 500
-    
+
+@api_bp.route("/me/logo")
+@login_required
+def logo():
+    try:
+        if current_user.organization.logo is None:
+            return jsonify(), 200
+        else:
+            return send_file(io.BytesIO(current_user.organization.logo().data), download_name=current_user.organization.logo().filename)
+    except:
+        print(traceback.format_exc())
+        return jsonify({"error":"An exception has occoured"}), 500
+
 @api_bp.route("/update_all_entries", methods=["GET"])
 @login_required
 def update_all_entries():

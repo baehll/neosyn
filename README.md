@@ -58,9 +58,9 @@
     ```
     flask run --cert=adhoc --debug
     ```
-    If running redis in WSL, run following command in WSL
+    Additionally, a celery and redis instance is required to run all tasks. Celery is part of the requirements and should be installed alongside the other python modules. A redis instance can be run in a docker container e.g. .
     ```
-    sudo service redis-server start
+    celery -A make_celery.celery_app worker -E
     ```
 
 ### DB Migration

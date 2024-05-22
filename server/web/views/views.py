@@ -1,5 +1,5 @@
-from flask import Blueprint, render_template, request, jsonify, send_from_directory
-from flask_login import login_required
+from flask import Blueprint, render_template, request, jsonify, send_from_directory, redirect
+from flask_login import login_required, current_user
 import requests
 
 views = Blueprint('views', __name__)
@@ -13,9 +13,10 @@ def catch_all(path):
 def serve_static_assets(filename):
     return send_from_directory('static/assets', filename)
 
-# TODO entfernen
 @views.route("/login.html")
 def login():
+    if current_user.is_authenticated:
+        return redirect("/app.html")
     return send_from_directory("static", "login.html")
 
 @views.route("/app.html")

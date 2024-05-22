@@ -8,6 +8,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from ..models import db, User, OAuth, EarlyAccessKeys, Platform
 from ...utils import FB_Blueprint, IGApiFetcher
 import traceback
+from ..tasks import init_ig_data
 
 authenticate = FB_Blueprint.make_facebook_blueprint(
     storage=SQLAlchemyStorage(OAuth, db.session, user=current_user),
@@ -115,6 +116,8 @@ def facebook_logged_in(blueprint, token):
         print("New User created and successfully signed in.")
         
         # trigger async DB Update
+        init = init_ig_data.delay(user.id, oauth.token)
+        init.forget()
         
         return redirect("/registration.html")
 
@@ -126,8 +129,9 @@ def facebook_logged_in(blueprint, token):
 
 # notify on OAuth provider error
 @oauth_error.connect_via(authenticate)
-def facebook_error(blueprint, message, response):
-    msg = ("OAuth error from {name}! " "message={message} response={response}").format(
-        name=blueprint.name, message=message, response=response
+def facebook_error(blueprint, error, error_description, error_uri):
+    msg = ("OAuth error from {name}! " "message={error} error_description={error_description}, error_uri={error_uri}").format(
+        name=blueprint.name, error=error, error_description=error_description, error_uri=error_uri
     )
     print(msg)
+    return redirect("/login.html")

@@ -132,7 +132,7 @@ Sample JSON Array mit bis zu **20** Thread Objekten:
 
 ### POST /api/data/threads
 
-Liefert Threads aller Social Media Plattformen gefiltert nach JSON Request zurück
+Liefert Threads aller Social Media Plattformen gefiltert nach JSON Request zurück, mit der aktuellsten Interaktion zuerst
 
 JSON Post Body für Filterung / Paging:
 ```bash
@@ -203,34 +203,6 @@ Sample JSON Array mit Message/Comment Objekten:
     }
 ```
 
-### GET /api/supported_platforms
-
-Gibt die Liste der Plattformen zurück, die aktuell implementiert sind
-
-**200**, wenn die Anfrage erfolgreich war
-Sample JSON Array mit platform Objekten:
-```bash
-[
-    {
-        "id": 1,
-        "is_implemented": "1",
-        "name": "Instagram"
-    },
-    {
-        "id": 2,
-        "is_implemented": "0",
-        "name": "TikTok"
-    },...
-]
-```
-
-**500**, wenn ein Fehler aufgetreten ist mit
-```bash
-    {
-        "error": "error_message"
-    }
-```
-
 ### PUT /api/data/threads/{id}
 
 Aktualisiert einen Thread (gerade nur um den Read Status auf gelesen/ungelesen zu setzen)
@@ -244,6 +216,34 @@ JSON Post Body:
 
 **200**, wenn die Anfrage erfolgreich war ohne Response Body
 
+
+**500**, wenn ein Fehler aufgetreten ist mit
+```bash
+    {
+        "error": "error_message"
+    }
+```
+
+### GET /api/supported_platforms
+
+Gibt die Liste der Plattformen zurück, die aktuell implementiert sind
+
+**200**, wenn die Anfrage erfolgreich war
+Sample JSON Array mit platform Objekten:
+```bash
+[
+    {
+        "id": 1,
+        "is_implemented": True,
+        "name": "Instagram"
+    },
+    {
+        "id": 2,
+        "is_implemented": False,
+        "name": "TikTok"
+    },...
+]
+```
 
 **500**, wenn ein Fehler aufgetreten ist mit
 ```bash
@@ -385,6 +385,39 @@ Sample JSON Array Antwort:
         "error": "error_message"
     }
 ```
+
+**500**, wenn ein Fehler aufgetreten ist mit
+```bash
+    {
+        "error": "error_message"
+    }
+```
+
+### GET /api/me
+
+Liefert die Userinformationen zurück
+
+**200**, wenn die Anfrage erfolgreich war
+Sample JSON Antwort:
+```bash
+    {
+        "companyName": "...",
+        "name": "..."    
+    }
+```
+
+**500**, wenn ein Fehler aufgetreten ist mit
+```bash
+    {
+        "error": "error_message"
+    }
+```
+
+### GET /api/me/logo
+
+Liefert das Logo File des Unternehmens, zu dem der User gehört
+
+**200**, wenn die Anfrage erfolgreich war mit der Bild Datei als Content
 
 **500**, wenn ein Fehler aufgetreten ist mit
 ```bash
