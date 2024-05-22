@@ -144,7 +144,7 @@ export default {
       this.currentStep--;
       this.currentStepComponent = this.steps[this.currentStep].component;
     },
-    finishRegistrationWithoutFileUpload(){
+    async finishRegistrationWithoutFileUpload(){
       this.uploadStarted = true
       const res = await RegistrationService.companyFiles([])
       this.uploadStarted = false
