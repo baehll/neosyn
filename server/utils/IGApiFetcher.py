@@ -389,10 +389,10 @@ def getComments(access_token, media):
     db_comment_dict = dict([(c.fb_id, c) for c in db_comments])
     fb_comment_dict = dict()
     for c in com_res:
-        fb_comment_dict[c["id"]] = (c, False)
+        fb_comment_dict[c["id"]] = (c, False, None)
         if "replies" in c:
             for r in c["replies"]["data"]:
-                fb_comment_dict[r["id"]] = (r, True)
+                fb_comment_dict[r["id"]] = (r, True, c["id"])
     '''	
     Welche Kommentare sind in fb_comments, aber nicht in db_comments -> hinzufügen
     Welche Kommentare sind in db_comments, aber nicht in fb_comments -> delete
@@ -411,22 +411,32 @@ def getComments(access_token, media):
     # print(updateable_comment_ids)
     # print(new_comment_ids)
     for id in new_comment_ids:
-        (fb_com, is_reply) = fb_comment_dict[id]
-        # Replies werden nur zusammen mit dem Top Level Kommentar betrachtet, einzeln übersprungen
+        (fb_com, is_reply, parent_id) = fb_comment_dict[id]
+        # Replies werden nur zusammen mit dem Top Level Kommentar neu erstellt, ansonsten muss das bestehende objekte aus der DB geholt werden
         if is_reply:
+            parent = db.session.execute(db.select(IGComment).filter(IGComment.fb_id == parent_id)).scalar_one_or_none()
+            if parent is not None:
+                reply = IGComment(timestamp=date_parser.isoparse(fb_com["timestamp"]), fb_id=fb_com["id"], text=fb_com["text"], like_count=fb_com["like_count"])
+                comment_customer.append((reply, fb_com["from"]))
+                _commitToDB([reply])
+                reply.parent = parent
+                #new_comments.append(reply)
             continue
+        
         new_comm = IGComment(timestamp=date_parser.isoparse(fb_com["timestamp"]), fb_id=fb_com["id"], text=fb_com["text"], like_count=fb_com["like_count"])
         
         # User mit Media und Comment verknüpfen
         comment_customer.append((new_comm, fb_com["from"]))
-        new_comments.append(new_comm)
+        #new_comments.append(new_comm)
         if "replies" in fb_com:
             for r in fb_com["replies"]["data"]:
                 reply = IGComment(timestamp=date_parser.isoparse(r["timestamp"]), fb_id=r["id"], text=r["text"], like_count=r["like_count"])
                 comment_customer.append((reply, r["from"]))
                 reply.parent = new_comm
-                new_comments.append(reply)
-                
+                #new_comments.append(reply)
+    
+    _commitToDB(new_comments)
+  
     for comment, fb_user in comment_customer:
         # prüfen, ob customer in DB vorhanden ist, sonst hinzufügen und verbindung media - comment - customer erstellen
         db_customer = db.session.execute(db.select(IGCustomer).filter_by(fb_id=fb_user["id"])).scalar_one_or_none()
@@ -460,7 +470,7 @@ def getComments(access_token, media):
         db_updateable_comments = [c for c in db_comments if c.fb_id in updateable_comment_ids]
         for com in db_updateable_comments:
             #print(fb_comment_dict[com.fb_id])
-            (fb_com_body,_) = fb_comment_dict[com.fb_id]
+            (fb_com_body,_, _) = fb_comment_dict[com.fb_id]
             if fb_com_body is not None:
                 com.text = fb_com_body["text"]
                 com.timestamp = date_parser.isoparse(fb_com_body["timestamp"])
