@@ -99,6 +99,7 @@ import Reload from '../global/reload.vue';
 import {mapStores} from 'pinia';
 import {useThreadStore} from '../../stores/thread.js';
 import TimeDifferenceDisplay from '../global/TimeDifferenceDisplay.vue';
+import {usePlatformStore} from '../../stores/platforms.js'
 
 export default {
   name: 'ThreadTopBar',
@@ -115,7 +116,7 @@ export default {
     }
   },
   computed: {
-    ...mapStores(useThreadStore),
+    ...mapStores(useThreadStore, usePlatformStore),
     sortingOptions() {
       return {
            'new': this.$t('New'),
@@ -146,8 +147,9 @@ export default {
       this.sortingLayerVisible = !this.sortingLayerVisible
     }
   },
-  created() {
+  async created() {
     this.threadFilter = new ThreadFilter
+    await this.platformStore.getPlatforms()
   }
 }
 </script>

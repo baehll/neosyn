@@ -150,6 +150,8 @@ export default {
       this.uploadStarted = false
       if(res.status > 300){
         // show error
+      } else {
+        window.location = '/app.html'
       }
     }
   },
