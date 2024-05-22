@@ -15,8 +15,8 @@ def serve_static_assets(filename):
 
 @views.route("/login.html")
 def login():
-    if current_user.is_authenticated:
-        return redirect("/app.html")
+    # if current_user.is_authenticated:
+    #     return redirect("/app.html")
     return send_from_directory("static", "login.html")
 
 @views.route("/app.html")
