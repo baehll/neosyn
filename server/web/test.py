@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, current_app
 from .models import db, IGPage, IGMedia, IGBusinessAccount, IGComment, OAuth
-from ..utils.IGApiFetcher import getPages, getComments, getBusinessAccounts, getMedia, updateAllEntries
+from ..utils.IGApiFetcher import getPages, getComments, getBusinessAccounts, getMedia, updateAllEntries, getIGUserInfo
 from flask_login import current_user, login_required
 from .tasks import init_ig_data
 from celery.result import AsyncResult
@@ -91,4 +91,11 @@ def task_status(id):
     # }
     print(datetime.now())
     print(datetime.now().astimezone(ZoneInfo("Europe/Berlin")))
+    return jsonify()
+
+@test.route("/me", methods=["GET"])
+@login_required
+def me():
+    oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()
+    getIGUserInfo(oauth.token["access_token"])
     return jsonify()

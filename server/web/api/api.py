@@ -125,7 +125,7 @@ def company_files():
             db.session.add(orga)
             db.session.commit()
 
-            init_assistant.delay(orga.id)
+            init_assistant.delay(orga.id).forget()
             
             if len(errors) > 0:
                 return jsonify({"error": errors, "successful":", ".join(successful) }), 422
@@ -134,7 +134,7 @@ def company_files():
         else:
             db.session.add(orga)
             db.session.commit()
-            init_assistant.delay(orga.id)
+            init_assistant.delay(orga.id).forget()
             return jsonify(), 200
     except Exception:
         print(traceback.format_exc())

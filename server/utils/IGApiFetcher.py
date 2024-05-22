@@ -24,7 +24,8 @@ def _getIDs(access_token, path, fields="", url=""):
     else:
         print("ID Request GET returned " + str(req.status_code) + f", (URL: {path}, Fields: {fields} )")
  
-# Liefert eine Liste an allen Einträgen, die unter dem Path und den Fields vorhanden sind, inkl. paging results (wenn in einer Response > 25 Einträge sind)
+# Liefert eine Liste an allen Einträgen, die unter dem Path und den Fields vorhanden sind, 
+# inkl. paging results (wenn in einer Response > 25 Einträge sind)
 def _getInstagramData(access_token, path, fields=""):
     ids = _getIDs(access_token, path, fields)
     results = []
@@ -181,6 +182,11 @@ def _updateExistingEntries(entries, changed_data):
                     setattr(entry, key, value)
         
 # FUNCTIONS
+
+def getIGUserInfo(access_token):
+    #_fields = ""
+    page_res = _getInstagramData(access_token, "/me")
+    print(page_res)
 
 # request mit dem jeweiligen ETag der Pages falls vorhanden. erstellt und updatet Pages für gegebenen Usertoken
 def getPages(access_token, user):
@@ -490,12 +496,12 @@ def getCustomers(access_token, media):
     _commitToDB([media])
     return
     
-def updateInteractions(access_token, media_ids, interaction_id):
-    # doppelter _UPDATE_OFFSET, um die eine hälfte jetzt zu updaten und die andere im Hintergrund zu updaten
-    interactions = db.session.execute(db.select(IGThread).filter(IGThread.media_id.in_(media_ids)).offset(interaction_id).limit(_UPDATE_OFFSET*2)).scalars().all()
-    # ab der ersten Interaction die nächsten _UPDATE_OFFSET updaten
+def updateInteractions(access_token, thread_ids):
+    threads = db.session.execute(db.select(IGThread).filter(IGThread.id.in_(thread_ids))).scalars().all()
     
-    # ab der ersten Interaction + _UPDATE_OFFSET die nächsten _UPDATE_OFFSET updaten im Hintergrund 
+    for t in threads:
+        getComments(access_token, t.media)
+        
     
 
 def updateAllEntries(access_token, user):
@@ -522,3 +528,8 @@ def updateAllEntries(access_token, user):
             medias.extend(db.session.execute(db.select(IGMedia).filter(IGMedia.bzacc.has(id=b.id))).scalars().all())
     for m in medias:
         getComments(access_token, m)
+
+    print("media + comments done")
+    
+    # customer suchen, der dem user entspricht und diese verknüpfen
+    

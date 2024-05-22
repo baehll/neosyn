@@ -57,34 +57,46 @@ def isThreadByUser(threadId, user):
 def all_threads():
     try:
         if request.method == "GET":         
-            oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()
+            oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()            
             
-            associated_threads = getThreadsByUser(current_user)
+            associated_threads = []
             if len(associated_threads) == 0:
                 return jsonify([]), 204
+      
+            #   
+            # IGApiFetcher.updateInteractions(oauth.token["access_token"], [t.id for t in associated_threads], query_offset)
             
-            query_offset = request.args.get("offset") if request.args.get("offset") is not None else 0  
-            IGApiFetcher.updateInteractions(oauth.token["access_token"], [t.id for t in associated_threads], query_offset)
-            # Response Objekt bauen, thread um Customer Daten und letzte aktuelle message des Threads + lastUpdated (= zeitpunkt der letzten aktuellen message)
-            results = []
+            threads = []
             for at in associated_threads:
                 last_comment = sorted(at.comments, key=lambda x: x.timestamp)[-1]
-                results.append(thread_result_obj(at, last_comment.timestamp, last_comment.text))
+                threads.append((at, last_comment))
+                threads.append(thread_result_obj(at, last_comment.timestamp, last_comment.text))
             
             sorting_option = request.args.get("sorting") 
             
             if sorting_option == "new" or sorting_option is None:
-                results.sort(key=lambda x: x["lastUpdated"])
-                results.reverse()
+                threads.sort(key=lambda x: x[1].timestamp, reverse=True)
             elif sorting_option == "old":
-                results.sort(key=lambda x: x["lastUpdated"])
+                threads.sort(key=lambda x: x[1].timestamp)
             elif sorting_option == "most-interaction":
-                results.sort(key=lambda x: x["interactions"])
-                results.reverse()
+                threads.sort(key=lambda x: len(x[0].comments), reverse=True)
             elif sorting_option == "least-interaction":
-                results.sort(key=lambda x: x["interactions"])
+                threads.sort(key=lambda x: len(x[0].comments))
             else:
                 return jsonify({"error":"Unspecified sorting argument, only 'new' (default), 'old', 'most-interaction', 'least-interaction' allowed"}), 500
+            
+            # Ab offset die ersten 10 Threads synchron aktualisieren, die nächsten 10 asynchron als Task
+            offset = request.args.get("offset") if request.args.get("offset") is not None else 0
+            
+            thread_ids = [t[0].id for t in threads]
+            IGApiFetcher.updateInteractions(oauth.token["access_token"], thread_ids[offset:offset+10])
+            
+            if(offset+20 <= len(thread_ids)):
+                update_interactions.delay(oauth.token["access_token"], thread_ids[offset+10:offset+20]).forget()
+            elif (offset+10 <= len(thread_ids)):
+                update_interactions.delay(oauth.token["access_token"], thread_ids[offset+10:]).forget()
+                
+            results = [thread_result_obj(t[0], t[1].timestamp, t[1].text) for t in threads]
             return jsonify([r for r in results]), 200
         
         if request.method == "POST":
