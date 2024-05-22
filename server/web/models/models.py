@@ -107,6 +107,16 @@ class User(_Base, UserMixin):
     
     answer_improvements = db.relationship("AnswerImprovements", back_populates="user")
     
+    # @property
+    # def is_active(self):
+    #     query = OAuth.query.filter_by(provider_user_id=self.id)
+    #     try:
+    #         oauth = query.one()
+    #     except:
+    #         return False
+    #     return True
+    
+    
 class OAuth(OAuthConsumerMixin, _Base):
     provider_user_id = db.Column(db.String, unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)
@@ -237,4 +247,5 @@ login_manager.login_view = "facebook.login"
 
 @login_manager.user_loader
 def load_user(user_id):
+    #print(User.query.get(int(user_id)))
     return User.query.get(int(user_id))

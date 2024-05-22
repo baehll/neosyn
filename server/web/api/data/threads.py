@@ -274,7 +274,7 @@ def post_message(id):
             #print(current_user.organization)
             last_comment = thread.comments[-1]
             res = requests.post(_URL + f"/{last_comment.fb_id}/replies?message={quote(body['message'])}&access_token={oauth.token['access_token']}")
-            IGApiFetcher.getComments(oauth.token['access_token'], thread.media) # TODO über celery updaten lassen
+            IGApiFetcher.getComments(oauth.token['access_token'], thread.media)
             
             # tabelle mit Verbesserungen erweitern
             if "generated_message" in body:
