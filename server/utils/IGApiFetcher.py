@@ -274,9 +274,9 @@ def getPages(access_token, user):
     return new_pages
 
 def getBusinessAccounts(access_token, page):
-    _fields = r"instagram_business_account{followers_count},followers_count"
+    _fields = r"instagram_business_account{followers_count, profile_picture_url, username},followers_count"
     db_bzaccs = db.session.execute(db.select(IGBusinessAccount).filter(IGBusinessAccount.page.has(id=page.id))).scalars().all()
-    new_bz_accs = []
+    new_bz_accs, new_customers = [], []
     
     bs_res = _getInstagramData(access_token, f"/{page.fb_id}", fields=_fields)
     payload = []
@@ -288,25 +288,21 @@ def getBusinessAccounts(access_token, page):
     db_bzacc_dict = dict([(bz.fb_id, bz) for bz in db_bzaccs])
     fb_bzacc_dict = dict([(bz["instagram_business_account"]["id"], bz) for bz in bs_res])
     
-    # Sets zur Anwendung von Mengenoperatoren
-    # db_bzacc_fb_ids = set(db_bzacc_dict.keys())
-    # fb_bzacc_ids = set(fb_bzacc_dict.keys()) 
-    
     deletable_bzacc_ids, updateable_bzacc_ids, new_bzacc_ids = _findIDDifferences(db_bzacc_dict, fb_bzacc_dict, len(db_bzaccs) > 0)
 
-    # if len(db_bzaccs) > 0:
-    #     deletable_bzacc_ids = db_bzacc_fb_ids - fb_bzacc_ids
-    #     updateable_bzacc_ids = db_bzacc_fb_ids & fb_bzacc_ids
-    
-    # new_bzacc_ids = fb_bzacc_ids - db_bzacc_fb_ids  
-    
     # aus der Antwort neue BZ_Accs erstellen
     for id in new_bzacc_ids:
         bz = fb_bzacc_dict[id]
         new_bz_acc = IGBusinessAccount(fb_id=bz["instagram_business_account"]["id"], followers_count=bz["instagram_business_account"]["followers_count"])
         page.business_accounts.append(new_bz_acc)
         page.followers_count = bz["followers_count"]
+        
+        new_customer = IGCustomer(fb_id=bz["instagram_business_account"]["id"], profile_picture_url=bz["instagram_business_account"]["profile_picture_url"], name=bz["instagram_business_account"]["username"])
+        new_bz_acc.customer = new_customer
         new_bz_accs.append(new_bz_acc)
+        new_customers.append(new_customer)
+    
+    _commitToDB(new_bz_accs + [page] + new_customers)    
     
     if len(deletable_bzacc_ids) > 0:
         db_deletable_bzaccs = [b for b in db_bzaccs if b.fb_id in deletable_bzacc_ids]
@@ -319,9 +315,10 @@ def getBusinessAccounts(access_token, page):
             fb_bzacc_body = fb_bzacc_dict[bz.fb_id]
             if fb_bzacc_body is not None:
                 bz.followers_count = fb_bzacc_body["instagram_business_account"]["followers_count"]
+                bz.customer.profile_picture_url = fb_bzacc_body["instagram_business_account"]["profile_picture_url"]
+                bz.customer.name= fb_bzacc_body["instagram_business_account"]["username"]
                 updated_bzaccs.append(bz)
         _commitToDB(updated_bzaccs)
-    _commitToDB(new_bz_accs + [page])
 
     return new_bz_accs
 
@@ -341,17 +338,8 @@ def getMedia(access_token, bz_acc):
     db_media_dict = dict([(m.fb_id, m) for m in db_medias])
     fb_media_dict = dict([(m["id"], m) for m in media_res])
     
-    # # Sets zur Anwendung von Mengenoperatoren
-    # db_media_fb_ids = set(db_media_dict.keys())
-    # fb_media_ids = set(fb_media_dict.keys()) 
-    
     deletable_media_ids, updateable_media_ids, new_media_ids = _findIDDifferences(db_media_dict, fb_media_dict, len(db_medias) > 0)
     
-    # if len(db_medias) > 0:
-    #     deletable_media_ids = db_media_fb_ids - fb_media_ids
-    #     updateable_media_ids = db_media_fb_ids & fb_media_ids
-    
-    # new_media_ids = fb_media_ids - db_media_fb_ids
     for id in new_media_ids:
         body = fb_media_dict[id]
         new_media = IGMedia(timestamp=date_parser.isoparse(body["timestamp"]), 
@@ -414,20 +402,13 @@ def getComments(access_token, media):
                 fb_comment_dict[r["id"]] = (r, True, c["id"])
                 
     deletable_comment_ids, updateable_comment_ids, new_comment_ids = _findIDDifferences(db_comment_dict, fb_comment_dict, len(db_comments)>0)
-
-    # Sets zur Anwendung von Mengenoperatoren
-    # db_comments_fb_ids = set(db_comment_dict.keys())
-    # fb_comment_ids = set(fb_comment_dict.keys()) 
-    
-    # if len(db_comments) > 0:
-    #     deletable_comment_ids = db_comments_fb_ids - fb_comment_ids
-    #     updateable_comment_ids = db_comments_fb_ids & fb_comment_ids
-    # new_comment_ids = fb_comment_ids - db_comments_fb_ids
+    user_bzacc = media.bzacc
     # print("----")
     # print(deletable_comment_ids)
     # print(updateable_comment_ids)
     # print(new_comment_ids)
     for id in new_comment_ids:
+        new_comments = []
         (fb_com, is_reply, parent_id) = fb_comment_dict[id]
         # Replies werden nur zusammen mit dem Top Level Kommentar neu erstellt, ansonsten muss das bestehende objekte aus der DB geholt werden
         if is_reply:
@@ -435,52 +416,71 @@ def getComments(access_token, media):
             if parent is not None:
                 reply = IGComment(timestamp=date_parser.isoparse(fb_com["timestamp"]), fb_id=fb_com["id"], text=fb_com["text"], like_count=fb_com["like_count"])
                 comment_customer.append((reply, fb_com["from"]))
-                _commitToDB([reply])
+                #_commitToDB([reply])
                 reply.parent = parent
-                #new_comments.append(reply)
-            continue
-        
-        new_comm = IGComment(timestamp=date_parser.isoparse(fb_com["timestamp"]), fb_id=fb_com["id"], text=fb_com["text"], like_count=fb_com["like_count"])
-        
-        # User mit Media und Comment verknüpfen
-        comment_customer.append((new_comm, fb_com["from"]))
-        #new_comments.append(new_comm)
-        if "replies" in fb_com:
-            for r in fb_com["replies"]["data"]:
-                reply = IGComment(timestamp=date_parser.isoparse(r["timestamp"]), fb_id=r["id"], text=r["text"], like_count=r["like_count"])
-                comment_customer.append((reply, r["from"]))
-                reply.parent = new_comm
-                #new_comments.append(reply)
-    
+                new_comments.append(reply)
+        else:
+            new_comm = IGComment(timestamp=date_parser.isoparse(fb_com["timestamp"]), fb_id=fb_com["id"], text=fb_com["text"], like_count=fb_com["like_count"])
+            
+            comment_customer.append((new_comm, fb_com["from"]))
+            new_comments.append(new_comm)
+            if "replies" in fb_com:
+                for r in fb_com["replies"]["data"]:
+                    reply = IGComment(timestamp=date_parser.isoparse(r["timestamp"]), fb_id=r["id"], text=r["text"], like_count=r["like_count"])
+                    comment_customer.append((reply, r["from"]))
+                    reply.parent = new_comm
+                    new_comments.append(reply)
+                    
     _commitToDB(new_comments)
   
     for comment, fb_user in comment_customer:
-        # prüfen, ob customer in DB vorhanden ist, sonst hinzufügen und verbindung media - comment - customer erstellen
+        #print(comment)
         db_customer = db.session.execute(db.select(IGCustomer).filter_by(fb_id=fb_user["id"])).scalar_one_or_none()
-
-        # Wenn kein Customer bis jetzt existiert, neuen erstellen
+                
         if db_customer is None:
             db_customer = IGCustomer(fb_id=fb_user["id"], name=fb_user["username"])
-            _commitToDB([db_customer])            
-        
-        thread = db.session.execute(db.select(IGThread).filter_by(media=media).filter_by(customer=db_customer)).scalar_one_or_none()
-        # Wenn es noch keinen Thread gibt, neuen erstellen
-        if thread is None:
-            thread = IGThread(media=media, customer=db_customer)
+            _commitToDB([db_customer])
+            
+        # Wenn das Kommentar ein TL Kommentar ist, neuen Thread erstellen und User+Customer hier verknüpfen
+        if comment.parent is None:
+                
+            thread = IGThread(media=media, bzacc=user_bzacc, customer=db_customer)
             _commitToDB([thread])
             
-        comment.thread = thread
-        comment.media = media
-        comment.customer = db_customer
-        
-        _commitToDB([comment, media, db_customer, thread])
-        thread.comments.append(comment)
-        media.comments.append(comment)
-        db_customer.comments.append(comment)
-    
+            comment.thread = thread
+            comment.media = media
+            comment.customer = db_customer
+            
+            _commitToDB([comment, media, thread])
+            thread.comments.append(comment)
+            media.comments.append(comment)
+            db_customer.comments.append(comment)
+        else:
+            # Ansonsten ist das Kommentar ein reply, es muss also einen Thread bereits geben
+            thread = comment.parent.thread
+                
+            # wenn das reply nicht vom user ist sollte sichergestellt werden, dass der customer für den Thread gesetzt ist 
+            if user_bzacc.fb_id != fb_user["id"]:
+                if thread.customer is None:
+                    thread.customer = db_customer
+                comment.customer = db_customer
+            else:
+                comment.customer = user_bzacc.customer
+                
+            comment.thread = thread
+            comment.media = media
+            
+            _commitToDB([comment, media, thread])
+            thread.comments.append(comment)
+            media.comments.append(comment)
+            
     if len(deletable_comment_ids) > 0:
+        db_delete_targets = []
         db_deletable_comments = [c for c in db_comments if c.fb_id in deletable_comment_ids]
-        _deleteFromDB(db_deletable_comments)
+        for comment in db_deletable_comments:
+            if len(comment.thread.comments) == 1:
+                db_delete_targets.append(comment.thread)
+        _deleteFromDB(db_deletable_comments + db_delete_targets)
     
     updated_comments = []
     if len(updateable_comment_ids) > 0:
@@ -563,5 +563,5 @@ def updateAllEntries(access_token, user):
 
     print("media + comments done")
     
-    connectCustomerBusinessAccounts(access_token, bz_accs)
+    #connectCustomerBusinessAccounts(access_token, bz_accs)
     
