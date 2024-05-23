@@ -16,4 +16,5 @@ def init_assistant(orga_id):
 
 @shared_task
 def update_interactions(oauth_token, thread_ids):
+    print(f"updating {len(thread_ids)}")
     IGApiFetcher.updateInteractions(oauth_token, thread_ids)

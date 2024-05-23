@@ -35,17 +35,18 @@ def thread_result_obj(at, comment):
     }
 
 
-def serialize_comment(comment, bz_accs):
+def serialize_comment(comment, bzaccs):
     result = {
         "id": comment.id,
         "threadId": comment.thread_id,
         "message": comment.text,
         "messageDate": comment.timestamp.astimezone(ZoneInfo("Europe/Berlin")),
-        "from": None
+        "from": comment.customer.id
     }
     
-    if len(comment.customer.bz_acc) > 0 and comment.customer.bz_acc[0] not in bz_accs:
-        result["from"] = comment.customer.id
+    # Wenn das Kommentar mit einem Business Account verfasst wurde, der zum User gehört
+    if len(comment.customer.bz_acc) > 0 and comment.customer.bz_acc[0] in bzaccs:
+        result["from"] = None
         
     return result
 
@@ -111,7 +112,8 @@ def all_threads():
             # Ab offset die ersten 10 Threads synchron aktualisieren, die nächsten 10 asynchron als Task
             
             thread_ids = [t[0].id for t in threads]
-            IGApiFetcher.updateInteractions(oauth.token["access_token"], thread_ids[offset:offset+10])
+            #IGApiFetcher.updateInteractions(oauth.token["access_token"], thread_ids[offset:offset+10])
+            update_interactions.delay(oauth.token["access_token"], thread_ids[offset:offset+10])
             
             if len(thread_ids) > 10:
                 if(offset+20 <= len(thread_ids)):
@@ -137,7 +139,7 @@ def all_threads():
                     return jsonify({"error":"Offset is not a number"}), 500
                 
             associated_threads = db.session.execute(stmt).scalars().all()
-            print(len(associated_threads))
+            #print(len(associated_threads))
             threads = []
             for at in associated_threads:            
                 last_comment = sorted(at.comments, key=lambda x: x.timestamp)[-1]
@@ -157,8 +159,9 @@ def all_threads():
                 offset = request.get_json()["offset"]
 
             thread_ids = [t[0].id for t in threads]
-            IGApiFetcher.updateInteractions(oauth.token["access_token"], thread_ids[offset:offset+10])
+            #IGApiFetcher.updateInteractions(oauth.token["access_token"], thread_ids[offset:offset+10])
             
+            update_interactions.delay(oauth.token["access_token"], thread_ids[offset:offset+10])
             if len(thread_ids) > 10:
                 if(offset+20 <= len(thread_ids)):
                     res = update_interactions.delay(oauth.token["access_token"], thread_ids[offset+10:offset+20])
