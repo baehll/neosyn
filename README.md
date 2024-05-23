@@ -43,6 +43,7 @@
     COMPANY_FILE_UPLOAD_FOLDER=./UPLOADS
     IMPLEMENTED_PLATFORMS=Instagram
     GPT_ASSISTANT_ID=asst_71TD5Qg6iTIy75t2k8hVWrwj
+    OPENAI_PROJ_ID=proj_jGzjbxWxHXRYlq4DRmPJceop
     ```
 
 5. Run the following command in ./ or do these by hand
