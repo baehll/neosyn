@@ -402,12 +402,13 @@ def getComments(access_token, media):
                 fb_comment_dict[r["id"]] = (r, True, c["id"])
                 
     deletable_comment_ids, updateable_comment_ids, new_comment_ids = _findIDDifferences(db_comment_dict, fb_comment_dict, len(db_comments)>0)
-
+    user_bzacc = media.bzacc
     # print("----")
     # print(deletable_comment_ids)
     # print(updateable_comment_ids)
     # print(new_comment_ids)
     for id in new_comment_ids:
+        new_comments = []
         (fb_com, is_reply, parent_id) = fb_comment_dict[id]
         # Replies werden nur zusammen mit dem Top Level Kommentar neu erstellt, ansonsten muss das bestehende objekte aus der DB geholt werden
         if is_reply:
@@ -415,52 +416,71 @@ def getComments(access_token, media):
             if parent is not None:
                 reply = IGComment(timestamp=date_parser.isoparse(fb_com["timestamp"]), fb_id=fb_com["id"], text=fb_com["text"], like_count=fb_com["like_count"])
                 comment_customer.append((reply, fb_com["from"]))
-                _commitToDB([reply])
+                #_commitToDB([reply])
                 reply.parent = parent
-                #new_comments.append(reply)
-            continue
-        
-        new_comm = IGComment(timestamp=date_parser.isoparse(fb_com["timestamp"]), fb_id=fb_com["id"], text=fb_com["text"], like_count=fb_com["like_count"])
-        
-        # User mit Media und Comment verknüpfen
-        comment_customer.append((new_comm, fb_com["from"]))
-        #new_comments.append(new_comm)
-        if "replies" in fb_com:
-            for r in fb_com["replies"]["data"]:
-                reply = IGComment(timestamp=date_parser.isoparse(r["timestamp"]), fb_id=r["id"], text=r["text"], like_count=r["like_count"])
-                comment_customer.append((reply, r["from"]))
-                reply.parent = new_comm
-                #new_comments.append(reply)
-    
+                new_comments.append(reply)
+        else:
+            new_comm = IGComment(timestamp=date_parser.isoparse(fb_com["timestamp"]), fb_id=fb_com["id"], text=fb_com["text"], like_count=fb_com["like_count"])
+            
+            comment_customer.append((new_comm, fb_com["from"]))
+            new_comments.append(new_comm)
+            if "replies" in fb_com:
+                for r in fb_com["replies"]["data"]:
+                    reply = IGComment(timestamp=date_parser.isoparse(r["timestamp"]), fb_id=r["id"], text=r["text"], like_count=r["like_count"])
+                    comment_customer.append((reply, r["from"]))
+                    reply.parent = new_comm
+                    new_comments.append(reply)
+                    
     _commitToDB(new_comments)
   
     for comment, fb_user in comment_customer:
-        # prüfen, ob customer in DB vorhanden ist, sonst hinzufügen und verbindung media - comment - customer erstellen
+        #print(comment)
         db_customer = db.session.execute(db.select(IGCustomer).filter_by(fb_id=fb_user["id"])).scalar_one_or_none()
-
-        # Wenn kein Customer bis jetzt existiert, neuen erstellen
+                
         if db_customer is None:
             db_customer = IGCustomer(fb_id=fb_user["id"], name=fb_user["username"])
-            _commitToDB([db_customer])            
-        
-        thread = db.session.execute(db.select(IGThread).filter_by(media=media).filter_by(customer=db_customer)).scalar_one_or_none()
-        # Wenn es noch keinen Thread gibt, neuen erstellen
-        if thread is None:
-            thread = IGThread(media=media, customer=db_customer)
+            _commitToDB([db_customer])
+            
+        # Wenn das Kommentar ein TL Kommentar ist, neuen Thread erstellen und User+Customer hier verknüpfen
+        if comment.parent is None:
+                
+            thread = IGThread(media=media, bzacc=user_bzacc, customer=db_customer)
             _commitToDB([thread])
             
-        comment.thread = thread
-        comment.media = media
-        comment.customer = db_customer
-        
-        _commitToDB([comment, media, db_customer, thread])
-        thread.comments.append(comment)
-        media.comments.append(comment)
-        db_customer.comments.append(comment)
-    
+            comment.thread = thread
+            comment.media = media
+            comment.customer = db_customer
+            
+            _commitToDB([comment, media, thread])
+            thread.comments.append(comment)
+            media.comments.append(comment)
+            db_customer.comments.append(comment)
+        else:
+            # Ansonsten ist das Kommentar ein reply, es muss also einen Thread bereits geben
+            thread = comment.parent.thread
+                
+            # wenn das reply nicht vom user ist sollte sichergestellt werden, dass der customer für den Thread gesetzt ist 
+            if user_bzacc.fb_id != fb_user["id"]:
+                if thread.customer is None:
+                    thread.customer = db_customer
+                comment.customer = db_customer
+            else:
+                comment.customer = user_bzacc.customer
+                
+            comment.thread = thread
+            comment.media = media
+            
+            _commitToDB([comment, media, thread])
+            thread.comments.append(comment)
+            media.comments.append(comment)
+            
     if len(deletable_comment_ids) > 0:
+        db_delete_targets = []
         db_deletable_comments = [c for c in db_comments if c.fb_id in deletable_comment_ids]
-        _deleteFromDB(db_deletable_comments)
+        for comment in db_deletable_comments:
+            if len(comment.thread.comments) == 1:
+                db_delete_targets.append(comment.thread)
+        _deleteFromDB(db_deletable_comments + db_delete_targets)
     
     updated_comments = []
     if len(updateable_comment_ids) > 0:
@@ -543,5 +563,5 @@ def updateAllEntries(access_token, user):
 
     print("media + comments done")
     
-    connectCustomerBusinessAccounts(access_token, bz_accs)
+    #connectCustomerBusinessAccounts(access_token, bz_accs)
     
