@@ -124,11 +124,12 @@ def all_threads():
             results = [thread_result_obj(t[0], t[1]) for t in threads]
             return jsonify(results), 200
         
-        if request.method == "POST":                
+        if request.method == "POST": 
             # alle Threads für die posts finden
                 # suchsstring anwenden auf IGComment.text
                 # pagination anwenden
             stmt = db.select(IGThread).filter(IGThread.media_id.in_(media_ids)).limit(20)
+            
             if "offset" in request.get_json():
                 try:
                     stmt.offset((int(request.get_json()["offset"] - 1) * 20))
@@ -136,7 +137,7 @@ def all_threads():
                     return jsonify({"error":"Offset is not a number"}), 500
                 
             associated_threads = db.session.execute(stmt).scalars().all()
-            
+            print(len(associated_threads))
             threads = []
             for at in associated_threads:            
                 last_comment = sorted(at.comments, key=lambda x: x.timestamp)[-1]

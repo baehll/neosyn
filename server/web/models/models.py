@@ -248,4 +248,4 @@ login_manager.login_view = "facebook.login"
 @login_manager.user_loader
 def load_user(user_id):
     #print(User.query.get(int(user_id)))
-    return User.query.get(int(user_id))
+    return User.query.filter(User.id == int(user_id)).first()

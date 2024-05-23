@@ -180,6 +180,25 @@ def _updateExistingEntries(entries, changed_data):
                 entry.etag = etag_header
                 for key,value in changed_data.items():
                     setattr(entry, key, value)
+
+def _findIDDifferences(db_dict, fb_dict, db_data_exists):    
+    '''	
+    Welche Kommentare sind in fb_comments, aber nicht in db_comments -> hinzufügen
+    Welche Kommentare sind in db_comments, aber nicht in fb_comments -> delete
+    Schnittmenge fb_comments db_comments -> update
+    '''
+    db_fb_ids = set(db_dict.keys())
+    fb_ids = set(fb_dict.keys())
+    
+    deleteable_ids, updateable_ids, new_page_ids = [], [], []
+    
+    if (db_data_exists):
+        deleteable_ids = db_fb_ids - fb_ids
+        updateable_ids = db_fb_ids & fb_ids
+    
+    new_page_ids = fb_ids - db_fb_ids
+    
+    return deleteable_ids, updateable_ids, new_page_ids
         
 # FUNCTIONS
 
@@ -203,16 +222,16 @@ def getPages(access_token, user):
     fb_page_dict = dict([(bz["id"], bz) for bz in page_res])
     
     # Sets zur Anwendung von Mengenoperatoren
-    db_page_fb_ids = set(db_page_dict.keys())
-    fb_page_ids = set(fb_page_dict.keys()) 
+    # db_page_fb_ids = set(db_page_dict.keys())
+    # fb_page_ids = set(fb_page_dict.keys()) 
     
-    deletable_page_ids, updateable_page_ids = [], []
+    deletable_page_ids, updateable_page_ids, new_page_ids = _findIDDifferences(db_page_dict, fb_page_dict, len(db_pages) > 0)
+
+    # if len(db_pages) > 0:
+    #     deletable_page_ids = db_page_fb_ids - fb_page_ids
+    #     updateable_page_ids = db_page_fb_ids & fb_page_ids
     
-    if len(db_pages) > 0:
-        deletable_page_ids = db_page_fb_ids - fb_page_ids
-        updateable_page_ids = db_page_fb_ids & fb_page_ids
-    
-    new_page_ids = fb_page_ids - db_page_fb_ids  
+    # new_page_ids = fb_page_ids - db_page_fb_ids  
     for id in new_page_ids:
         p = fb_page_dict[id]
         new_page = IGPage(name=p["name"], category=p["category"], fb_id=p["id"], followers_count=p["followers_count"])
@@ -270,16 +289,16 @@ def getBusinessAccounts(access_token, page):
     fb_bzacc_dict = dict([(bz["instagram_business_account"]["id"], bz) for bz in bs_res])
     
     # Sets zur Anwendung von Mengenoperatoren
-    db_bzacc_fb_ids = set(db_bzacc_dict.keys())
-    fb_bzacc_ids = set(fb_bzacc_dict.keys()) 
+    # db_bzacc_fb_ids = set(db_bzacc_dict.keys())
+    # fb_bzacc_ids = set(fb_bzacc_dict.keys()) 
     
-    deletable_bzacc_ids, updateable_bzacc_ids = [], []
+    deletable_bzacc_ids, updateable_bzacc_ids, new_bzacc_ids = _findIDDifferences(db_bzacc_dict, fb_bzacc_dict, len(db_bzaccs) > 0)
 
-    if len(db_bzaccs) > 0:
-        deletable_bzacc_ids = db_bzacc_fb_ids - fb_bzacc_ids
-        updateable_bzacc_ids = db_bzacc_fb_ids & fb_bzacc_ids
+    # if len(db_bzaccs) > 0:
+    #     deletable_bzacc_ids = db_bzacc_fb_ids - fb_bzacc_ids
+    #     updateable_bzacc_ids = db_bzacc_fb_ids & fb_bzacc_ids
     
-    new_bzacc_ids = fb_bzacc_ids - db_bzacc_fb_ids  
+    # new_bzacc_ids = fb_bzacc_ids - db_bzacc_fb_ids  
     
     # aus der Antwort neue BZ_Accs erstellen
     for id in new_bzacc_ids:
@@ -322,17 +341,17 @@ def getMedia(access_token, bz_acc):
     db_media_dict = dict([(m.fb_id, m) for m in db_medias])
     fb_media_dict = dict([(m["id"], m) for m in media_res])
     
-    # Sets zur Anwendung von Mengenoperatoren
-    db_media_fb_ids = set(db_media_dict.keys())
-    fb_media_ids = set(fb_media_dict.keys()) 
+    # # Sets zur Anwendung von Mengenoperatoren
+    # db_media_fb_ids = set(db_media_dict.keys())
+    # fb_media_ids = set(fb_media_dict.keys()) 
     
-    deletable_media_ids, updateable_media_ids = [], []
+    deletable_media_ids, updateable_media_ids, new_media_ids = _findIDDifferences(db_media_dict, fb_media_dict, len(db_medias) > 0)
     
-    if len(db_medias) > 0:
-        deletable_media_ids = db_media_fb_ids - fb_media_ids
-        updateable_media_ids = db_media_fb_ids & fb_media_ids
+    # if len(db_medias) > 0:
+    #     deletable_media_ids = db_media_fb_ids - fb_media_ids
+    #     updateable_media_ids = db_media_fb_ids & fb_media_ids
     
-    new_media_ids = fb_media_ids - db_media_fb_ids
+    # new_media_ids = fb_media_ids - db_media_fb_ids
     for id in new_media_ids:
         body = fb_media_dict[id]
         new_media = IGMedia(timestamp=date_parser.isoparse(body["timestamp"]), 
@@ -384,7 +403,7 @@ def getComments(access_token, media):
         payload.append({"method": "GET", "relative_url": f"{com['id']}?fields=" + _fields})
     com_res = _batchRequest(access_token, payload)
     
-    deletable_comment_ids, new_comment_ids, updateable_comment_ids, comment_customer, new_comments = [], [], [], [], []
+    comment_customer, new_comments = [], []
 
     db_comment_dict = dict([(c.fb_id, c) for c in db_comments])
     fb_comment_dict = dict()
@@ -393,20 +412,18 @@ def getComments(access_token, media):
         if "replies" in c:
             for r in c["replies"]["data"]:
                 fb_comment_dict[r["id"]] = (r, True, c["id"])
-    '''	
-    Welche Kommentare sind in fb_comments, aber nicht in db_comments -> hinzufügen
-    Welche Kommentare sind in db_comments, aber nicht in fb_comments -> delete
-    Schnittmenge fb_comments db_comments -> update
-    '''
+                
+    deletable_comment_ids, updateable_comment_ids, new_comment_ids = _findIDDifferences(db_comment_dict, fb_comment_dict, len(db_comments)>0)
+
     # Sets zur Anwendung von Mengenoperatoren
-    db_comments_fb_ids = set(db_comment_dict.keys())
-    fb_comment_ids = set(fb_comment_dict.keys()) 
+    # db_comments_fb_ids = set(db_comment_dict.keys())
+    # fb_comment_ids = set(fb_comment_dict.keys()) 
     
-    if len(db_comments) > 0:
-        deletable_comment_ids = db_comments_fb_ids - fb_comment_ids
-        updateable_comment_ids = db_comments_fb_ids & fb_comment_ids
-    new_comment_ids = fb_comment_ids - db_comments_fb_ids
-    
+    # if len(db_comments) > 0:
+    #     deletable_comment_ids = db_comments_fb_ids - fb_comment_ids
+    #     updateable_comment_ids = db_comments_fb_ids & fb_comment_ids
+    # new_comment_ids = fb_comment_ids - db_comments_fb_ids
+    # print("----")
     # print(deletable_comment_ids)
     # print(updateable_comment_ids)
     # print(new_comment_ids)

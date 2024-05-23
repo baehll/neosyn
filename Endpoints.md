@@ -369,12 +369,12 @@ Datenstruktur im JSON Body:
 ```
 
 **200**, wenn die Anfrage erfolgreich war
-Sample JSON Array Antwort:
+Sample JSON Array Antwort mit mehreren Strings:
 ```bash
     [
-        "....",
-        "....",
-        "....",
+        str,
+        str,
+        str,
         ...
     ]
 ```
@@ -401,23 +401,11 @@ Liefert die Userinformationen zurück
 Sample JSON Antwort:
 ```bash
     {
-        "companyName": "...",
-        "name": "..."    
+        companyName str,
+        name str,
+        logoURL (base64 encoded data URL)
     }
 ```
-
-**500**, wenn ein Fehler aufgetreten ist mit
-```bash
-    {
-        "error": "error_message"
-    }
-```
-
-### GET /api/me/logo
-
-Liefert das Logo File des Unternehmens, zu dem der User gehört
-
-**200**, wenn die Anfrage erfolgreich war mit der Bild Datei als Content
 
 **500**, wenn ein Fehler aufgetreten ist mit
 ```bash
