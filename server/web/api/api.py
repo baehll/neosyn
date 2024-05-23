@@ -162,9 +162,9 @@ def me():
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occoured"}), 500
 
-# @api_bp.route("/update_all_entries", methods=["GET"])
-# @login_required
-# def update_all_entries():
-#     oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()
-#     IGApiFetcher.updateAllEntries(oauth.token["access_token"], current_user)
-#     return jsonify({}), 200
+@api_bp.route("/update_all_entries", methods=["GET"])
+@login_required
+def update_all_entries():
+    oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()
+    IGApiFetcher.updateAllEntries(oauth.token["access_token"], current_user)
+    return jsonify({}), 200
