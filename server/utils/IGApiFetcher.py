@@ -423,10 +423,10 @@ def getComments(access_token, media):
     #     deletable_comment_ids = db_comments_fb_ids - fb_comment_ids
     #     updateable_comment_ids = db_comments_fb_ids & fb_comment_ids
     # new_comment_ids = fb_comment_ids - db_comments_fb_ids
-    print("----")
-    print(deletable_comment_ids)
-    print(updateable_comment_ids)
-    print(new_comment_ids)
+    # print("----")
+    # print(deletable_comment_ids)
+    # print(updateable_comment_ids)
+    # print(new_comment_ids)
     for id in new_comment_ids:
         (fb_com, is_reply, parent_id) = fb_comment_dict[id]
         # Replies werden nur zusammen mit dem Top Level Kommentar neu erstellt, ansonsten muss das bestehende objekte aus der DB geholt werden
