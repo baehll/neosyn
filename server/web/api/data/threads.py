@@ -111,14 +111,14 @@ def all_threads():
             
             thread_ids = [t[0].id for t in threads]
             #IGApiFetcher.updateInteractions(oauth.token["access_token"], thread_ids[offset:offset+10])
-            update_interactions.delay(oauth.token["access_token"], thread_ids[offset:offset+10])
+            update_interactions.delay(current_user.oauth.token["access_token"], thread_ids[offset:offset+10])
             
             if len(thread_ids) > 10:
                 if(offset+20 <= len(thread_ids)):
-                    res = update_interactions.delay(oauth.token["access_token"], thread_ids[offset+10:offset+20])
+                    res = update_interactions.delay(current_user.oauth.token["access_token"], thread_ids[offset+10:offset+20])
                     res.forget()
                 elif (offset+10 <= len(thread_ids)):
-                    res = update_interactions.delay(oauth.token["access_token"], thread_ids[offset+10:])
+                    res = update_interactions.delay(current_user.oauth.token["access_token"], thread_ids[offset+10:])
                     res.forget()
                 
             results = [thread_result_obj(t[0], t[1]) for t in threads]
@@ -301,7 +301,7 @@ def post_message(id):
             #print(current_user.organization)
             last_comment = thread.comments[-1]
             res = requests.post(_URL + f"/{last_comment.fb_id}/replies?message={quote(body['message'])}&access_token={oauth.token['access_token']}")
-            IGApiFetcher.getComments(oauth.token['access_token'], thread.media)
+            IGApiFetcher.getComments(current_user.oauth.token['access_token'], thread.media)
             
             # tabelle mit Verbesserungen erweitern
             if "generated_message" in body:

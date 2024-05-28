@@ -167,5 +167,5 @@ def me():
 @login_required
 def update_all_entries():
     oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()
-    IGApiFetcher.updateAllEntries(oauth.token["access_token"], current_user)
+    IGApiFetcher.updateAllEntries(current_user.oauth.token["access_token"], current_user)
     return jsonify({}), 200
