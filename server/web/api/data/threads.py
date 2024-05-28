@@ -1,9 +1,12 @@
 from flask import (
     Blueprint, jsonify, request, session, current_app
 )
-from ...models import db, _PlatformEnum, OAuth, IGPage, IGThread, AnswerImprovements
+
+from ....social_media_api import IGApiFetcher
+from ....db.models import db, _PlatformEnum, OAuth, IGPage, IGThread, AnswerImprovements
+from ....db import db_handler
 from pathvalidate import replace_symbol
-from ....utils import file_utils, IGApiFetcher
+from ....utils import file_utils
 from flask_login import login_required, current_user
 import traceback, requests
 from urllib.parse import quote
@@ -52,15 +55,10 @@ def serialize_comment(comment, bzaccs):
 
 def getThreadsByUser(user):
     # pages für den user finden
-    pages = db.session.execute(db.select(IGPage).filter_by(user=user)).scalars().all()
-    media_ids = []
-    for p in pages:
+    threads = []
+    for p in user.pages:
         for b in p.business_accounts:
-            for m in b.medias:
-                media_ids.append(m.id)
-    
-    # alle Threads finden            
-    threads = db.session.execute(db.select(IGThread).filter(IGThread.media_id.in_(media_ids))).scalars().all()
+            threads.extend(b.threads)
     return threads
 
 def isThreadByUser(threadId, user):
@@ -70,8 +68,8 @@ def isThreadByUser(threadId, user):
 @login_required
 def all_threads():
     try:
-        oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()   
-        pages = db.session.execute(db.select(IGPage).filter_by(user=current_user)).scalars().all()
+        oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none() 
+        pages = current_user.pages
         
         if len(pages) == 0:
             return jsonify({"error":"No pages associated with user"}), 500
@@ -81,7 +79,7 @@ def all_threads():
             for b in p.business_accounts:
                 for m in b.medias:
                     media_ids.append(m.id)
-            
+        
         if request.method == "GET":                  
             offset = int(request.args.get("offset")) if request.args.get("offset") is not None else 1
 
@@ -141,12 +139,16 @@ def all_threads():
             associated_threads = db.session.execute(stmt).scalars().all()
             #print(len(associated_threads))
             threads = []
-            for at in associated_threads:            
+            for at in associated_threads:       
+                if len(at.comments) == 0:
+                    db_handler.deleteFromDB([at])
+                    continue
+                
                 last_comment = sorted(at.comments, key=lambda x: x.timestamp)[-1]
                 if "q" in request.get_json() and request.get_json()["q"] != "":
                     query = replace_symbol(request.get_json()["q"])
                     for c in at.comments:
-                        if query in c.text:
+                        if query in c.text or query in c.customer.name:
                             threads.append((at, last_comment))
                             break
                 else:
@@ -176,7 +178,7 @@ def all_threads():
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occoured"}), 500
 
-@threads_bp.route("/<id>", methods=["GET", "PUT"])
+@threads_bp.route("/<id>", methods=["GET", "PUT", "DELETE"])
 @login_required
 def get_messages_by_threadid(id):
     try:
@@ -224,6 +226,27 @@ def get_messages_by_threadid(id):
                 db.session.add(thread)
                 db.session.commit()
                 return jsonify(), 200
+        
+        if request.method == "DELETE":
+            if isThreadByUser(int(id), current_user):
+                thread = db.session.execute(db.select(IGThread).filter(IGThread.id == int(id))).scalar_one_or_none()
+                if thread is not None:
+                    # TL Kommentar zum Thread suchen
+                    tl_comment = next((c for c in thread.comments if c.parent is None), None)
+                    if tl_comment is not None:
+                        # FB Request für Kommentar löschen
+                        #print(f"{_URL}/{tl_comment.fb_id}")
+                        req = requests.delete(f"{_URL}/{int(tl_comment.fb_id)}?access_token={current_user.oauth.token['access_token']}")
+                        if "success" in req.json() and req.json()["success"] == True:
+                            db_handler.deleteFromDB(thread.comments)
+                            db_handler.deleteFromDB([thread])
+                            return jsonify(), 200
+                        else:
+                            return jsonify({"error":f"Instagram error while deleting, {req.json()['error']['message']}"}), 500
+                    else:
+                        return jsonify({"error":"Top level comment for thread not found"}), 500
+                else:
+                    return jsonify({"error":f"Thread with id {id} not found"}), 500
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occoured"}), 500

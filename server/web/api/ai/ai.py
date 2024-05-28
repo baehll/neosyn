@@ -3,7 +3,7 @@ from flask import (
 )
 from operator import attrgetter
 from flask_login import login_required, current_user
-from ...models import db, User , _PlatformEnum, Organization, OAuth, Platform, IGThread, OpenAIRun
+from ....db.models import db, User , _PlatformEnum, Organization, OAuth, Platform, IGThread, OpenAIRun
 from ....utils import assistant_utils as gpt_assistant
 from ..data.threads import isThreadByUser
 import traceback, json, os, requests

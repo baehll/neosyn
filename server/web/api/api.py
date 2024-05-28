@@ -5,9 +5,11 @@ import io, base64, mimetypes
 import requests
 from flask_login import login_required, current_user
 from decouple import config
-from ..models import db, User , _PlatformEnum, Organization, OAuth, Platform, IGThread, File
+
+from ...social_media_api import IGApiFetcher
+from ...db.models import db, User , _PlatformEnum, Organization, OAuth, Platform, IGThread, File
 from pathvalidate import replace_symbol
-from ...utils import file_utils, IGApiFetcher, assistant_utils
+from ...utils import file_utils, assistant_utils
 from werkzeug.utils import secure_filename
 import traceback
 from .data.threads import isThreadByUser
@@ -44,17 +46,16 @@ def init_user():
         if "companyname" not in form_data or form_data["companyname"] == "":
             return jsonify({"error": "No companyname specified"}), 400
         
-        if current_user.organization is not None:
-            db.session.delete(current_user.organization)
-            db.session.commit()
+        if current_user.organization is None: 
+            # Neues Organization DB Objekt initialisieren
+            new_orga = Organization(name=form_data["companyname"])
+        
+            # User updaten, verknüpft mit Orga
+            new_orga.users.append(current_user)
+            current_user.name = form_data["username"]
+        else:
+            current_user.organization.name = form_data["companyname"]
             #return jsonify({"error": "User already associated with organization"}), 500
-        
-        # Neues Organization DB Objekt initialisieren
-        new_orga = Organization(name=form_data["companyname"])
-        
-        # User updaten, verknüpft mit Orga
-        new_orga.users.append(current_user)
-        current_user.name = form_data["username"]
         
         logo = None
         

@@ -5,8 +5,8 @@ from flask_login import current_user, login_user, login_required, logout_user
 from flask_dance.consumer import oauth_authorized, oauth_error
 from flask_dance.consumer.storage.sqla import SQLAlchemyStorage
 from sqlalchemy.orm.exc import NoResultFound
-from ..models import db, User, OAuth, EarlyAccessKeys, Platform
-from ...utils import FB_Blueprint, IGApiFetcher
+from ...db import db, User, OAuth, EarlyAccessKeys, Platform
+from ...auth_blueprint import FB_Blueprint
 import traceback
 from ..tasks import init_ig_data
 

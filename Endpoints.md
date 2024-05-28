@@ -92,6 +92,34 @@ Sample Response:
 
 ## S5
 
+### GET /api/supported_platforms
+
+Gibt die Liste der Plattformen zurück, die aktuell implementiert sind
+
+**200**, wenn die Anfrage erfolgreich war
+Sample JSON Array mit platform Objekten:
+```bash
+[
+    {
+        "id": 1,
+        "is_implemented": True,
+        "name": "Instagram"
+    },
+    {
+        "id": 2,
+        "is_implemented": False,
+        "name": "TikTok"
+    },...
+]
+```
+
+**500**, wenn ein Fehler aufgetreten ist mit
+```bash
+    {
+        "error": "error_message"
+    }
+```
+
 ### GET /api/data/threads
 Liefert Threads aller Social Media Plattformen sortiert nach Query Parametern zurück
 
@@ -173,9 +201,9 @@ Sample JSON Array mit bis zu **20** Thread Objekten:
         "error": "error_message"
     }
 ```
-### GET /api/data/threads/<:threadId>
+### GET /api/data/threads/{id}
 
-Liefert den Nachrichtenverlauf eines Threads nach threadId
+Liefert den Nachrichtenverlauf eines Threads nach id
 
 **200**, wenn die Anfrage erfolgreich war
 Sample JSON Array mit Message/Comment Objekten:
@@ -224,26 +252,11 @@ JSON Post Body:
     }
 ```
 
-### GET /api/supported_platforms
+### DELETE /api/data/threads/{id}
 
-Gibt die Liste der Plattformen zurück, die aktuell implementiert sind
+Löscht den Kommentar, zu dem der Thread erstellt wurde und den dazugehörigen Thread
 
-**200**, wenn die Anfrage erfolgreich war
-Sample JSON Array mit platform Objekten:
-```bash
-[
-    {
-        "id": 1,
-        "is_implemented": True,
-        "name": "Instagram"
-    },
-    {
-        "id": 2,
-        "is_implemented": False,
-        "name": "TikTok"
-    },...
-]
-```
+**200**, wenn die Anfrage erfolgreich war ohne response body
 
 **500**, wenn ein Fehler aufgetreten ist mit
 ```bash

@@ -1,13 +1,12 @@
 from dateutil import parser as date_parser
-from ..web.models import db, IGPage, IGBusinessAccount, IGMedia, IGComment, IGCustomer, IGThread
+from ..db.models import db, IGPage, IGBusinessAccount, IGMedia, IGComment, IGCustomer, IGThread
 import requests, json, traceback
 from datetime import datetime
-
+from ..db.db_handler import commitAllToDB, deleteFromDB
 # UTILITY FUNCTIONS UND VARIABLEN
 
 _URL = "https://graph.facebook.com/v19.0"
 # TASKS = ["ADVERTISE", "ANALYZE", "CREATE_CONTENT", "MESSAGING", "MODERATE", "MANAGE"]
-_UPDATE_OFFSET = 20
 # request gegen IG Graph API für die IDs (pre Batches)
 def _getIDs(access_token, path, fields="", url=""):
     request_url = _URL + path
@@ -112,24 +111,6 @@ def _resolvePaging(node):
             results.extend([{"method" : "GET", "relative_url": f"{n['id']}"} for n in req.json()["data"]])
         
     return results
-
-# commit eine ganze Iterable in DB
-def _commitToDB(data):
-    try:
-        db.session.add_all(data)
-        db.session.commit()
-    except Exception as e:
-        print(e)
-        db.session.rollback()
-
-def _deleteFromDB(data):
-    try:
-        for d in data:
-            db.session.delete(d)
-        db.session.commit()
-    except Exception:
-        print(traceback.format_exc())
-        db.session.rollback()
 
 # Holt alle ETags für die db_objs, die noch nicht in der Datenbank sind
 def _getETagsForNewObjs(access_token, db_objs):
@@ -253,11 +234,11 @@ def getPages(access_token, user):
         user.pages.append(new_page)
         new_pages.append(new_page)
     
-    _commitToDB(new_pages + [user])    
+    commitAllToDB(new_pages + [user])    
     
     if len(deletable_page_ids) > 0:
         db_deletable_bzaccs = [b for b in db_pages if b.fb_id in deletable_page_ids]
-        _deleteFromDB(db_deletable_bzaccs)
+        deleteFromDB(db_deletable_bzaccs)
         
     updated_pages = []
     if len(updateable_page_ids) > 0:
@@ -269,7 +250,7 @@ def getPages(access_token, user):
                 page.name = fb_page_body["name"]
                 page.category = fb_page_body["category"]
                 updated_pages.append(page)
-        _commitToDB(updated_pages)
+        commitAllToDB(updated_pages)
     # return der page_id's
     return new_pages
 
@@ -302,11 +283,11 @@ def getBusinessAccounts(access_token, page):
         new_bz_accs.append(new_bz_acc)
         new_customers.append(new_customer)
     
-    _commitToDB(new_bz_accs + [page] + new_customers)    
+    commitAllToDB(new_bz_accs + [page] + new_customers)    
     
     if len(deletable_bzacc_ids) > 0:
         db_deletable_bzaccs = [b for b in db_bzaccs if b.fb_id in deletable_bzacc_ids]
-        _deleteFromDB(db_deletable_bzaccs)
+        deleteFromDB(db_deletable_bzaccs)
         
     updated_bzaccs = []
     if len(updateable_bzacc_ids) > 0:
@@ -318,12 +299,12 @@ def getBusinessAccounts(access_token, page):
                 bz.customer.profile_picture_url = fb_bzacc_body["instagram_business_account"]["profile_picture_url"]
                 bz.customer.name= fb_bzacc_body["instagram_business_account"]["username"]
                 updated_bzaccs.append(bz)
-        _commitToDB(updated_bzaccs)
+        commitAllToDB(updated_bzaccs)
 
     return new_bz_accs
 
 def getMedia(access_token, bz_acc):
-    _fields = "media_url,timestamp,permalink,comments_count,like_count,caption,media_type"
+    _fields = "media_url,timestamp,permalink,comments_count,like_count,caption,media_type,thumbnail_url"
     db_medias = db.session.execute(db.select(IGMedia).filter(IGMedia.bzacc.has(id=bz_acc.id))).scalars().all()
     new_medias = []
     
@@ -343,22 +324,26 @@ def getMedia(access_token, bz_acc):
     for id in new_media_ids:
         body = fb_media_dict[id]
         new_media = IGMedia(timestamp=date_parser.isoparse(body["timestamp"]), 
-                            permalink=body["permalink"], 
-                            media_url=body["media_url"], 
+                            permalink=body["permalink"],  
                             fb_id=body["id"],
                             like_count=body["like_count"],
                             comments_count=body["comments_count"],
                             caption=body["caption"],
                             media_type=body["media_type"])
         
+        if "thumbnail_url" in body:
+            new_media.media_url = body["thumbnail_url"]
+        else:
+            new_media.media_url = body["media_url"]
+        
         new_medias.append(new_media)
         bz_acc.medias.append(new_media)
     
-    _commitToDB(new_medias + [bz_acc])
+    commitAllToDB(new_medias + [bz_acc])
     
     if len(deletable_media_ids) > 0:
         db_deletable_medias = [m for m in db_medias if m.fb_id in deletable_media_ids]
-        _deleteFromDB(db_deletable_medias)
+        deleteFromDB(db_deletable_medias)
         
     updated_medias = []
     if len(updateable_media_ids) > 0:
@@ -366,6 +351,8 @@ def getMedia(access_token, bz_acc):
         for media in db_updateable_medias:
             fb_media_body = fb_media_dict[media.fb_id]
             if fb_media_body is not None:
+                if fb_media_body["comments_count"] != media.comments_count:
+                    new_medias.append(media)
                 media.timestamp=date_parser.isoparse(fb_media_body["timestamp"])
                 media.permalink=fb_media_body["permalink"]
                 media.media_url=fb_media_body["media_url"] 
@@ -375,12 +362,12 @@ def getMedia(access_token, bz_acc):
                 media.caption=fb_media_body["caption"]
                 media.media_type=fb_media_body["media_type"]
                 updated_medias.append(media)
-        _commitToDB(updated_medias)
+        commitAllToDB(updated_medias)
 
     return new_medias
     
 def getComments(access_token, media):
-    _fields = "replies{from, parent, timestamp, username,text,like_count},id,timestamp,from,text,like_count"
+    _fields = "replies{from,parent,timestamp,username,text,like_count},id,timestamp,from,text,like_count"
     db_comments = db.session.execute(db.select(IGComment).filter(IGComment.media.has(id=media.id))).scalars().all()
 
     res = _getInstagramData(access_token, f"/{media.fb_id}/comments")
@@ -416,7 +403,7 @@ def getComments(access_token, media):
             if parent is not None:
                 reply = IGComment(timestamp=date_parser.isoparse(fb_com["timestamp"]), fb_id=fb_com["id"], text=fb_com["text"], like_count=fb_com["like_count"])
                 comment_customer.append((reply, fb_com["from"]))
-                #_commitToDB([reply])
+                #commitAllToDB([reply])
                 reply.parent = parent
                 new_comments.append(reply)
         else:
@@ -431,7 +418,7 @@ def getComments(access_token, media):
                     reply.parent = new_comm
                     new_comments.append(reply)
                     
-    _commitToDB(new_comments)
+    commitAllToDB(new_comments)
   
     for comment, fb_user in comment_customer:
         #print(comment)
@@ -439,19 +426,19 @@ def getComments(access_token, media):
                 
         if db_customer is None:
             db_customer = IGCustomer(fb_id=fb_user["id"], name=fb_user["username"])
-            _commitToDB([db_customer])
+            commitAllToDB([db_customer])
             
         # Wenn das Kommentar ein TL Kommentar ist, neuen Thread erstellen und User+Customer hier verknüpfen
         if comment.parent is None:
                 
             thread = IGThread(media=media, bzacc=user_bzacc, customer=db_customer)
-            _commitToDB([thread])
+            commitAllToDB([thread])
             
             comment.thread = thread
             comment.media = media
             comment.customer = db_customer
             
-            _commitToDB([comment, media, thread])
+            commitAllToDB([comment, media, thread])
             thread.comments.append(comment)
             media.comments.append(comment)
             db_customer.comments.append(comment)
@@ -470,7 +457,7 @@ def getComments(access_token, media):
             comment.thread = thread
             comment.media = media
             
-            _commitToDB([comment, media, thread])
+            commitAllToDB([comment, media, thread])
             thread.comments.append(comment)
             media.comments.append(comment)
             
@@ -480,7 +467,7 @@ def getComments(access_token, media):
         for comment in db_deletable_comments:
             if len(comment.thread.comments) == 1:
                 db_delete_targets.append(comment.thread)
-        _deleteFromDB(db_deletable_comments + db_delete_targets)
+        deleteFromDB(db_deletable_comments + db_delete_targets)
     
     updated_comments = []
     if len(updateable_comment_ids) > 0:
@@ -494,7 +481,7 @@ def getComments(access_token, media):
                 com.like_count = fb_com_body["like_count"]
                 updated_comments.append(com)
         
-    _commitToDB([media] + updated_comments)
+    commitAllToDB([media] + updated_comments)
     getCustomers(access_token, media)
     
     return new_comments
@@ -515,11 +502,19 @@ def getCustomers(access_token, media):
             if c.fb_id == body["id"]:
                 c.profile_picture_url = body["profile_picture_url"]
     
-    _commitToDB([media])
+    commitAllToDB([media])
     return
     
 def updateInteractions(access_token, thread_ids):
     threads = db.session.execute(db.select(IGThread).filter(IGThread.id.in_(thread_ids))).scalars().all()
+    bzaccs = [t.media.bzacc for t in threads]
+    
+    updated_medias = []
+    for bz in bzaccs:
+        updated_medias.extend(getMedia(access_token, bz))
+        
+    for media in updated_medias:
+        getComments(access_token, media)
     
     for t in threads:
         getComments(access_token, t.media)
@@ -532,7 +527,7 @@ def connectCustomerBusinessAccounts(access_token, bz_accs):
         bz_acc = bz_acc_set[c.fb_id]
         bz_acc.customer = c
         connected.append(bz_acc)
-    _commitToDB(connected)
+    commitAllToDB(connected)
     
     print("Customer - Business-Account relationship created")
     
