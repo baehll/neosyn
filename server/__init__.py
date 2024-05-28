@@ -16,8 +16,8 @@ ENV = EnvManager()
 
 class GPTConfig():
     EMBEDDING_MODEL="text-embedding-ada-002" 
-    GPT_MODEL="gpt-4-turbo"
-    CLIENT=OpenAI(api_key=config("OPENAI_API_KEY"))
+    GPT_MODEL="gpt-4o"
+    CLIENT=OpenAI(api_key=config("OPENAI_API_KEY"), project=config("OPENAI_PROJ_ID"))
      
 def celery_init_app(app: Flask) -> Celery:
     class FlaskTask(Task):

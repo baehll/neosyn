@@ -105,7 +105,7 @@ class User(_Base, UserMixin):
     platform_id = db.Column(db.Integer, db.ForeignKey("platforms.id"))
     platform = db.relationship("Platform")
     
-    answer_improvements = db.relationship("AnswerImprovements", back_populates="user")
+    answer_improvements = db.relationship("AnswerImprovements", back_populates="user")    
     
 class OAuth(OAuthConsumerMixin, _Base):
     provider_user_id = db.Column(db.String, unique=True, nullable=False)
@@ -147,6 +147,7 @@ class IGBusinessAccount(_IGBaseTable):
     followers_count = db.Column(db.Integer)
     
     medias = db.relationship("IGMedia", back_populates="bzacc")
+    threads = db.relationship("IGThread", back_populates="bzacc")
     
     customer_id = db.Column(db.Integer, db.ForeignKey("ig_customers.id"))
     customer = db.relationship("IGCustomer", back_populates="bz_acc")
@@ -156,12 +157,14 @@ class IGThread(_Base):
     
     media_id = db.Column(db.ForeignKey("ig_medias.id"))
     customer_id = db.Column(db.ForeignKey("ig_customers.id"))
+    bzacc_id = db.Column(db.ForeignKey("ig_business_accounts.id"))
     
     is_unread = db.Column(db.Boolean, nullable=False, default=True)
     is_bookmarked = db.Column(db.Boolean, default=False)
     
     media = db.relationship("IGMedia", back_populates="thread_association")
     customer = db.relationship("IGCustomer", back_populates="thread_association")
+    bzacc = db.relationship("IGBusinessAccount", back_populates="threads")
     
     comments = db.relationship("IGComment", back_populates="thread")
     
@@ -237,4 +240,5 @@ login_manager.login_view = "facebook.login"
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.query.get(int(user_id))
+    #print(User.query.get(int(user_id)))
+    return User.query.filter(User.id == int(user_id)).first()

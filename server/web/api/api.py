@@ -1,7 +1,7 @@
 from flask import (
     Blueprint, jsonify, request, session, current_app, send_file
 )
-import io
+import io, base64, mimetypes
 import requests
 from flask_login import login_required, current_user
 from decouple import config
@@ -58,7 +58,6 @@ def init_user():
         
         logo = None
         
-        # Logo im upload ordner abspeichern
         if 'file' in request.files:
             file = request.files["file"]
             if file.filename == "":
@@ -146,22 +145,19 @@ def company_files():
 @login_required
 def me():
     try:
+        logo = current_user.organization.logo()
+        data_url = None
+        
+        if logo is not None:
+            encoded_logo = base64.urlsafe_b64encode(logo.data).decode("utf-8")
+            mime_type, _ = mimetypes.guess_type(logo.filename)
+            data_url = f'data:{mime_type};base64,{encoded_logo}'
+            
         return jsonify({
             "name": current_user.name,
-            "companyName": current_user.organization.name
+            "companyName": current_user.organization.name,
+            "logoURL": data_url
         }), 200
-    except:
-        print(traceback.format_exc())
-        return jsonify({"error":"An exception has occoured"}), 500
-
-@api_bp.route("/me/logo")
-@login_required
-def logo():
-    try:
-        if current_user.organization.logo is None:
-            return jsonify(), 200
-        else:
-            return send_file(io.BytesIO(current_user.organization.logo().data), download_name=current_user.organization.logo().filename)
     except:
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occoured"}), 500
