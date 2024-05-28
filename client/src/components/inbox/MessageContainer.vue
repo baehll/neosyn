@@ -202,7 +202,7 @@ export default {
         this.messageStore.messages[this.currentThreadId].push(message)
         setTimeout(() => {
           this.$refs.messageScroller.scrollTo({top: this.$refs.messageScroller.scrollHeight, behavior: 'smooth'})
-          this.messageStore.messages[message.threadId][this.messages[message.threadId].length - 1].state = 'received'
+          this.messageStore.messages[this.currentThreadId][this.messageStore.messages[this.currentThreadId].length - 1].state = 'received'
           this.messageInput = ''
           this.$refs.msgInput.innerText = ''
         }, 250)
