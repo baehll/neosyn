@@ -27,10 +27,10 @@ export default {
         updatedSelection = this.modelValue.filter(x => x !== this.id);
       }
 			this.$emit('update:modelValue', updatedSelection)
+			this.$emit('valueChanged')
 		}
 	},
 	created(){
-console.log(this.modelValue)
 	}
 }
 </script>

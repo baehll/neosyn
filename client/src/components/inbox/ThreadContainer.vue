@@ -3,7 +3,7 @@
     <ThreadTopBar
       @triggeredSearch="updateSearchTermAndFetch"
       @changedFilter="updateFilterAndFetch"
-      @changeSorting="updateSortingAndFetch"
+      @changedSorting="updateSortingAndFetch"
     />
     <div class="scroller overflow-y-scroll">
       <Thread
@@ -39,8 +39,8 @@ export default {
     return {
       selectedThreadId: null,
       filters: [],
-      searchTerm: '',
-      sorting: 'asc',
+      searchTerm: null,
+      sorting: null,
     }
   },
   computed: {
@@ -61,18 +61,21 @@ export default {
         await ThreadService.deleteThread(id)
       } catch (e){
       }
-      this.threadStore.threads = this.threadStore.threads.filter(t => t.id !== id) 
+      this.threadStore.threads = this.threadStore.threads.filter(t => t.id !== id)
     },
     async fetchThreads() {
-      this.threadStore.fetchThreads()
+      this.threadStore.fetchThreads(this.filters, this.searchTerm, this.sorting)
     },
-    async updateSortingAndFetch() {
+    async updateSortingAndFetch(sorting) {
+      this.sorting = sorting
       return this.fetchThreads()
     },
-    async updateFilterAndFetch() {
+    async updateFilterAndFetch(filters) {
+      this.filters = filters
       return this.fetchThreads()
     },
-    async updateSearchTermAndFetch() {
+    async updateSearchTermAndFetch(searchTerm) {
+      this.searchTerm = searchTerm
       return this.fetchThreads()
     },
     async setSelectedThread(id) {

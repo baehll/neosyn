@@ -5,7 +5,9 @@
         class="text-lightgray-10 absolute left-6 top-1/2 transform -translate-y-1/2 pointer-events-none"
       />
       <input type="text" class="bg-transparent border border-lightgray-10 py-0 px-24 w-full"
-             @keyup.enter="commitSearch">
+        v-model="searchTerm"
+        @keyup.enter="commitSearch"
+      >
     </div>
     <div class="px-3 justify-between relative flex flex-row">
       <div class="flex items-center gap-2 w-8/1 pt-3 pb-4">
@@ -65,10 +67,11 @@
             :key="platform.name"
           >
             <Checkbox
-              :label="platform.label"
-              :id="platform.name"
-              :disabled="platform.disabled && platform.disabled === true"
+              :label="platform.name"
+              :id="platform.id"
+              :disabled="platform.is_implemented === false"
               v-model="platformFilter"
+              @value-changed="filterChanged"
             />
           </li>
         </ul>
@@ -80,7 +83,8 @@
               :rtl="true"
               :label="messageType.label"
               :id="messageType.name"
-             v-model="messageTypeFilter"
+              v-model="messageTypeFilter"
+              @value-changed="filterChanged"
             />
           </li>
         </ul>
@@ -103,6 +107,7 @@ import {usePlatformStore} from '../../stores/platforms.js'
 
 export default {
   name: 'ThreadTopBar',
+  emits: ['triggered-search', 'changed-filter', 'changed-sorting'],
   components: {TimeDifferenceDisplay, Reload, Searchglass, Sorting, Filter, CustomButton, Checkbox},
   data: () => {
     return {
@@ -127,7 +132,7 @@ export default {
     },
     availableFilters() {
       const result = {}
-      result.platforms = ThreadFilter.AVAILABLE_PLATFORMS
+      result.platforms = this.platformStore.platforms
       result.messageTypes = ThreadFilter.MESSAGE_TYPES
       return result
     },
@@ -135,8 +140,16 @@ export default {
   methods: {
     setSorting(sorting){
       this.sorting = sorting
+      this.$emit('changed-sorting', this.sorting)
+    },
+    filterChanged(){
+      this.$emit('changed-filter', {
+        platform: this.platformFilter,
+        sentiment: this.messageTypeFilter
+      })
     },
     commitSearch() {
+      this.$emit('triggered-search', this.searchTerm)
     },
     toggleFilterLayer() {
       this.sortingLayerVisible = false
