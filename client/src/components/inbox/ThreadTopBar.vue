@@ -13,6 +13,7 @@
       <div class="flex items-center gap-2 w-8/1 pt-3 pb-4">
         <Reload
           class="text-lightgray-10"
+          @click="fetchThreads"
         />
         <TimeDifferenceDisplay
           :point-in-time="threadStore.lastUpdated"
