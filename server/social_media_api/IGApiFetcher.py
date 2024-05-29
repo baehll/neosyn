@@ -1,8 +1,8 @@
 from dateutil import parser as date_parser
 from ..db.models import db, IGPage, IGBusinessAccount, IGMedia, IGComment, IGCustomer, IGThread
-import requests, json, traceback
-from datetime import datetime
+import requests, json
 from ..db.db_handler import commitAllToDB, deleteFromDB
+from urllib.parse import quote
 # UTILITY FUNCTIONS UND VARIABLEN
 
 _URL = "https://graph.facebook.com/v19.0"
@@ -182,6 +182,11 @@ def _findIDDifferences(db_dict, fb_dict, db_data_exists):
     return deleteable_ids, updateable_ids, new_page_ids
         
 # FUNCTIONS
+def deleteIGObject(access_token, fb_id):
+    return requests.delete(f"{_URL}/{int(fb_id)}?access_token={access_token}")
+
+def postReplyToComment(access_token, tl_comment_id, reply_message):
+    return requests.post(_URL + f"/{tl_comment_id}/replies?message={quote(reply_message)}&access_token={access_token}")
 
 # request mit dem jeweiligen ETag der Pages falls vorhanden. erstellt und updatet Pages für gegebenen Usertoken
 def getPages(access_token, user):
