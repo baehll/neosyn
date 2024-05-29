@@ -43,11 +43,19 @@ export default {
             apiUrl += `?${joinedParams}`
         }
 
-        return API.client.post(apiUrl, {
+        const postBody = {
             platforms: filterOptions.platform,
             sentiments: filterOptions.sentiment,
             q: searchTerm,
-        });
+        }
+
+        for(const key in postBody){
+            if(!postBody[key] || !postBody[key].length){
+                delete postBody[key]
+            }
+        }
+
+        return API.client.post(apiUrl, postBody);
     },
     toggleUnreadStatus(id, unread){
         return API.client.put(`/api/data/threads/${id}`, {
