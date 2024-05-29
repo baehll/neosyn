@@ -478,7 +478,7 @@ def getComments(access_token, media):
                 com.timestamp = date_parser.isoparse(fb_com_body["timestamp"])
                 com.like_count = fb_com_body["like_count"]
                 updated_comments.append(com)
-                com.thread.is_unread = True
+                #com.thread.is_unread = True
         
     commitAllToDB([media] + updated_comments)
     getCustomers(access_token, media)
