@@ -122,14 +122,16 @@ Sample JSON Array mit platform Objekten:
 
 ### POST /api/data/threads
 
-Liefert Threads aller Social Media Plattformen gefiltert nach JSON Request zurück, mit der aktuellsten Interaktion zuerst
+Liefert Threads aller Social Media Plattformen gefiltert nach JSON Request zurück, mit der aktuellsten Interaktion zuerst. Alle Query Parameter und Parameter im Post Body sind optional.
 
-Query Parameter
+Query Parameter 
 ```bash
     ?sorting=YYY string (new,old,most_interaction,least_interaction)
     &offset=threadId int (ThreadID, ab dem geladen werden soll, default: 1) 
+    &unread=status bool (0 oder 1)
 ```
 Der offset wird verwendet, um die ersten Interaktionen in der Sortierung anzuzeigen und nur diese zu updaten, da durch die Menge an Anfragen bei vielen Kommentaren viel Zeit vergeht. 
+Über unread kann nach allen Threads gefiltert werden, die den definierten Status haben, default werden einfach alle Threads unabhängig von ihrem Status geliefert.
 
 JSON Post Body für Filterung / Paging:
 ```bash
