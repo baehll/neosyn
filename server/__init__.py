@@ -4,7 +4,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from decouple import config
 from openai import OpenAI
-from .web.models import db, User, login_manager, EarlyAccessKeys, Platform, _PlatformEnum
+from .db.models import db, User, login_manager, EarlyAccessKeys, Platform, _PlatformEnum
 from .utils.env_utils import EnvManager 
 from flask_migrate import Migrate
 from flask_talisman import Talisman

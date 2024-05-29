@@ -106,11 +106,12 @@ class User(_Base, UserMixin):
     platform = db.relationship("Platform")
     
     answer_improvements = db.relationship("AnswerImprovements", back_populates="user")    
+    oauth = db.relationship("OAuth", back_populates="user", uselist=False)
     
 class OAuth(OAuthConsumerMixin, _Base):
     provider_user_id = db.Column(db.String, unique=True, nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey(User.id), nullable=False)
-    user = db.relationship(User)
+    user = db.relationship("User", back_populates="oauth")
 
 class IGPage(_IGBaseTable):
     __tablename__ = "ig_pages"

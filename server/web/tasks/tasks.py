@@ -1,7 +1,7 @@
 from celery import Celery, shared_task
 from celery.signals import task_prerun
-from ..models import db, OAuth, User, Organization
-from ...utils import IGApiFetcher
+from ...db.models import db, OAuth, User, Organization
+from ...social_media_api import IGApiFetcher
 from ...utils import assistant_utils
 
 

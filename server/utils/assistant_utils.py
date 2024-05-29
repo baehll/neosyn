@@ -1,6 +1,6 @@
 import os
 from io import BytesIO
-from ..web.models import db
+from ..db.models import db
 
 def GPTConfig():
     from server import GPTConfig
