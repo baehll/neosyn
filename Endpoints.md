@@ -126,7 +126,7 @@ Liefert Threads aller Social Media Plattformen gefiltert nach JSON Request zurü
 
 Query Parameter
 ```bash
-    ?sorting=YYY string (Ein Wert aus new,old,most-interaction,least-interaction)
+    ?sorting=YYY string (new,old,most_interaction,least_interaction)
     &offset=threadId int (ThreadID, ab dem geladen werden soll, default: 1) 
 ```
 Der offset wird verwendet, um die ersten Interaktionen in der Sortierung anzuzeigen und nur diese zu updaten, da durch die Menge an Anfragen bei vielen Kommentaren viel Zeit vergeht. 

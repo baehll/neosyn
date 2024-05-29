@@ -56,9 +56,10 @@ def getThreadsByUser(user):
 
 def isThreadByUser(threadId, user):
     # current_user -> pages -> bzaccs -> customer -> threads
-    stmt = db.select(IGThread).join(IGCustomer).join(IGBusinessAccount).join(IGPage).filter(IGPage.user==user).filter(IGThread.id == threadId)
-    print(stmt)
+    stmt = db.select(IGThread).join(IGCustomer).join(IGBusinessAccount).join(IGPage).filter(IGPage.user==user).filter(IGThread.id==threadId)
+    print(threadId)
     thread = db.session.execute(stmt).scalar_one_or_none()
+    print(thread)
     return (thread is not None)
 
 @threads_bp.route("/", methods=["GET", "POST"])
@@ -111,9 +112,9 @@ def all_threads():
             threads.sort(key=lambda x: x[1].timestamp, reverse=True)
         elif sorting_option == "old":
             threads.sort(key=lambda x: x[1].timestamp)
-        elif sorting_option == "most-interaction":
+        elif sorting_option == "most_interaction":
             threads.sort(key=lambda x: len(x[0].comments), reverse=True)
-        elif sorting_option == "least-interaction":
+        elif sorting_option == "least_interaction":
             threads.sort(key=lambda x: len(x[0].comments))
         else:
             return jsonify({"error":"Unspecified sorting argument, only 'new' (default), 'old', 'most-interaction', 'least-interaction' allowed"}), 500
