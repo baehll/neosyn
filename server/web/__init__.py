@@ -1,5 +1,5 @@
 from .api import *
 from .auth import *
-from .models import *
+from ..db import *
 from .views import *
 from .tasks import *

@@ -17,14 +17,16 @@
           class="w-full pl-2 pr-5 pt-4 pb-6 messages items-start flex flex-col h-full overflow-scroll absolute top-0 left-0 "
           ref="messageScroller">
           <Message
-          class="mb-6"
-          v-for="message in messageStore.messages[currentThreadId]"
-          :message="message.message"
-          :from="message.from"
-          :id="message.id"
-          :date="message.messageDate"
-          :state="message.state"
-        />
+            class="mb-6"
+            v-for="message in messageStore.messages[currentThreadId]"
+            :logo="currentThread.avatar"
+            :message="message.message"
+            :name="message.username"
+            :from="message.from"
+            :id="message.id"
+            :date="message.messageDate"
+            :state="message.state"
+          />
         </div>
         <div
           :class="{'h-full flex-col grow shrink-0 justify-end items-end suggestions absolute bottom-0 right-0 transform transition-transform': true, 'translate-x-100': suggestions.length === 0, 'translate-x-0': suggestions.length > 0}"
@@ -117,10 +119,10 @@ export default {
       currentThreadId: null,
       currentThread: null,
       quickResponses: [
-        'Thanks! 💚',
-        'I agree!',
-        'Love it! 💚',
-        'Cool!'
+        '+',
+        '+',
+        '+',
+        '+',
       ],
       msg: 'Not watching message',
       messageInput: '',
@@ -185,7 +187,7 @@ export default {
       const message = {
         state: 'sending',
         message: this.messageInput,
-        from: 0,
+        from: null,
         threadId: this.currentThreadId,
         date: Date.now(),
       }
@@ -197,12 +199,13 @@ export default {
       this.selectedQuickAction = null
       this.suggestions = []
 
+      this.messageStore.messages[this.currentThreadId].push(message)
+
       const res = await MessageService.sendMessage(this.currentThreadId, this.messageInput, selectedSuggestionMessage)
       if(res.status === 200){
-        this.messageStore.messages[this.currentThreadId].push(message)
         setTimeout(() => {
           this.$refs.messageScroller.scrollTo({top: this.$refs.messageScroller.scrollHeight, behavior: 'smooth'})
-          this.messageStore.messages[message.threadId][this.messages[message.threadId].length - 1].state = 'received'
+          this.messageStore.messages[this.currentThreadId][this.messageStore.messages[this.currentThreadId].length - 1].state = 'received'
           this.messageInput = ''
           this.$refs.msgInput.innerText = ''
         }, 250)

@@ -5,10 +5,11 @@ from flask_login import current_user, login_user, login_required, logout_user
 from flask_dance.consumer import oauth_authorized, oauth_error
 from flask_dance.consumer.storage.sqla import SQLAlchemyStorage
 from sqlalchemy.orm.exc import NoResultFound
-from ..models import db, User, OAuth, EarlyAccessKeys, Platform
-from ...utils import FB_Blueprint, IGApiFetcher
+from ...db import db, User, OAuth, EarlyAccessKeys, Platform
+from ...auth_blueprint import FB_Blueprint
 import traceback
 from ..tasks import init_ig_data
+from ...social_media_api import IGApiFetcher
 
 authenticate = FB_Blueprint.make_facebook_blueprint(
     storage=SQLAlchemyStorage(OAuth, db.session, user=current_user),
@@ -71,7 +72,7 @@ def debug_login(id):
         db.session.add_all([oauth, user])
         db.session.commit()
         login_user(user)
-        IGApiFetcher.updateAllEntries(oauth.token["access_token"], user)
+        IGApiFetcher.updateAllEntries(user.oauth.token["access_token"], user)
         return redirect("/registration.html")
     else:
         return jsonify(), 404

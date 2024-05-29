@@ -24,11 +24,38 @@ export default {
      * Data structure for sorting:
      * Value of new, most-interaction, old or least-interaction
      */
-    getThreads(filterOptions, sorting){
-        return API.client.post('/api/data/threads', {
-            filterOptions,
-            sorting
-        });
+    getThreads(filterOptions, searchTerm, sorting, offset){
+        let apiUrl = '/api/data/threads/'
+        const paramsToAdd = []
+        const urlParams = {
+            sorting,
+            offset
+        }
+
+        for(const paramName in urlParams){
+            if(urlParams[paramName]){
+                paramsToAdd.push(`${paramName}=${urlParams[paramName]}`)
+            }
+        }
+
+        if(paramsToAdd.length){
+            const joinedParams = paramsToAdd.join('&')
+            apiUrl += `?${joinedParams}`
+        }
+
+        const postBody = {
+            platforms: filterOptions.platform,
+            sentiments: filterOptions.sentiment,
+            q: searchTerm,
+        }
+
+        for(const key in postBody){
+            if(!postBody[key] || !postBody[key].length){
+                delete postBody[key]
+            }
+        }
+
+        return API.client.post(apiUrl, postBody);
     },
     toggleUnreadStatus(id, unread){
         return API.client.put(`/api/data/threads/${id}`, {

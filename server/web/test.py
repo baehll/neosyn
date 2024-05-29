@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request, current_app
-from .models import db, IGPage, IGMedia, IGBusinessAccount, IGComment, OAuth
-from ..utils.IGApiFetcher import getPages, getComments, getBusinessAccounts, getMedia, updateAllEntries
+from ..db.models import db, IGPage, IGMedia, IGBusinessAccount, IGComment, OAuth
+from ..social_media_api.IGApiFetcher import getPages, getComments, getBusinessAccounts, getMedia, updateAllEntries
 from flask_login import current_user, login_required
 from .tasks import init_ig_data
 from celery.result import AsyncResult

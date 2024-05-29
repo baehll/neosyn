@@ -92,36 +92,26 @@ Sample Response:
 
 ## S5
 
-### GET /api/data/threads
-Liefert Threads aller Social Media Plattformen sortiert nach Query Parametern zurück
+### GET /api/supported_platforms
 
-Query Parameter
-```bash
-    ?sorting=YYY string (Ein Wert aus new,old,most-interaction,least-interaction)
-    &offset=threadId int (ThreadID, ab dem geladen werden soll, default: 1) 
-```
-Der offset wird verwendet, um die ersten Interaktionen in der Sortierung anzuzeigen und nur diese zu updaten, da durch die Menge an Anfragen bei vielen Kommentaren viel Zeit vergeht. 
+Gibt die Liste der Plattformen zurück, die aktuell implementiert sind
 
 **200**, wenn die Anfrage erfolgreich war
-
-Sample JSON Array mit bis zu **20** Thread Objekten:
+Sample JSON Array mit platform Objekten:
 ```bash
-    [
-          {
-              id int,
-              username string,
-              avatar url string,
-              message string,
-              platform int,
-              lastUpdated datetime,
-              unread bool,
-              interactions int, 
-              bookmarked bool
-          }
-    ]
+[
+    {
+        "id": 1,
+        "is_implemented": True,
+        "name": "Instagram"
+    },
+    {
+        "id": 2,
+        "is_implemented": False,
+        "name": "TikTok"
+    },...
+]
 ```
-
-**204**, wenn die Anfrage erfolgreich war, aber keine Threads für diese Anfrage existieren (wenn es zB noch keine Kommentare unter Posts gibt oder in der DB noch nichts enthalten ist)
 
 **500**, wenn ein Fehler aufgetreten ist mit
 ```bash
@@ -134,13 +124,19 @@ Sample JSON Array mit bis zu **20** Thread Objekten:
 
 Liefert Threads aller Social Media Plattformen gefiltert nach JSON Request zurück, mit der aktuellsten Interaktion zuerst
 
+Query Parameter
+```bash
+    ?sorting=YYY string (new,old,most_interaction,least_interaction)
+    &offset=threadId int (ThreadID, ab dem geladen werden soll, default: 1) 
+```
+Der offset wird verwendet, um die ersten Interaktionen in der Sortierung anzuzeigen und nur diese zu updaten, da durch die Menge an Anfragen bei vielen Kommentaren viel Zeit vergeht. 
+
 JSON Post Body für Filterung / Paging:
 ```bash
     {
         q: string,
-        platforms: int, (noch nicht implementiert, da Enums noch nicht geteilt werden)
-        sentiments: [int/string] (question, positive, neutral, negative), (noch nicht implementiert)
-        offset: int (id des threads nach der die weiteren threads geladen werden sollen)
+        platforms: int, ( ID der Plattform aus /api/supported_platforms)
+        sentiments: [int/string] (question, positive, neutral, negative) (noch nicht implementiert)
     }
 ```
 
@@ -173,9 +169,9 @@ Sample JSON Array mit bis zu **20** Thread Objekten:
         "error": "error_message"
     }
 ```
-### GET /api/data/threads/<:threadId>
+### GET /api/data/threads/{id}
 
-Liefert den Nachrichtenverlauf eines Threads nach threadId
+Liefert den Nachrichtenverlauf eines Threads nach id
 
 **200**, wenn die Anfrage erfolgreich war
 Sample JSON Array mit Message/Comment Objekten:
@@ -224,26 +220,11 @@ JSON Post Body:
     }
 ```
 
-### GET /api/supported_platforms
+### DELETE /api/data/threads/{id}
 
-Gibt die Liste der Plattformen zurück, die aktuell implementiert sind
+Löscht den Kommentar, zu dem der Thread erstellt wurde und den dazugehörigen Thread
 
-**200**, wenn die Anfrage erfolgreich war
-Sample JSON Array mit platform Objekten:
-```bash
-[
-    {
-        "id": 1,
-        "is_implemented": True,
-        "name": "Instagram"
-    },
-    {
-        "id": 2,
-        "is_implemented": False,
-        "name": "TikTok"
-    },...
-]
-```
+**200**, wenn die Anfrage erfolgreich war ohne response body
 
 **500**, wenn ein Fehler aufgetreten ist mit
 ```bash

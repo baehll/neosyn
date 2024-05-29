@@ -5,13 +5,9 @@
     <div :class="{'flex gap-4 message-wrap': true, 'cursor-pointer': selectable }">
       <div class="flex flex-col ">
         <div class="flex justify-end items-end gap-4 mb-2">
-          <div
-            v-if="from !== null"
-            class="bg-primary rounded-full w-8 h-8 shrink-0">
-          </div>
           <p
             @click="$emit('select')"
-            :class="{'p-4 border border-lightgray-80 text-white font-roboto text-xs rounded-lg': true,'border border-primary': selected === true, 'bg-lightgray-30': from === null}" v-text="message"
+            :class="{'min-w-16 p-4 border border-lightgray-80 text-white font-roboto text-xs rounded-lg': true,'border border-primary': selected === true, 'bg-lightgray-30': from === null}" v-text="message"
           ></p>
         </div>
         <small v-if="date" :class="{'text-xs text-lightgray-10': true, 'mr-4 self-end': from !== null, 'ml-4 self-begin': from === null}" v-text="getFormattedDate"></small>
