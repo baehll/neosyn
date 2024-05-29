@@ -19,6 +19,7 @@
           <Message
           class="mb-6"
           v-for="message in messageStore.messages[currentThreadId]"
+          :logo="currentThread.avatar"
           :message="message.message"
           :from="message.from"
           :id="message.id"

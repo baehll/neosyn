@@ -7,7 +7,12 @@
         <div class="flex justify-end items-end gap-4 mb-2">
           <div
             v-if="from !== null"
-            class="bg-primary rounded-full w-8 h-8 shrink-0">
+            class="bg-primary rounded-full w-8 h-8 shrink-0"
+          >
+            <img
+              src="logo"
+              v-if="logo !== null"
+            />
           </div>
           <p
             @click="$emit('select')"

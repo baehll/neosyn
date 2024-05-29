@@ -8,6 +8,7 @@
 import Home from './views/Home.vue';
 import {mapStores} from 'pinia';
 import {useTimerStore} from './stores/timer.js';
+import {useUserStore} from './stores/user.js';
 import ResolutionNotice from './components/global/ResolutionNotice.vue';
 
 export default {
@@ -23,7 +24,7 @@ export default {
     }
   },
   computed: {
-    ...mapStores(useTimerStore)
+    ...mapStores(useTimerStore, useUserStore)
   },
   methods: {
     checkResolution() {
@@ -32,7 +33,8 @@ export default {
       this.resolutionTooLow = false // innerWidth <= 1600 || innerHeight <= 1150
     }
   },
-  created() {
+  async created() {
+    await this.userStore.me()
     addEventListener('resize', this.checkResolution);
     this.checkResolution();
     setInterval(() => {
