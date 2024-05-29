@@ -429,38 +429,31 @@ def getComments(access_token, media):
             commitAllToDB([db_customer])
             
         # Wenn das Kommentar ein TL Kommentar ist, neuen Thread erstellen und User+Customer hier verknüpfen
+        thread = None
         if comment.parent is None:
-                
             thread = IGThread(media=media, bzacc=user_bzacc, customer=db_customer)
+            
             commitAllToDB([thread])
-            
-            comment.thread = thread
-            comment.media = media
-            comment.customer = db_customer
-            
-            commitAllToDB([comment, media, thread])
-            thread.comments.append(comment)
-            media.comments.append(comment)
-            db_customer.comments.append(comment)
         else:
             # Ansonsten ist das Kommentar ein reply, es muss also einen Thread bereits geben
             thread = comment.parent.thread
-                
-            # wenn das reply nicht vom user ist sollte sichergestellt werden, dass der customer für den Thread gesetzt ist 
-            if user_bzacc.fb_id != fb_user["id"]:
-                if thread.customer is None:
-                    thread.customer = db_customer
-                comment.customer = db_customer
-            else:
-                comment.customer = user_bzacc.customer
-                
-            comment.thread = thread
-            comment.media = media
             
-            commitAllToDB([comment, media, thread])
-            thread.comments.append(comment)
-            media.comments.append(comment)
-            
+            # TL Kommentare vom User führen dazu, dass der Thread auch zum User zugeordnet wird
+            # Deshalb muss bei einem reply von einem Kunden der Thread neu zugewiesen werden
+            # Thread.customer sollte immer ein customer sein
+            if thread.customer == user_bzacc.customer:
+                thread.customer = db_customer
+        
+        comment.thread = thread
+        comment.media = media
+        comment.customer = db_customer
+        
+        commitAllToDB([comment, media, thread])
+        thread.comments.append(comment)
+        thread.is_unread = True
+        media.comments.append(comment)
+        db_customer.comments.append(comment)
+        
     if len(deletable_comment_ids) > 0:
         db_delete_targets = []
         db_deletable_comments = [c for c in db_comments if c.fb_id in deletable_comment_ids]
@@ -480,6 +473,7 @@ def getComments(access_token, media):
                 com.timestamp = date_parser.isoparse(fb_com_body["timestamp"])
                 com.like_count = fb_com_body["like_count"]
                 updated_comments.append(com)
+                com.thread.is_unread = True
         
     commitAllToDB([media] + updated_comments)
     getCustomers(access_token, media)
