@@ -1,10 +1,11 @@
 <template>
-<span v-text="difference"></span>
+<span v-text="diff"></span>
 </template>
 <script>
 
 import {mapStores} from 'pinia';
 import {useTimerStore} from '../../stores/timer.js';
+import moment from 'moment'
 
 export default {
   name: 'TimeDifferenceDisplay',
@@ -12,16 +13,36 @@ export default {
   props: {
     pointInTime: {
       type: Number
-    }
+    },
+    now: {
+      type: Number
+    },
   },
   data: () => {
-    return {}
+    return {
+      diff: null
+    }
+  },
+  watch: {
+    now(newVal, oldVal){
+      this.diff = this.difference()
+    }
   },
   computed: {
     ...mapStores(useTimerStore),
+  },
+  methods: {
     difference() {
-      const now = this.timerStore.now
-      const res = this.timerStore.getTimeDifference(this.pointInTime)
+      const _now = moment()
+      const _pointInTime = moment(this.pointInTime)
+      const res = {
+        years: _now.diff(_pointInTime, 'years'),
+        months: _now.diff(_pointInTime, 'months'),
+        days: _now.diff(_pointInTime, 'days'),
+        hours: _now.diff(_pointInTime, 'hours'),
+        minutes: _now.diff(_pointInTime, 'minutes'),
+        seconds: _now.diff(_pointInTime, 'seconds'),
+      }
       const {years, months, days, hours, minutes} = res
       const translations = {
         defaultTranslation: this.$i18n.t('moments ago'),
@@ -55,12 +76,11 @@ export default {
       return translations.defaultTranslation
     }
   },
-  methods: {},
   mounted: function () {
 
   },
   created: function () {
-
+    this.diff = this.difference()
   }
 }
 </script>

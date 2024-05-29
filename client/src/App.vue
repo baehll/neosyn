@@ -34,12 +34,13 @@ export default {
     }
   },
   async created() {
-    await this.userStore.me()
+    this.userStore.me()
     addEventListener('resize', this.checkResolution);
     this.checkResolution();
+
     setInterval(() => {
       this.timerStore.now = Date.now()
-    }, 60 * 1000)
+    }, 1000)
   }
 }
 </script>

@@ -64,20 +64,16 @@ def all_threads():
     try:        
         if len(current_user.pages) == 0:
             return jsonify({"error":"No pages associated with user"}), 500
-
-        media_ids = []
-        for p in current_user.pages:
-            for b in p.business_accounts:
-                for m in b.medias:
-                    media_ids.append(m.id)
         
         # Offset Query Parameter     
-        offset = int(request.args.get("offset")) if request.args.get("offset") is not None else 1
-        print(offset)
+        offset = int(request.args.get("offset")) if request.args.get("offset") is not None else 0
+        unread = request.args.get("unread") if request.args.get("unread") else None
         # current_user -> page -> bzacc -> medias -> threads, limit 20, offset
         stmt = db.select(IGThread).join(IGMedia).join(IGBusinessAccount).join(IGPage).filter(IGPage.user == current_user).limit(20).offset(offset)
-        #stmt = db.select(IGThread).filter(IGThread.media_id.in_(media_ids)).limit(20).offset((offset - 1) * 20)
-        print(stmt)
+        
+        if unread is not None:
+            stmt = stmt.filter(IGThread.is_unread == unread)
+       
         associated_threads = db.session.execute(stmt).scalars().all()
         
         if len(associated_threads) == 0:
@@ -172,7 +168,7 @@ def get_messages_by_threadid(id):
                     status = request.get_json()["unread"]
                     thread.is_unread = status
                     db_handler.commitAllToDB([thread])
-                    print(thread)
+                    #print(thread)
                     return jsonify(), 200
             else:
                 return jsonify({"error":"ID not associated with user account"}), 500
