@@ -120,8 +120,9 @@ Sample JSON Array mit platform Objekten:
     }
 ```
 
-### GET /api/data/threads
-Liefert Threads aller Social Media Plattformen sortiert nach Query Parametern zurück
+### POST /api/data/threads
+
+Liefert Threads aller Social Media Plattformen gefiltert nach JSON Request zurück, mit der aktuellsten Interaktion zuerst
 
 Query Parameter
 ```bash
@@ -130,45 +131,12 @@ Query Parameter
 ```
 Der offset wird verwendet, um die ersten Interaktionen in der Sortierung anzuzeigen und nur diese zu updaten, da durch die Menge an Anfragen bei vielen Kommentaren viel Zeit vergeht. 
 
-**200**, wenn die Anfrage erfolgreich war
-
-Sample JSON Array mit bis zu **20** Thread Objekten:
-```bash
-    [
-          {
-              id int,
-              username string,
-              avatar url string,
-              message string,
-              platform int,
-              lastUpdated datetime,
-              unread bool,
-              interactions int, 
-              bookmarked bool
-          }
-    ]
-```
-
-**204**, wenn die Anfrage erfolgreich war, aber keine Threads für diese Anfrage existieren (wenn es zB noch keine Kommentare unter Posts gibt oder in der DB noch nichts enthalten ist)
-
-**500**, wenn ein Fehler aufgetreten ist mit
-```bash
-    {
-        "error": "error_message"
-    }
-```
-
-### POST /api/data/threads
-
-Liefert Threads aller Social Media Plattformen gefiltert nach JSON Request zurück, mit der aktuellsten Interaktion zuerst
-
 JSON Post Body für Filterung / Paging:
 ```bash
     {
         q: string,
-        platforms: int, (noch nicht implementiert, da Enums noch nicht geteilt werden)
-        sentiments: [int/string] (question, positive, neutral, negative), (noch nicht implementiert)
-        offset: int (id des threads nach der die weiteren threads geladen werden sollen)
+        platforms: int, ( ID der Plattform aus /api/supported_platforms)
+        sentiments: [int/string] (question, positive, neutral, negative) (noch nicht implementiert)
     }
 ```
 
