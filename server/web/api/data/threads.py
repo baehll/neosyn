@@ -15,8 +15,6 @@ from ...tasks import update_interactions
 
 threads_bp = Blueprint('threads', __name__)
 
-_URL = "https://graph.facebook.com/v19.0"
-
 def thread_result_obj(at, comment):
     return {
         "id": at.id,
@@ -186,9 +184,7 @@ def get_messages_by_threadid(id):
                     # TL Kommentar zum Thread suchen
                     tl_comment = next((c for c in thread.comments if c.parent is None), None)
                     if tl_comment is not None:
-                        # FB Request für Kommentar löschen
-                        #print(f"{_URL}/{tl_comment.fb_id}")
-                        
+                        # FB Request für Kommentar löschen                        
                         req = IGApiFetcher.deleteIGObject(current_user.oauth.token['access_token'], tl_comment.fb_id)
                         if "success" in req.json() and req.json()["success"] == True:
                             db_handler.deleteFromDB(thread.comments)
