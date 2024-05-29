@@ -9,6 +9,7 @@ export const useTimerStore = defineStore('timer', {
         getTimeDifference: () => pointInTime => {
             const _now = moment()
             const _pointInTime = moment(pointInTime)
+            console.log(pointInTime)
             return {
                 years: _now.diff(_pointInTime, 'years'),
                 months: _now.diff(_pointInTime, 'months'),

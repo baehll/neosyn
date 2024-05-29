@@ -4,6 +4,7 @@
       @triggeredSearch="updateSearchTermAndFetch"
       @changedFilter="updateFilterAndFetch"
       @changedSorting="updateSortingAndFetch"
+      @reload="fetchThreads"
     />
     <div class="scroller overflow-y-scroll">
       <Thread

@@ -4,7 +4,7 @@ import ThreadService from '../services/ThreadService.js'
 
 export const useThreadStore = defineStore('thread', {
     state: () => ({
-        lastUpdate: null,
+        lastUpdate: Date.now(),
         lastUpdateText: '',
         threads: [],
         currentThread: null,
