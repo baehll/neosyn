@@ -55,11 +55,9 @@ def getThreadsByUser(user):
     return threads
 
 def isThreadByUser(threadId, user):
-    # current_user -> pages -> bzaccs -> customer -> threads
-    stmt = db.select(IGThread).join(IGCustomer).join(IGBusinessAccount).join(IGPage).filter(IGPage.user==user).filter(IGThread.id==threadId)
-    print(threadId)
+    # current_user -> pages -> bzaccs -> medias -> threads
+    stmt = db.select(IGThread).join(IGMedia).join(IGBusinessAccount).join(IGPage).filter(IGPage.user==user).filter(IGThread.id==threadId)
     thread = db.session.execute(stmt).scalar_one_or_none()
-    print(thread)
     return (thread is not None)
 
 @threads_bp.route("/", methods=["GET", "POST"])
@@ -174,10 +172,9 @@ def get_messages_by_threadid(id):
                 thread = db.session.execute(db.select(IGThread).filter_by(id=int(id))).scalar_one_or_none()
                 if thread is not None:
                     status = request.get_json()["unread"]
-                    
                     thread.is_unread = status
-                    db.session.add(thread)
-                    db.session.commit()
+                    db_handler.commitAllToDB([thread])
+                    print(thread)
                     return jsonify(), 200
             else:
                 return jsonify({"error":"ID not associated with user account"}), 500

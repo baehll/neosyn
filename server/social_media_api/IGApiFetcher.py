@@ -421,7 +421,7 @@ def getComments(access_token, media):
     commitAllToDB(new_comments)
   
     for comment, fb_user in comment_customer:
-        print(1)
+        print(f"New comment {comment.id}")
         #print(comment)
         db_customer = db.session.execute(db.select(IGCustomer).filter_by(fb_id=fb_user["id"])).scalar_one_or_none()
                 
@@ -474,7 +474,7 @@ def getComments(access_token, media):
                 com.timestamp = date_parser.isoparse(fb_com_body["timestamp"])
                 com.like_count = fb_com_body["like_count"]
                 updated_comments.append(com)
-                com.thread.is_unread = True
+                #com.thread.is_unread = True
         
     commitAllToDB([media] + updated_comments)
     getCustomers(access_token, media)
