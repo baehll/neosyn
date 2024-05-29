@@ -188,7 +188,8 @@ def get_messages_by_threadid(id):
                     if tl_comment is not None:
                         # FB Request für Kommentar löschen
                         #print(f"{_URL}/{tl_comment.fb_id}")
-                        req = requests.delete(f"{_URL}/{int(tl_comment.fb_id)}?access_token={current_user.oauth.token['access_token']}")
+                        
+                        req = IGApiFetcher.deleteIGObject(current_user.oauth.token['access_token'], tl_comment.fb_id)
                         if "success" in req.json() and req.json()["success"] == True:
                             db_handler.deleteFromDB(thread.comments)
                             db_handler.deleteFromDB([thread])
@@ -249,10 +250,9 @@ def post_message(id):
             if thread is None:
                 return jsonify({"error": "Thread not associated with user"}), 500
             
-            oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()
             #print(current_user.organization)
             last_comment = thread.comments[-1]
-            res = requests.post(_URL + f"/{last_comment.fb_id}/replies?message={quote(body['message'])}&access_token={oauth.token['access_token']}")
+            res = IGApiFetcher.postReplyToComment(current_user.oauth.token["access_token"], last_comment.fb_id, body['message'])
             IGApiFetcher.getComments(current_user.oauth.token['access_token'], thread.media)
             
             # tabelle mit Verbesserungen erweitern
