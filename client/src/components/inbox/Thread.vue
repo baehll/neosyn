@@ -20,6 +20,7 @@
         class=""
         :class="{'text-lightgray-10 text-xs absolute right-0': true, 'opacity-0 pointer-events-none': threadActionVisible}"
         :point-in-time="getParsedPointInTime"
+        :now="timerStore.now"
       />
       <div
         class=""
