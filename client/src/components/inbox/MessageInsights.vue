@@ -1,5 +1,5 @@
 <template>
-  <div class="shrink-0 p-4 bg-darkgray h-1/2 rounded-xl flex flex-col">
+  <div class="shrink-0 p-4 bg-darkgray h-1/2 rounded-xl flex flex-col border border-lightgray-80">
     <span class="text-white">insights</span>
   </div>
 </template>
