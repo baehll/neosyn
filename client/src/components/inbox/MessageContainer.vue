@@ -75,9 +75,10 @@
             {{ $t('Generate') }}
           </GenerateButton>
           <div
-            class="message-input-wrap max-h-24 overflow-scroll"
+            :class="{'message-input-wrap max-h-24 overflow-scroll': true, 'cursor-pointer': currentThreadId}"
+            @click="focusInput"
           >
-            <span v-if="currentThreadId" contenteditable @keyup="messageUpdated" ref="msgInput"
+            <span v-if="currentThreadId" contenteditable @keyup="messageUpdated" ref="msgInput" v-text="messageInput"
               class="max-w-full text-sm bg-transparent resize-none outline-0 grow-0 text-white block w-full "></span>
           </div>
           <button
@@ -158,6 +159,9 @@ export default {
     ...mapStores(useThreadStore, useMessageStore),
   },
   methods: {
+    focusInput(){
+      this.$refs.msgInput.focus()
+    },
     closeSuggestions(){
       this.showSuggestions = false
       this.suggestions = []
@@ -190,6 +194,9 @@ export default {
       this.insertResponse(message)
     },
     insertResponse(message) {
+      if(!this.$refs.msgInput){
+        return
+      }
       this.messageInput = message
       this.$refs.msgInput.innerText = message
     },
@@ -291,6 +298,10 @@ position: absolute;
 
 .message-input-wrap {
   min-height: 42px;
-  min-width: 70%;
+  min-width: 75%;
+
+  > span {
+    @apply h-full;
+  }
 }
 </style>
