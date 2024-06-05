@@ -12,11 +12,12 @@
     <div class="px-3 justify-between relative flex flex-row">
       <div class="flex items-center gap-2 w-8/1 pt-3 pb-4">
         <Reload
-          class="text-lightgray-10"
-          @click="fetchThreads"
+          class="text-lightgray-10 cursor-pointer"
+          @click="$emit('reload')"
         />
         <TimeDifferenceDisplay
-          :point-in-time="threadStore.lastUpdated"
+          :point-in-time="threadStore.lastUpdate"
+          :now="timerStore.now"
           class="text-lightgray-10 text-sm"
         />
       </div>
@@ -105,10 +106,11 @@ import {mapStores} from 'pinia';
 import {useThreadStore} from '../../stores/thread.js';
 import TimeDifferenceDisplay from '../global/TimeDifferenceDisplay.vue';
 import {usePlatformStore} from '../../stores/platforms.js'
+import {useTimerStore} from '../../stores/timer.js'
 
 export default {
   name: 'ThreadTopBar',
-  emits: ['triggered-search', 'changed-filter', 'changed-sorting'],
+  emits: ['triggered-search', 'changed-filter', 'changed-sorting', 'reload'],
   components: {TimeDifferenceDisplay, Reload, Searchglass, Sorting, Filter, CustomButton, Checkbox},
   data: () => {
     return {
@@ -122,7 +124,7 @@ export default {
     }
   },
   computed: {
-    ...mapStores(useThreadStore, usePlatformStore),
+    ...mapStores(useTimerStore, useThreadStore, usePlatformStore),
     sortingOptions() {
       return {
            'new': this.$t('New'),
