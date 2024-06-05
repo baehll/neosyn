@@ -236,8 +236,6 @@ def post_message(id):
             return jsonify({"error": "No message specified"}), 400
         
         if isThreadByUser(id, current_user):
-            # Posting
-            # /ig-comment-id/replies?message={message}
             thread = db.session.execute(db.select(IGThread).filter(IGThread.id == id)).scalar_one_or_none()
             if thread is None:
                 return jsonify({"error": "Thread not associated with user"}), 500
@@ -245,7 +243,7 @@ def post_message(id):
             #print(current_user.organization)
             last_comment = thread.comments[-1]
             res = IGApiFetcher.postReplyToComment(current_user.oauth.token["access_token"], last_comment.fb_id, body['message'])
-            IGApiFetcher.getComments(current_user.oauth.token['access_token'], thread.media)
+            update_interactions.delay(current_user.oauth.token["access_token"], [id])
             
             # tabelle mit Verbesserungen erweitern
             if "generated_message" in body:
