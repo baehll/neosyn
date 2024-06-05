@@ -77,7 +77,6 @@ class Organization(_Base):
     files = db.relationship("File", back_populates="organization", foreign_keys=[File.orga_id])
     prompt_changes = db.relationship("PromptChange", back_populates="organization")
     
-    gpt_thread_id = db.Column(db.String)
     vec_storage_id = db.Column(db.String)
 
     logo_id = db.Column(db.Integer)
@@ -185,6 +184,8 @@ class IGMedia(_IGBaseTable):
     media_type = db.Column(db.String, nullable=False)
     
     caption = db.Column(db.String)
+    
+    gpt_thread_id = db.Column(db.String)
     
     thread_association = db.relationship("IGThread", back_populates="media")
     customers = association_proxy("thread_association", "customer")
