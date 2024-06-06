@@ -1,10 +1,24 @@
-import os
+import os, csv
 from io import BytesIO
 from ..db.models import db
 
 def GPTConfig():
     from server import GPTConfig
     return GPTConfig
+
+def upload_csv_lines_to_openai(filename, lines, vec_storage_id):
+    output = BytesIO()
+    csv_data = csv.writer(output, quoting=csv.QUOTE_NONNUMERIC)
+    csv_data.writerows(lines)
+    file_id = GPTConfig().CLIENT.files.create(
+        file=(filename + ".csv", output.getvalue),
+        purpose="assistants"
+    )
+    
+    GPTConfig().CLIENT.beta.vector_stores.files.create_and_poll(
+        vector_store_id=vec_storage_id,
+        file_id=file_id
+    )
 
 def upload_files_to_openai(file_blobs):
     file_ids = []
@@ -53,7 +67,6 @@ def init_assistant(orga):
         }
     )
     # assistant mit vector storage verknüpfen
-    orga.gpt_thread_id = thread.id
     orga.vec_storage_id = vec_storage.id
     db.session.add(orga)
     db.session.commit()

@@ -16,6 +16,14 @@ def init_ig_data(user_id, oauth_token):
     return IGApiFetcher.updateAllEntries(oauth_token["access_token"], user)
 
 @shared_task
+def add_interactions_to_vector_store(user_id):
+    db.engine.dispose()
+
+    user = db.session.execute(db.select(User).filter(User.id == user_id)).scalar_one()
+    # alle replies zu kommentaren finden
+    # tupel (kommentar, reply) array bilden 
+    # assistant_utils.upload_csv_lines_to_openai("filename", user.organization.vec_storage_id, reply_comments)
+@shared_task
 def init_assistant(orga_id):
     db.engine.dispose()
 
