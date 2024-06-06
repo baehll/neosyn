@@ -426,8 +426,6 @@ def getComments(access_token, media):
     commitAllToDB(new_comments)
   
     for comment, fb_user in comment_customer:
-        print(f"New comment {comment.id}")
-        #print(comment)
         db_customer = db.session.execute(db.select(IGCustomer).filter_by(fb_id=fb_user["id"])).scalar_one_or_none()
                 
         if db_customer is None:
