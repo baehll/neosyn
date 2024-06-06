@@ -1,6 +1,6 @@
 <template>
-  <div class="message-container grow border border-lightgray-80 overflow-hidden h-full px-5 py-5 bg-lightgray">
-    <div class="overflow-hidden flex flex-col justify-between w-full h-full bg-darkgray rounded-xl message p-4">
+  <div class="message-container grow overflow-hidden h-full px-5 py-5 bg-lightgray-30">
+    <div class="overflow-hidden flex border border-lightgray-80 flex-col justify-between w-full h-full bg-darkgray rounded-xl message p-4">
       <div class="flex justify-between px-2 pt-2 pb-4">
         <span class="rounded-3xl border border-white px-4 text-white py-1" v-text="$t('Interaction')"></span>
         <button
