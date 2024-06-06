@@ -360,14 +360,19 @@ def getMedia(access_token, bz_acc):
                     new_medias.append(media)
                 media.timestamp=date_parser.isoparse(fb_media_body["timestamp"])
                 media.permalink=fb_media_body["permalink"]
-                media.media_url=fb_media_body["media_url"] 
                 media.fb_id=fb_media_body["id"]
                 media.like_count=fb_media_body["like_count"]
                 media.comments_count=fb_media_body["comments_count"]
                 media.caption=fb_media_body["caption"]
                 media.media_type=fb_media_body["media_type"]
+                
+                if "thumbnail_url" in fb_media_body:
+                    media.media_url = fb_media_body["thumbnail_url"]
+                else:
+                    media.media_url = fb_media_body["media_url"]
                 updated_medias.append(media)
-        commitAllToDB(updated_medias)
+                
+    commitAllToDB(updated_medias)
 
     return new_medias
     
@@ -426,8 +431,6 @@ def getComments(access_token, media):
     commitAllToDB(new_comments)
   
     for comment, fb_user in comment_customer:
-        print(f"New comment {comment.id}")
-        #print(comment)
         db_customer = db.session.execute(db.select(IGCustomer).filter_by(fb_id=fb_user["id"])).scalar_one_or_none()
                 
         if db_customer is None:

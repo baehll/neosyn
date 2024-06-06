@@ -3,6 +3,13 @@
     :class="'cursor-pointer transition-colors hover:bg-lightgray-20 text-white thread py-4 px-5 border-b border-lightgray relative ' + getInteractiveClasses"
     @click="selectThread"
   >
+    <div v-if="deleteDialog" class="bg-red absolute p-4 top-0 left-0 w-full h-full z-50 flex flex-col justify-between">
+      <strong v-text="$t('Delete this comment?')"></strong>
+      <div class="flex justify-between">
+        <button v-text="$t('Cancel')" @click="deleteDialog = false"></button>
+        <button v-text="$t('Confirm')" @click="deleteThread"></button>
+      </div>
+    </div>
     <span
       class="absolute left-2 top-6 rounded-full bg-primary w-2 h-2"
       v-if="unread === true"
@@ -34,7 +41,7 @@
           />
         </button>
         <button
-          @click="deleteMessage"
+          @click="deleteDialog = true"
         >
           <Trash
             class="hover:text-primary text-darkgray-80"
@@ -91,6 +98,7 @@ export default {
   data: () => {
     return {
       threadActionVisible: false,
+      deleteDialog: false,
     }
   },
   computed: {
@@ -108,7 +116,7 @@ export default {
     toggleUnreadStatus(e){
       this.$emit('toggle-unread', this.id)
     },
-    deleteMessage(){
+    deleteThread(){
       this.$emit('delete', this.id)
     },
     showThreadActions() {

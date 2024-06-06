@@ -63,7 +63,7 @@ export default {
         });
     },
     deleteThread(id){
-        return API.client.delete('tbd', id);
+        return API.client.delete(`/api/data/threads/${id}`);
     },
     bookmarkThread(id, bookmarked){
         return API.client.put(`/api/data/threads/bookmarks/${id}`, {
