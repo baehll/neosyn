@@ -99,7 +99,8 @@ def all_threads():
         
         # Sorting Query Parameter        
         sorting_option = request.args.get("sorting") 
-            
+        
+        # TODO Sorting in SQL Statement einbauen
         if sorting_option == "new" or sorting_option is None:
             threads.sort(key=lambda x: x[1].timestamp, reverse=True)
         elif sorting_option == "old":

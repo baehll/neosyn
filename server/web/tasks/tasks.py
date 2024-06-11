@@ -50,11 +50,11 @@ def generate_response(threadId, GPTConfig):
                 }
             }
         )
+        thread.media.gpt_thread_id = gpt_thread.id
+        db_handler.commitAllToDB([thread])
     else:
         gpt_thread = GPTConfig().CLIENT.beta.threads.retrieve(thread.media.gpt_thread_id)
     
-    thread.media.gpt_thread_id = gpt_thread.id
-    db_handler.commitAllToDB([thread])
     
     # Überprüfen, ob in metadata der aktuellste kommentar steht
     if "last_comment_id" not in gpt_thread.metadata:
@@ -63,7 +63,9 @@ def generate_response(threadId, GPTConfig):
         latest_comments = db.session.execute(db.select(IGComment).join(IGMedia).filter(IGComment.id > int(gpt_thread.metadata["last_comment_id"])).filter(IGMedia == thread.media)).scalars()
     
     last_id = None
+    
     # Alle Kommentare in diesem Thread hinzufügen
+    # TODO Kommentare zu einzelnen Messages zusammenfassen
     for c in latest_comments:
         if len(c.customer.bz_acc) == 1:
             text = "Von User: " 
