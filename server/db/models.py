@@ -147,28 +147,28 @@ class IGBusinessAccount(_IGBaseTable):
     followers_count = db.Column(db.Integer)
     
     medias = db.relationship("IGMedia", back_populates="bzacc")
-    threads = db.relationship("IGThread", back_populates="bzacc")
+    # threads = db.relationship("IGThread", back_populates="bzacc")
     
-    customer_id = db.Column(db.Integer, db.ForeignKey("ig_customers.id"))
-    customer = db.relationship("IGCustomer", back_populates="bz_acc")
+    # customer_id = db.Column(db.Integer, db.ForeignKey("ig_customers.id"))
+    # customer = db.relationship("IGCustomer", back_populates="bz_acc")
 
-class IGThread(_Base):
-    __tablename__ = "ig_threads"
+# class IGThread(_Base):
+#     __tablename__ = "ig_threads"
     
-    media_id = db.Column(db.ForeignKey("ig_medias.id"))
-    customer_id = db.Column(db.ForeignKey("ig_customers.id"))
-    bzacc_id = db.Column(db.ForeignKey("ig_business_accounts.id"))
+#     media_id = db.Column(db.ForeignKey("ig_medias.id"))
+#     customer_id = db.Column(db.ForeignKey("ig_customers.id"))
+#     bzacc_id = db.Column(db.ForeignKey("ig_business_accounts.id"))
     
-    is_unread = db.Column(db.Boolean, nullable=False, default=True)
-    is_bookmarked = db.Column(db.Boolean, default=False)
+#     is_unread = db.Column(db.Boolean, nullable=False, default=True)
+#     is_bookmarked = db.Column(db.Boolean, default=False)
     
-    media = db.relationship("IGMedia", back_populates="thread_association")
-    customer = db.relationship("IGCustomer", back_populates="thread_association")
-    bzacc = db.relationship("IGBusinessAccount", back_populates="threads")
+#     media = db.relationship("IGMedia", back_populates="thread_association")
+#     customer = db.relationship("IGCustomer", back_populates="thread_association")
+#     bzacc = db.relationship("IGBusinessAccount", back_populates="threads")
     
-    comments = db.relationship("IGComment", back_populates="thread")
+#     comments = db.relationship("IGComment", back_populates="thread")
     
-    answer_improvements = db.relationship("AnswerImprovements", back_populates="thread")
+#     answer_improvements = db.relationship("AnswerImprovements", back_populates="thread")
     
 class IGMedia(_IGBaseTable):
     __tablename__ = "ig_medias"
@@ -187,43 +187,47 @@ class IGMedia(_IGBaseTable):
     
     gpt_thread_id = db.Column(db.String)
     
-    thread_association = db.relationship("IGThread", back_populates="media")
-    customers = association_proxy("thread_association", "customer")
+    oldest_comment_timestamp = db.Column(db.DateTime)
+    latest_comment_timestamp = db.Column(db.DateTime)
     
-    comments = db.relationship("IGComment", back_populates="media")
+    answer_improvements = db.relationship("AnswerImprovements", back_populates="media")
+    #thread_association = db.relationship("IGThread", back_populates="media")
+    #customers = association_proxy("thread_association", "customer")
     
-class IGCustomer(_IGBaseTable):
-    __tablename__ = "ig_customers"
+    #comments = db.relationship("IGComment", back_populates="media")
+    
+# class IGCustomer(_IGBaseTable):
+#     __tablename__ = "ig_customers"
 
-    name = db.Column(db.String, nullable=False)
-    profile_picture_url = db.Column(db.String)    
+#     name = db.Column(db.String, nullable=False)
+#     profile_picture_url = db.Column(db.String)    
     
-    thread_association = db.relationship("IGThread", back_populates="customer")
-    medias = association_proxy("thread_association", "media")
+#     thread_association = db.relationship("IGThread", back_populates="customer")
+#     medias = association_proxy("thread_association", "media")
     
-    comments = db.relationship("IGComment", back_populates="customer")
-    bz_acc = db.relationship("IGBusinessAccount", back_populates="customer")
+#     comments = db.relationship("IGComment", back_populates="customer")
+#     bz_acc = db.relationship("IGBusinessAccount", back_populates="customer")
     
-class IGComment(_IGBaseTable):
-    __tablename__  = "ig_comments"
+# class IGComment(_IGBaseTable):
+#     __tablename__  = "ig_comments"
     
-    parent_id = db.Column(db.Integer, db.ForeignKey("ig_comments.id"), nullable=True)
-    parent = db.relationship("IGComment", remote_side="IGComment.id",backref="children")
+#     parent_id = db.Column(db.Integer, db.ForeignKey("ig_comments.id"), nullable=True)
+#     parent = db.relationship("IGComment", remote_side="IGComment.id",backref="children")
     
-    thread_id = db.Column(db.Integer, db.ForeignKey("ig_threads.id"))
-    thread = db.relationship("IGThread", back_populates="comments")
+#     thread_id = db.Column(db.Integer, db.ForeignKey("ig_threads.id"))
+#     thread = db.relationship("IGThread", back_populates="comments")
     
-    media_id = db.Column(db.Integer, db.ForeignKey("ig_medias.id"))
-    media = db.relationship("IGMedia", back_populates="comments")
+#     media_id = db.Column(db.Integer, db.ForeignKey("ig_medias.id"))
+#     media = db.relationship("IGMedia", back_populates="comments")
     
-    customer_id = db.Column(db.Integer, db.ForeignKey("ig_customers.id"))
-    customer = db.relationship("IGCustomer", back_populates="comments")
+#     customer_id = db.Column(db.Integer, db.ForeignKey("ig_customers.id"))
+#     customer = db.relationship("IGCustomer", back_populates="comments")
     
-    sentiment = db.Column(db.Integer)
-    timestamp = db.Column(db.DateTime, nullable=False)
+#     sentiment = db.Column(db.Integer)
+#     timestamp = db.Column(db.DateTime, nullable=False)
 
-    text = db.Column(db.String)
-    like_count = db.Column(db.Integer, default=0)
+#     text = db.Column(db.String)
+#     like_count = db.Column(db.Integer, default=0)
 
 class AnswerImprovements(_Base):
     __tablename__ = "answer_improvements"
@@ -234,8 +238,8 @@ class AnswerImprovements(_Base):
     user_id = db.Column(db.Integer, db.ForeignKey("users.id"))
     user = db.relationship("User", back_populates="answer_improvements")
     
-    thread_id = db.Column(db.Integer, db.ForeignKey("ig_threads.id"))
-    thread = db.relationship("IGThread", back_populates="answer_improvements")
+    ig_media = db.Column(db.Integer, db.ForeignKey("ig_medias.id"))
+    media = db.relationship("IGMedia", back_populates="answer_improvements")
     
 login_manager = LoginManager()
 login_manager.login_view = "facebook.login"

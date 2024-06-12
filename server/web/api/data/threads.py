@@ -1,15 +1,13 @@
 from flask import (
-    Blueprint, jsonify, request, session, current_app
+    Blueprint, jsonify, request
 )
 
 from ....social_media_api import IGApiFetcher
-from ....db.models import db, _PlatformEnum, OAuth, IGPage, IGThread, AnswerImprovements, IGCustomer, IGBusinessAccount, IGMedia
+from ....db.models import db, _PlatformEnum, IGPage, AnswerImprovements, IGBusinessAccount, IGMedia
 from ....db import db_handler
 from pathvalidate import replace_symbol
-from ....utils import file_utils
 from flask_login import login_required, current_user
-import traceback, requests
-from urllib.parse import quote
+import traceback
 from zoneinfo import ZoneInfo
 from ...tasks import update_interactions
 

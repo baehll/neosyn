@@ -11,6 +11,7 @@ from flask_talisman import Talisman
 from datetime import timedelta
 from celery import Celery, Task
 from celery import current_app as current_celery_app
+from flask_caching import Cache
 
 ENV = EnvManager()
 
@@ -89,8 +90,13 @@ def create_app() -> Flask:
     
     db.init_app(app)
     login_manager.init_app(app)
+    
     # Migration Script for DB
     migrate = Migrate(app, db)
+    
+    # Caching
+    cache = Cache(config={"CACHE_TYPE":"SimpleCache", "CACHE_DEFAULT_TIMEOUT":900})
+    cache.init_app(app)
     
     # # Celery Stuff
     # app.config.from_mapping(
@@ -137,9 +143,9 @@ def create_app() -> Flask:
             db.session.commit()
             
     from .web.views import views
-    from .web.api import api_bp
-    from .web.api.data import threads_bp
-    from .web.api.ai import ai_bp
+    # from .web.api import api_bp
+    # from .web.api.data import threads_bp
+    # from .web.api.ai import ai_bp
     from .web.auth import authenticate
 
     @app.before_request
@@ -148,9 +154,9 @@ def create_app() -> Flask:
     
     app.register_blueprint(views, url_prefix='/')
     
-    app.register_blueprint(api_bp, url_prefix='/api')
-    app.register_blueprint(threads_bp, url_prefix="/api/data/threads")
-    app.register_blueprint(ai_bp, url_prefix="/api/data/ai")
+    # app.register_blueprint(api_bp, url_prefix='/api')
+    # app.register_blueprint(threads_bp, url_prefix="/api/data/threads")
+    # app.register_blueprint(ai_bp, url_prefix="/api/data/ai")
     
     app.register_blueprint(authenticate, url_prefix='/auth')
 

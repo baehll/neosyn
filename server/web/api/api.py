@@ -1,18 +1,14 @@
 from flask import (
     Blueprint, jsonify, request, session, current_app, send_file
 )
-import io, base64, mimetypes
-import requests
+import base64, mimetypes
 from flask_login import login_required, current_user
-from decouple import config
 
 from ...social_media_api import IGApiFetcher
-from ...db.models import db, User , _PlatformEnum, Organization, OAuth, Platform, IGThread, File
-from pathvalidate import replace_symbol
-from ...utils import file_utils, assistant_utils
+from ...db.models import db, Organization, Platform, File
+from ...utils import file_utils
 from werkzeug.utils import secure_filename
 import traceback
-from .data.threads import isThreadByUser
 from ..tasks import init_assistant
 
 api_bp = Blueprint('api', __name__)

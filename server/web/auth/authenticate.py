@@ -102,8 +102,8 @@ def facebook_logged_in(blueprint, token):
     if oauth.user:
         login_user(oauth.user)
         # trigger async DB Update
-        init = init_ig_data.delay(user.id, oauth.token)
-        init.forget()
+        # init = init_ig_data.delay(user.id, oauth.token)
+        # init.forget()
         print("Successfully signed in.")
         return redirect("/app.html")
     else:
@@ -120,8 +120,8 @@ def facebook_logged_in(blueprint, token):
         print("New User created and successfully signed in.")
         
         # trigger async DB Update
-        init = init_ig_data.delay(user.id, oauth.token)
-        init.forget()
+        # init = init_ig_data.delay(user.id, oauth.token)
+        # init.forget()
         
         return redirect("/registration.html")
 
