@@ -8,7 +8,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from ...db import db, User, OAuth, EarlyAccessKeys, Platform
 from ...auth_blueprint import FB_Blueprint
 import traceback
-from ..tasks import init_ig_data
+from ..tasks import loadCachedResults
 from ...social_media_api import IGApiFetcher
 
 authenticate = FB_Blueprint.make_facebook_blueprint(
@@ -102,7 +102,7 @@ def facebook_logged_in(blueprint, token):
     if oauth.user:
         login_user(oauth.user)
         # trigger async DB Update
-        # init = init_ig_data.delay(user.id, oauth.token)
+        # init = loadCachedResults(oauth.token["access_token"], f"media_trees_{oauth.user_id}")
         # init.forget()
         print("Successfully signed in.")
         return redirect("/app.html")
@@ -119,14 +119,10 @@ def facebook_logged_in(blueprint, token):
         login_user(user)
         print("New User created and successfully signed in.")
         
-        # trigger async DB Update
-        # init = init_ig_data.delay(user.id, oauth.token)
+        # init = loadCachedResults(oauth.token["access_token"], f"media_trees_{oauth.user_id}")
         # init.forget()
         
         return redirect("/registration.html")
-
-    # im Hintergrund update der Interactions und User Daten triggern
-    #IGApiFetcher.updateAllEntries(oauth.token["access_token"], oauth.user)
     
     # Disable Flask-Dance's default behavior for saving the OAuth token
     return False

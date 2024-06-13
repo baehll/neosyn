@@ -146,6 +146,9 @@ class IGBusinessAccount(_IGBaseTable):
     
     followers_count = db.Column(db.Integer)
     
+    name = db.Column(db.String)
+    profile_picture_url = db.Column(db.String)    
+    
     medias = db.relationship("IGMedia", back_populates="bzacc")
     # threads = db.relationship("IGThread", back_populates="bzacc")
     

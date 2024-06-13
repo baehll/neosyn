@@ -1,19 +1,18 @@
-from celery import Celery, shared_task
-from celery.signals import task_prerun
-from ...db.models import db, OAuth, User, Organization, IGMedia, OpenAIRun
+from celery import Celery, shared_task, group, chord
+from ...db.models import db, OAuth, User, Organization, IGMedia, OpenAIRun, IGBusinessAccount, IGPage
 from ...db import db_handler
-from ...social_media_api import IGApiFetcher
+from ...social_media_api import IGApiFetcher, interaction_query
 from ...utils import assistant_utils
 from flask import current_app
 from flask_login import current_user
-import os
+import os, time
 
 @shared_task
 def init_ig_data(user_id, oauth_token):
     db.engine.dispose()
 
     user = db.session.execute(db.select(User).filter(User.id == user_id)).scalar_one()
-    return IGApiFetcher.updateAllEntries(oauth_token["access_token"], user)
+    return IGApiFetcher.updateAllEntries(oauth_token, user)
 
 @shared_task
 def add_interactions_to_vector_store(user_id):
@@ -35,7 +34,43 @@ def update_interactions(oauth_token, thread_ids):
     db.engine.dispose()
 
     IGApiFetcher.updateInteractions(oauth_token, thread_ids)
-  
+ 
+@shared_task 
+def loadCommentsForMedia(oauth_token, media_fb_id):
+    return IGApiFetcher.getLatestComments(oauth_token, media_fb_id) 
+
+@shared_task
+def loadCachedResults(oauth_token, cache_id, user_id):
+    media_trees = current_app.extensions["cache"].get(cache_id) if current_app.extensions["cache"].get(cache_id) is not None else []
+    print(f"test caching {cache_id}")
+    if len(media_trees) > 0:
+        return
+    
+    # update IGPage, IGBusiness Account und IGMedia für User
+    init_ig_data.delay(user_id, oauth_token)
+    
+    # für jedes igMedia comments holen und einen tree erstellen
+    medias = db.session.execute(db.select(IGMedia).join(IGBusinessAccount).join(IGPage).join(User).filter(User.id == user_id).order_by(IGMedia.timestamp)).scalars().all()
+    active_tasks = []
+    
+    print("starting tasks")
+    while medias or active_tasks:
+        while medias and len(active_tasks) < 3:
+            media = medias.pop(0)
+            task = loadCommentsForMedia.s(oauth_token, media.fb_id).delay()
+            active_tasks.append(task)
+        
+        for task in active_tasks:
+            if task.ready():
+                media_trees.append(task.result)
+                active_tasks.remove(task)
+        
+        time.sleep(0.01)
+        
+    print("finished tasks")
+    current_app.extensions["cache"][cache_id] = media_trees
+    print(current_app.extensions["cache"].get(cache_id))
+
 @shared_task
 def generate_response(a,b):
     return  

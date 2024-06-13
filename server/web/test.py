@@ -1,9 +1,8 @@
 from flask import Blueprint, jsonify, request, current_app
 from ..db.models import db, IGPage, IGMedia, IGBusinessAccount, OAuth
-from ..social_media_api.IGApiFetcher import getPages, getComments, getBusinessAccounts, getMedia, updateAllEntries
+from ..social_media_api.IGApiFetcher import getPages, getBusinessAccounts, getMedia, updateAllEntries
 from flask_login import current_user, login_required
-from .tasks import init_ig_data
-from celery.result import AsyncResult
+from .tasks import init_ig_data, loadCachedResults
 from datetime import datetime
 from zoneinfo import ZoneInfo
 test = Blueprint('test', __name__)
@@ -77,9 +76,11 @@ def task_status(id):
     print(datetime.now().astimezone(ZoneInfo("Europe/Berlin")))
     return jsonify()
 
-@test.route("/me", methods=["GET"])
+@test.route("/cached_results", methods=["GET"])
 @login_required
-def me():
-    oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=current_user.id))).scalar_one_or_none()
-    connectCustomerBusinessAccount(oauth.token["access_token"])
-    return jsonify()
+def cached_results():
+    caching_key = f"media_trees_{current_user.id}"
+    print(caching_key)
+    task = loadCachedResults.delay(current_user.oauth.token["access_token"], caching_key, current_user.id).get()
+    print(current_app.extensions["cache"].get(caching_key))
+    return jsonify(current_app.extensions["cache"].get(caching_key))

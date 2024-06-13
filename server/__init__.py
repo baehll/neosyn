@@ -95,7 +95,7 @@ def create_app() -> Flask:
     migrate = Migrate(app, db)
     
     # Caching
-    cache = Cache(config={"CACHE_TYPE":"SimpleCache", "CACHE_DEFAULT_TIMEOUT":900})
+    cache = Cache(config={"CACHE_TYPE":"RedisCache", "CACHE_DEFAULT_TIMEOUT":900})
     cache.init_app(app)
     
     # # Celery Stuff
@@ -143,7 +143,7 @@ def create_app() -> Flask:
             db.session.commit()
             
     from .web.views import views
-    # from .web.api import api_bp
+    from .web.api import api_bp
     # from .web.api.data import threads_bp
     # from .web.api.ai import ai_bp
     from .web.auth import authenticate
@@ -154,7 +154,7 @@ def create_app() -> Flask:
     
     app.register_blueprint(views, url_prefix='/')
     
-    # app.register_blueprint(api_bp, url_prefix='/api')
+    app.register_blueprint(api_bp, url_prefix='/api')
     # app.register_blueprint(threads_bp, url_prefix="/api/data/threads")
     # app.register_blueprint(ai_bp, url_prefix="/api/data/ai")
     
