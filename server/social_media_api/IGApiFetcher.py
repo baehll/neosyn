@@ -45,6 +45,24 @@ def _getInstagramData(access_token, path, fields=""):
         results.append(ids.json())
     return results
             
+def _getCommentInstagramData(access_token, path, fields=""):
+    ids = _getIDs(access_token, path, fields)
+    results = []
+    if "data" in ids.json():
+        results = ids.json()["data"]
+        # Paging Results, wenn vorhanden, werden iterativ abgefragt und an results angehängt
+        #print(ids.json()["paging"]["next"])
+        if "paging" in ids.json() and "next" in ids.json()["paging"]:
+            req_url = ids.json()["paging"]["next"]
+            req = requests.get(url=req_url)
+            if req.status_code == 200 or req.status_code == 304:
+                results.extend(req.json()["data"])
+                ids = req
+            else:
+                print("Paging Results GET returned " + str(req.status_code) + f", (URL: {req_url})")
+    else:
+        results.append(ids.json())
+    return results
 
 # https://developers.facebook.com/docs/graph-api/batch-requests/
 # batch requests gehen gegen irgendeinen path, da jede request eine eigene relative URL hat
