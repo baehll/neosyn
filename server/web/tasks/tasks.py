@@ -40,12 +40,21 @@ def loadCommentsForMedia(oauth_token, media_fb_id):
     return IGApiFetcher.getLatestComments(oauth_token, media_fb_id) 
 
 @shared_task
-def loadCachedResults(oauth_token, cache_id, user_id, force_rebuild=False):
-    if not force_rebuild:
-        media_trees = current_app.extensions["cache"].get(cache_id)["media_trees"] if current_app.extensions["cache"].get(cache_id) is not None else []
-        #print(f"test caching {cache_id}")
-        if len(media_trees):
-            return current_app.extensions["cache"].get(cache_id)
+def loadCachedResults(oauth_token, cache_id, user_id, updated_media_id=None):
+    cached_data = current_app.extensions["cache"].get(cache_id)
+
+    #print(f"test caching {cache_id}")
+    if cached_data != None:
+        if updated_media_id != None:
+            # media tree mit fb_id entfernen aus media trees
+            interaction_query.remove_tree(cached_data["id_mapping"], cached_data["media_trees"], updated_media_id)
+            # daten für das media objekt sammeln
+            task = loadCommentsForMedia.s(oauth_token, updated_media_id).delay()
+            while not task.ready():
+                time.sleep(0.1)
+            # in bestehenden media_trees einsortieren
+            interaction_query.add_tree(cached_data["id_mapping"], cached_data["media_trees"], task.result)
+        return cached_data
     
     # update IGPage, IGBusiness Account und IGMedia für User
     init_ig_data.delay(user_id, oauth_token)
@@ -54,42 +63,26 @@ def loadCachedResults(oauth_token, cache_id, user_id, force_rebuild=False):
     medias = db.session.execute(db.select(IGMedia).join(IGBusinessAccount).join(IGPage).join(User).filter(User.id == user_id).order_by(IGMedia.timestamp)).scalars().all()
     active_tasks = []
     
-    id_start = 1
-    #print("starting tasks")
+    media_trees = []
+    id_to_node = {}
+    
+    print("starting tasks")
     while medias or active_tasks:
         while medias and len(active_tasks) < 3:
-            
             media = medias.pop(0)
             task = loadCommentsForMedia.s(oauth_token, media.fb_id).delay()
             active_tasks.append(task)
-            id_start += media.comments_count + 100
         
         for task in active_tasks:
             if task.ready():
                 if len(task.result):
-                    media_trees.append(task.result)
+                    interaction_query.add_tree(id_to_node, media_trees, tuple(task.result))
                 active_tasks.remove(task)
         
         time.sleep(0.01)
-        
-    #print("finished tasks")
-    data = {"media_trees": media_trees, "id_mapping": None}
-    
-    #print(media_trees)
-    # unique IDs an die media_tree comments und replies verteilen
-    id_to_node = {}
-    
-    def assign_ids_and_store(node):
-        id = node["id"]
-        id_to_node[id] = node
-        for r in node["replies"]:
-            assign_ids_and_store(r)
-    
-    for tree in media_trees:
-        for c in tree:
-            assign_ids_and_store(c)
                 
-    data["id_mapping"] = id_to_node
+    data = {"media_trees": media_trees, "id_mapping": id_to_node}
+       
     current_app.extensions["cache"][cache_id] = data
     return data
 

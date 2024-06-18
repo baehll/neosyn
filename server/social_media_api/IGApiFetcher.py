@@ -386,7 +386,7 @@ def getLatestComments(access_token, media_fb_id):
         for com in res:
             tree.append(create_comment(com))
             
-    return tree
+    return tuple([media_fb_id, tree])
     
 def updateAllEntries(access_token, user):
     pages, bz_accs, medias = [], [], []

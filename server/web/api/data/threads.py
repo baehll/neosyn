@@ -70,8 +70,8 @@ def all_threads():
         
         caching_key = f"media_trees_{current_user.id}"
         cached_data = loadCachedResults.delay(current_user.oauth.token["access_token"], caching_key, current_user.id).get()
-        all_threads = cached_data["media_trees"]
-        
+        all_threads = interaction_query.convert_lists_to_tuples(cached_data["media_trees"])
+        print(f"{len(all_threads)} == {len(cached_data['media_trees'])}")
         if len(all_threads) == 0:
             return jsonify([]), 204
         
@@ -79,8 +79,14 @@ def all_threads():
         if sorting_option not in [None, "new", "old", "most_interaction", "least_interaction"]:
             return jsonify({"error":"Unspecified sorting argument, only 'new' (default), 'old', 'most-interaction', 'least-interaction' allowed"}), 500
         
+        # for t in all_threads:
+        #     print(type(t))
+        #     print(t)
         sorted_threads = sort_threads(sorting_option, all_threads, offset, 20)
-        
+        print(f"{len(sorted_threads)}")
+        print("--------------")
+        print(sorted_threads)
+        print("--------------")
         # Nach Begriff filtern
             # erste Slice mit 20 Einträgen
             # durchsuchen nach Begriff in username oder text des Kommentars
@@ -91,7 +97,7 @@ def all_threads():
             filtered_threads = []
             
             while True:
-                for t in sorted_threads:
+                for _, t in sorted_threads:
                     if query in t["text"] or query in t["from"]["username"]:
                         filtered_threads.append(thread_result_obj(t))
                     elif "replies" in t:
@@ -215,7 +221,7 @@ def post_message(id):
             fb_id = cached_data["id_mapping"].get(id)["media"]
             
             media = db.session.execute(db.select(IGMedia).filter(IGMedia.fb_id == fb_id)).scalar_one_or_none()
-            loadCachedResults.delay(current_user.oauth.token["access_token"], caching_key, current_user.id, force_rebuild=True)
+            loadCachedResults.delay(current_user.oauth.token["access_token"], caching_key, current_user.id, updated_media_id=media.fb_id)
             improvement = AnswerImprovements(generated_answer=body["generated_message"], improved_answer=body["message"], user=current_user, media=media)
             db.session.add(improvement)
             db.session.commit()
