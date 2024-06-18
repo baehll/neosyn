@@ -378,9 +378,8 @@ def getMedia(access_token, bz_acc):
     return new_medias
 
 def getLatestComments(access_token, media_fb_id):
-    _fields = "replies{from,parent_id,timestamp,text,like_count,id},id,timestamp,from,text,like_count"
+    _fields = "replies{from,parent_id,timestamp,text,like_count,id,media},id,timestamp,from,text,like_count,media"
     tree = []
-    
     res = _getInstagramData(access_token, f"/{media_fb_id}/comments", fields=_fields)
     #print(res)
     if len(res) > 0:

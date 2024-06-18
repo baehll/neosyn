@@ -80,7 +80,5 @@ def task_status(id):
 @login_required
 def cached_results():
     caching_key = f"media_trees_{current_user.id}"
-    print(caching_key)
     task = loadCachedResults.delay(current_user.oauth.token["access_token"], caching_key, current_user.id).get()
-    print(current_app.extensions["cache"].get(caching_key))
-    return jsonify(current_app.extensions["cache"].get(caching_key))
+    return jsonify(task)

@@ -169,8 +169,8 @@ cython_debug/
 /server/static/*
 !/server/static/.gitkeep
 # Ignore contents of UPLOADS FOLDER
-/UPLOADS/*
-!/UPLOADS/.gitkeep
+/cache/*
+!/cache/.gitkeep
 
 /.vscode/
 /.idea/

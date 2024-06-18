@@ -12,6 +12,7 @@ from datetime import timedelta
 from celery import Celery, Task
 from celery import current_app as current_celery_app
 from flask_caching import Cache
+import os
 
 ENV = EnvManager()
 
@@ -95,7 +96,10 @@ def create_app() -> Flask:
     migrate = Migrate(app, db)
     
     # Caching
-    cache = Cache(config={"CACHE_TYPE":"RedisCache", "CACHE_DEFAULT_TIMEOUT":900})
+    if not os.path.isdir(config("CACHE_FOLDER")):
+        os.mkdir(config("CACHE_FOLDER"))
+    
+    cache = Cache(config={"CACHE_TYPE":"FileSystemCache", "CACHE_DEFAULT_TIMEOUT":900, "CACHE_DIR": config("CACHE_FOLDER")})
     cache.init_app(app)
     
     # # Celery Stuff
@@ -144,7 +148,7 @@ def create_app() -> Flask:
             
     from .web.views import views
     from .web.api import api_bp
-    # from .web.api.data import threads_bp
+    from .web.api.data import threads_bp
     # from .web.api.ai import ai_bp
     from .web.auth import authenticate
 
@@ -155,7 +159,7 @@ def create_app() -> Flask:
     app.register_blueprint(views, url_prefix='/')
     
     app.register_blueprint(api_bp, url_prefix='/api')
-    # app.register_blueprint(threads_bp, url_prefix="/api/data/threads")
+    app.register_blueprint(threads_bp, url_prefix="/api/data/threads")
     # app.register_blueprint(ai_bp, url_prefix="/api/data/ai")
     
     app.register_blueprint(authenticate, url_prefix='/auth')
