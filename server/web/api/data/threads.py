@@ -65,8 +65,10 @@ def sort_threads(sorting_option, threads, offset, slice_length):
 @login_required
 def all_threads():
     try:        
-        if len(current_user.pages) == 0:
-            return jsonify({"error":"No pages associated with user"}), 500
+    #     if len(current_user.pages) == 0:
+    #         return jsonify({"error":"No pages associated with user"}), 500
+        
+        
         
         # Offset Query Parameter     
         offset = int(request.args.get("offset")) if request.args.get("offset") is not None else 0
