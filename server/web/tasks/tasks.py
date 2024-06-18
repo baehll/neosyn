@@ -70,7 +70,7 @@ def loadCachedResults(oauth_token, cache_id, user_id, updated_media_id=None):
     
     print("starting tasks")
     while medias or active_tasks:
-        while medias and len(active_tasks) < 3:
+        while medias and len(active_tasks) < 2:
             media = medias.pop(0)
             task = loadCommentsForMedia.s(oauth_token, media.fb_id).delay()
             active_tasks.append(task)
