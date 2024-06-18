@@ -2,12 +2,11 @@ from flask import (
     Blueprint, jsonify, request, session, current_app
 )
 from flask_login import login_required, current_user
-from ....db.models import IGThread, OpenAIRun, IGComment, IGMedia, db
+from ....db.models import OpenAIRun, IGMedia, db
 from ....db import db_handler
 from ....utils import assistant_utils as gpt_assistant
-from ..data.threads import isThreadByUser
 import traceback, json, os, requests
-from ...tasks import generate_response
+from ...tasks import generate_response, loadCachedResults
 
 def GPTConfig():
     from server import GPTConfig
@@ -24,11 +23,12 @@ def generate_responses():
         if "threadId" not in body or body["threadId"] == "":
             return jsonify({"error":"No threadId specified in request"}), 500
 
-        # Prüfen, ob Thread mit User verknüpft ist
-        if not isThreadByUser(body["threadId"], current_user):
-            return jsonify({"error":"Thread not associated with user"}), 500
+        # # Prüfen, ob Thread mit User verknüpft ist
+        # if not isThreadByUser(body["threadId"], current_user):
+        #     return jsonify({"error":"Thread not associated with user"}), 500
         
-        run, gpt_thread = generate_response(body["threadId"], GPTConfig)
+        cached_data = loadCachedResults(current_user.oauth.token["access_token"], f"media_trees_{current_user.id}", current_user.id)
+        run, gpt_thread = generate_response(current_user.id , body["threadId"], GPTConfig, cached_data["id_mapping"].get(body["threadId"]))
         
         if run.status == 'completed': 
             messages = GPTConfig().CLIENT.beta.threads.messages.list(

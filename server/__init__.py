@@ -11,6 +11,8 @@ from flask_talisman import Talisman
 from datetime import timedelta
 from celery import Celery, Task
 from celery import current_app as current_celery_app
+from flask_caching import Cache
+import os
 
 ENV = EnvManager()
 
@@ -89,8 +91,16 @@ def create_app() -> Flask:
     
     db.init_app(app)
     login_manager.init_app(app)
+    
     # Migration Script for DB
     migrate = Migrate(app, db)
+    
+    # Caching
+    if not os.path.isdir(config("CACHE_FOLDER")):
+        os.mkdir(config("CACHE_FOLDER"))
+    
+    cache = Cache(config={"CACHE_TYPE":"FileSystemCache", "CACHE_DEFAULT_TIMEOUT":900, "CACHE_DIR": config("CACHE_FOLDER")})
+    cache.init_app(app)
     
     # # Celery Stuff
     # app.config.from_mapping(
