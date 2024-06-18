@@ -7,8 +7,8 @@ views = Blueprint('views', __name__)
 @views.route('/', defaults={"path":""})
 @views.route("/<path:path>")
 def catch_all(path):
-    print(current_user.get_id())
-    print(current_user.is_authenticated)
+    # print(current_user.get_id())
+    # print(current_user.is_authenticated)
     return send_from_directory('static', "index.html")
 
 @views.route('/assets/<path:filename>')
