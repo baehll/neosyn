@@ -51,15 +51,15 @@ def _getCommentInstagramData(access_token, path, fields=""):
     if "data" in ids.json():
         results = ids.json()["data"]
         # Paging Results, wenn vorhanden, werden iterativ abgefragt und an results angehängt
-        #print(ids.json()["paging"]["next"])
-        if "paging" in ids.json() and "next" in ids.json()["paging"]:
-            req_url = ids.json()["paging"]["next"]
-            req = requests.get(url=req_url)
-            if req.status_code == 200 or req.status_code == 304:
-                results.extend(req.json()["data"])
-                ids = req
-            else:
-                print("Paging Results GET returned " + str(req.status_code) + f", (URL: {req_url})")
+        # #print(ids.json()["paging"]["next"])
+        # if "paging" in ids.json() and "next" in ids.json()["paging"]:
+        #     req_url = ids.json()["paging"]["next"]
+        #     req = requests.get(url=req_url)
+        #     if req.status_code == 200 or req.status_code == 304:
+        #         results.extend(req.json()["data"])
+        #         ids = req
+        #     else:
+        #         print("Paging Results GET returned " + str(req.status_code) + f", (URL: {req_url})")
     else:
         results.append(ids.json())
     return results
@@ -405,7 +405,8 @@ def getLatestComments(access_token, media_fb_id):
             try:
                 tree.append(create_comment(com))
             except:
-                print(com)
+                #print(com)
+                continue
     return tuple([media_fb_id, tree])
     
 def updateAllEntries(access_token, user):
