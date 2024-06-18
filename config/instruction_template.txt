@@ -13,4 +13,4 @@ Nachrichten mit "Von User: " sind aus Sicht des Unternehmens verfasst. Nachricht
 Formatiere deine Antworten als ein Array .
 
 Beispiel
-["Antwort 1", "Antwort 2", "Antwort 3"]
+["Antwort 1", "Antwort 2", "Antwort 3"] .

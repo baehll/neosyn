@@ -60,22 +60,15 @@ class File(_Base):
     data = db.Column(db.LargeBinary)
     filename = db.Column(db.String)
 
-class PromptChange(_Base):
-    __tablename__ = "prompt_changes"
-    old = db.Column(db.String)
-    new = db.Column(db.String)
-    
-    orga_id = db.Column(db.Integer, db.ForeignKey("organizations.id"))
-    organization = db.relationship("Organization", back_populates="prompt_changes")
-
 class Organization(_Base):
     __tablename__ = "organizations"
     name = db.Column(db.String)
     
     users = db.relationship("User", back_populates="organization")
     generated_runs = db.relationship("OpenAIRun", back_populates="organization")
+    interaction_examples = db.relationship("InteractionExamples", back_populates="organization")
+    
     files = db.relationship("File", back_populates="organization", foreign_keys=[File.orga_id])
-    prompt_changes = db.relationship("PromptChange", back_populates="organization")
     
     vec_storage_id = db.Column(db.String)
 
@@ -84,6 +77,18 @@ class Organization(_Base):
 
     def logo(self):
         return File.query.filter_by(id=self.logo_id).first()
+
+class InteractionExamples(_Base):
+    __tablename__ = "interaction_examples"
+    
+    orga_id = db.Column(db.Integer, db.ForeignKey("organizations.id"))
+    organization = db.relationship("Organization", back_populates="interaction_examples")
+    
+    user_msg = db.Column(db.String)
+    customer_msg = db.Column(db.String)
+    
+    def export(self):
+        return "{'customer': '" + self.customer_msg + "', 'user': '" + self.user_msg + "'}"
 
 class OpenAIRun(_Base):
     __tablename__ = "openai_runs"

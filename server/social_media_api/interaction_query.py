@@ -16,6 +16,25 @@ def create_comment(igcomment):
         parent["replies"] = [create_comment(r) for r in igcomment["replies"]["data"]]
     return parent
 
+def get_nested_value(data, attribute_path):
+    keys = attribute_path.split('.')
+    value = data
+    for key in keys:
+        if isinstance(value, dict):
+            value = value.get(key, None)
+        else:
+            return None
+    return value
+
+def search_all_comments(node, attribute_paths, value, results=None):
+    if results is None:
+        results = []
+    if any(get_nested_value(node, path) == value for path in attribute_paths):
+        results.append(node)
+    for child in node['replies']:
+        search_all_comments(child, attribute_paths, value, results)
+    return results
+
 def max_timestamp(node):
     if not node['replies']:
         return node['timestamp']

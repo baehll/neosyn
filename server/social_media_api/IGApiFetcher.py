@@ -384,8 +384,10 @@ def getLatestComments(access_token, media_fb_id):
     #print(res)
     if len(res) > 0:
         for com in res:
-            tree.append(create_comment(com))
-            
+            try:
+                tree.append(create_comment(com))
+            except:
+                print(com)
     return tuple([media_fb_id, tree])
     
 def updateAllEntries(access_token, user):

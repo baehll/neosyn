@@ -102,8 +102,7 @@ def facebook_logged_in(blueprint, token):
     if oauth.user:
         login_user(oauth.user)
         # trigger async DB Update
-        init = loadCachedResults(oauth.token["access_token"], f"media_trees_{oauth.user_id}", oauth.user_id)
-        init.forget()
+        #init = loadCachedResults(oauth.token["access_token"], f"media_trees_{oauth.user_id}", oauth.user_id)
         print("Successfully signed in.")
         return redirect("/app.html")
     else:
@@ -119,8 +118,7 @@ def facebook_logged_in(blueprint, token):
         login_user(user)
         print("New User created and successfully signed in.")
         
-        init = loadCachedResults(oauth.token["access_token"], f"media_trees_{oauth.user_id}", user.id)
-        init.forget()
+        #init = loadCachedResults(oauth.token["access_token"], f"media_trees_{oauth.user_id}", user.id)
         
         return redirect("/registration.html")
     

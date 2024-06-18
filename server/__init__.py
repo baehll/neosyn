@@ -149,7 +149,7 @@ def create_app() -> Flask:
     from .web.views import views
     from .web.api import api_bp
     from .web.api.data import threads_bp
-    # from .web.api.ai import ai_bp
+    from .web.api.ai import ai_bp
     from .web.auth import authenticate
 
     @app.before_request
@@ -160,7 +160,7 @@ def create_app() -> Flask:
     
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(threads_bp, url_prefix="/api/data/threads")
-    # app.register_blueprint(ai_bp, url_prefix="/api/data/ai")
+    app.register_blueprint(ai_bp, url_prefix="/api/data/ai")
     
     app.register_blueprint(authenticate, url_prefix='/auth')
 

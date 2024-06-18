@@ -3,7 +3,7 @@ from flask import (
 )
 
 from ....social_media_api import IGApiFetcher, interaction_query
-from ....db.models import db, _PlatformEnum, IGPage, AnswerImprovements, IGBusinessAccount, IGMedia
+from ....db.models import db, _PlatformEnum, IGPage, AnswerImprovements, IGBusinessAccount, IGMedia, User
 from ....db import db_handler
 from pathvalidate import replace_symbol
 from flask_login import login_required, current_user
@@ -33,16 +33,21 @@ def thread_result_obj(comment):
     else: 
         timestamp = comment["timestamp"]
     response["lastUpdated"] = date_parser.isoparse(timestamp).astimezone(ZoneInfo("Europe/Berlin"))
+    
     return response
 
-def serialize_comment(comment):
+def serialize_comment(comment, bzaccs):
     result = {
         "id": comment["id"],
         "threadId": comment["media"],
         "message": comment["text"],
         "messageDate": date_parser.isoparse(comment["timestamp"]).astimezone(ZoneInfo("Europe/Berlin")),
-        "from": comment["from"]["id"]
+        "from": None
     }
+    
+    if comment["from"]["id"] not in bzaccs or comment["from"]["id"] != bzaccs:
+        result["from"] = comment["from"]["id"]
+        
     return result
 
 def sort_threads(sorting_option, threads, offset, slice_length):
@@ -50,7 +55,6 @@ def sort_threads(sorting_option, threads, offset, slice_length):
     if sorting_option == "new" or sorting_option is None:
         return interaction_query.get_sorted_slice(threads, interaction_query.traverse_pre_order_gen, offset, offset+slice_length)
     elif sorting_option == "old":
-        print("test")
         return interaction_query.get_sorted_slice(threads, interaction_query.traverse_post_order_gen, offset, offset+slice_length)
     #elif sorting_option == "most_interaction":
         #threads.sort(key=lambda x: len(x[0].comments), reverse=True)
@@ -67,11 +71,11 @@ def all_threads():
         # Offset Query Parameter     
         offset = int(request.args.get("offset")) if request.args.get("offset") is not None else 0
         unread = request.args.get("unread") if request.args.get("unread") else None
-        
+
         caching_key = f"media_trees_{current_user.id}"
         cached_data = loadCachedResults.delay(current_user.oauth.token["access_token"], caching_key, current_user.id).get()
         all_threads = interaction_query.convert_lists_to_tuples(cached_data["media_trees"])
-        print(f"{len(all_threads)} == {len(cached_data['media_trees'])}")
+        
         if len(all_threads) == 0:
             return jsonify([]), 204
         
@@ -79,14 +83,7 @@ def all_threads():
         if sorting_option not in [None, "new", "old", "most_interaction", "least_interaction"]:
             return jsonify({"error":"Unspecified sorting argument, only 'new' (default), 'old', 'most-interaction', 'least-interaction' allowed"}), 500
         
-        # for t in all_threads:
-        #     print(type(t))
-        #     print(t)
         sorted_threads = sort_threads(sorting_option, all_threads, offset, 20)
-        print(f"{len(sorted_threads)}")
-        print("--------------")
-        print(sorted_threads)
-        print("--------------")
         # Nach Begriff filtern
             # erste Slice mit 20 Einträgen
             # durchsuchen nach Begriff in username oder text des Kommentars
@@ -97,7 +94,7 @@ def all_threads():
             filtered_threads = []
             
             while True:
-                for _, t in sorted_threads:
+                for t in sorted_threads:
                     if query in t["text"] or query in t["from"]["username"]:
                         filtered_threads.append(thread_result_obj(t))
                     elif "replies" in t:
@@ -105,11 +102,11 @@ def all_threads():
                             if query in reply["text"] or query in reply["from"]["username"]:
                                 filtered_threads.append(thread_result_obj(t))
                                 break                        
-                if len(filtered_threads) < 20 or len(sort_threads) < 20:
+                if len(filtered_threads) >= 20 or len(sorted_threads) < 20:
+                    return jsonify(filtered_threads), 200
+                else:
                     sorted_threads = sort_threads(sorting_option, all_threads, offset+(20)*i, offset+(20)*(i+1))
                     i += 1
-                else:
-                    return jsonify(filtered_threads), 200
         else:
             return jsonify([thread_result_obj(t) for t in sorted_threads]), 200
     except Exception:
@@ -122,14 +119,15 @@ def get_messages_by_threadid(id):
     try:
         caching_key = f"media_trees_{current_user.id}"
         cached_data = loadCachedResults.delay(current_user.oauth.token["access_token"], caching_key, current_user.id).get()
+        bzaccs = db.session.execute(db.select(IGBusinessAccount.fb_id).join(IGPage).join(User).filter(User.id == current_user.id)).scalar_one_or_none()
         
         if request.method == "GET":    
             comments = []
             thread = cached_data["id_mapping"].get(id)
-            comments.append(serialize_comment(thread))
+            comments.append(serialize_comment(thread, bzaccs))
             
             for reply in thread["replies"]:
-                comments.append(reply)
+                comments.append(serialize_comment(reply, bzaccs))
                 
             return jsonify(comments)       
         if request.method == "PUT":
