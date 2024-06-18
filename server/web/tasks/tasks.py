@@ -62,7 +62,7 @@ def loadCachedResults(oauth_token, cache_id, user_id, updated_media_id=None):
     init_ig_data.delay(user_id, oauth_token)
     
     # für jedes igMedia comments holen und einen forest erstellen, jede kommentar kette ist ein tree
-    medias = db.session.execute(db.select(IGMedia).join(IGBusinessAccount).join(IGPage).join(User).filter(User.id == user_id).order_by(IGMedia.timestamp)).scalars().all()
+    medias = db.session.execute(db.select(IGMedia).join(IGBusinessAccount).join(IGPage).join(User).filter(User.id == user_id).order_by(IGMedia.timestamp).limit(10)).scalars().all()
     active_tasks = []
     
     media_trees = []
