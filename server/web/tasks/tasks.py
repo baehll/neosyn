@@ -82,7 +82,7 @@ def loadCachedResults(oauth_token, cache_id, user_id, updated_media_id=None):
                 active_tasks.remove(task)
         
         time.sleep(0.01)
-                
+    print("finished tasks")         
     data = {"media_trees": media_trees, "id_mapping": id_to_node}
        
     current_app.extensions["cache"][cache_id] = data
