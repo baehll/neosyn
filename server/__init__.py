@@ -27,7 +27,7 @@ def celery_init_app(app: Flask) -> Celery:
             with app.app_context():
                 return self.run(*args, **kwargs)
 
-    celery_app = Celery(app.name, backend=config('REDIS_URL'), broker=config('REDIS_URL'))
+    celery_app = Celery(app.name, backend=config('REDIS_URL')+"?ssl_cert_reqs=none", broker=config('REDIS_URL')+"?ssl_cert_reqs=none")
     celery_app.Task = FlaskTask
     celery_app.set_default()
     app.extensions["celery"] = celery_app
