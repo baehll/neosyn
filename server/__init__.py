@@ -102,7 +102,7 @@ def create_app() -> Flask:
     cache = Cache(config={"CACHE_TYPE":"FileSystemCache", "CACHE_DEFAULT_TIMEOUT":900, "CACHE_DIR": config("CACHE_FOLDER")})
     #cache = Cache(config={"CACHE_TYPE" : "SimpleCache", "CACHE_DEFAULT_TIMEOUT": 900})
     cache.init_app(app)
-    
+    cache.clear()
     # # Celery Stuff
     # app.config.from_mapping(
     #     CELERY=dict(
