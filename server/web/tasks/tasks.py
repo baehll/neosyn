@@ -82,7 +82,7 @@ def loadCachedResults(oauth_token, cache_id, user_id, updated_media_id=None):
                 active_tasks.remove(task)
         
         time.sleep(0.01)
-                
+    print("finished tasks")         
     data = {"media_trees": media_trees, "id_mapping": id_to_node}
        
     current_app.extensions["cache"][cache_id] = data
@@ -128,7 +128,7 @@ def generate_response(user_id, media_id, GPTConfig, messages):
         media.gpt_thread_id = gpt_thread.id
         db_handler.commitAllToDB([media])
         # wenn interaction examples existieren, bis zu 10 davon an eine message hängen
-        interaction_examples = db.session.execute(db.select(InteractionExamples).join(Organization).join(User).filter(User.id == user_id).limit(10)).scalar().all()
+        interaction_examples = db.session.execute(db.select(InteractionExamples).join(Organization).join(User).filter(User.id == user_id).limit(10)).scalars().all()
     
         for ex in interaction_examples:
             prompt_msg += ex.export()
