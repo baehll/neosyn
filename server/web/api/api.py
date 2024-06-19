@@ -52,7 +52,8 @@ def init_user():
         else:
             current_user.organization.name = form_data["companyname"]
             #return jsonify({"error": "User already associated with organization"}), 500
-        
+            new_orga = current_user.organization
+            
         logo = None
         
         if 'file' in request.files:
