@@ -128,7 +128,7 @@ def generate_response(user_id, media_id, GPTConfig, messages):
         media.gpt_thread_id = gpt_thread.id
         db_handler.commitAllToDB([media])
         # wenn interaction examples existieren, bis zu 10 davon an eine message hängen
-        interaction_examples = db.session.execute(db.select(InteractionExamples).join(Organization).join(User).filter(User.id == user_id).limit(10)).scalar().all()
+        interaction_examples = db.session.execute(db.select(InteractionExamples).join(Organization).join(User).filter(User.id == user_id).limit(10)).scalars().all()
     
         for ex in interaction_examples:
             prompt_msg += ex.export()
