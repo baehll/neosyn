@@ -85,7 +85,7 @@ def all_threads():
         if sorting_option not in [None, "new", "old", "most_interaction", "least_interaction"]:
             return jsonify({"error":"Unspecified sorting argument, only 'new' (default), 'old', 'most-interaction', 'least-interaction' allowed"}), 500
         
-        sorted_threads = sort_threads(sorting_option, all_threads, offset, 50)
+        sorted_threads = sort_threads(sorting_option, all_threads, offset, 25)
         # Nach Begriff filtern
             # erste Slice mit 20 Einträgen
             # durchsuchen nach Begriff in username oder text des Kommentars
@@ -104,10 +104,10 @@ def all_threads():
                             if query in reply["text"] or query in reply["from"]["username"]:
                                 filtered_threads.append(thread_result_obj(t))
                                 break                        
-                if len(filtered_threads) >= 50 or len(sorted_threads) < 50:
+                if len(filtered_threads) >= 25 or len(sorted_threads) < 25:
                     return jsonify(filtered_threads), 200
                 else:
-                    sorted_threads = sort_threads(sorting_option, all_threads, offset+(50)*i, offset+(50)*(i+1))
+                    sorted_threads = sort_threads(sorting_option, all_threads, offset+(25)*i, offset+(25)*(i+1))
                     i += 1
         else:
             return jsonify([thread_result_obj(t) for t in sorted_threads]), 200
