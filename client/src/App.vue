@@ -40,7 +40,7 @@ export default {
 
     setInterval(() => {
       this.timerStore.now = Date.now()
-    }, 1000)
+    }, 20*1000)
   }
 }
 </script>

@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-darkgray shrink-0 thread-container flex flex-col">
+  <div class="bg-darkgray shrink-0 border-r border-r-lightgray-80 thread-container flex flex-col">
     <ThreadTopBar
       @triggeredSearch="updateSearchTermAndFetch"
       @changedFilter="updateFilterAndFetch"
@@ -7,6 +7,11 @@
       @reload="fetchThreads"
     />
     <div class="scroller overflow-y-scroll">
+      <div class="thread-loader" v-if="threadsLoading">
+        <div></div>
+        <div></div>
+        <div></div>
+      </div>
       <Thread
         v-for="thread in threadStore.threads"
         :key="thread.id"
@@ -38,6 +43,7 @@ export default {
   emits:['selectedThread'],
   data: () => {
     return {
+      threadsLoading: false,
       selectedThreadId: null,
       filters: [],
       searchTerm: null,
@@ -65,7 +71,9 @@ export default {
       this.threadStore.threads = this.threadStore.threads.filter(t => t.id !== id)
     },
     async fetchThreads() {
-      this.threadStore.fetchThreads(this.filters, this.searchTerm, this.sorting)
+      this.threadsLoading = true
+      await this.threadStore.fetchThreads(this.filters, this.searchTerm, this.sorting)
+      this.threadsLoading = false
     },
     async updateSortingAndFetch(sorting) {
       this.sorting = sorting
@@ -90,7 +98,43 @@ export default {
 }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
+@keyframes loader {
+  0% {
+    transform: translate3d(-50%,0,0);
+  }
+  25% {
+    transform: translate3d(-100%,0,0);
+  }
+50% {
+    transform: translate3d(-50%,0,0);
+}
+  75% {
+    transform: translate3d(-0%,0,0);
+  }
+100% {
+    transform: translate3d(-50%,0,0);
+}
+}
+.thread-loader {
+  > div {
+    @apply rounded-xl mb-4 relative overflow-hidden mx-auto;
+    width: 85%;
+    height: 90px;
+    &:before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0;
+      width: 120%;
+      height: 100%;
+      transform: translate3d(-50%,0,0);
+      background: rgb(0,0,0);
+      background: linear-gradient(90deg, rgba(44,44,44,0) 0%, #6f6f6f 50%, rgba(44,44,44,0) 100%);
+      animation: loader 1.7s linear infinite;
+    }
+  }
+}
 .thread {
   &.selected {
     @apply bg-lightgray;

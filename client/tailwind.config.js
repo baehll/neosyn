@@ -23,7 +23,7 @@ export default {
                 'darkgray-10': '#212121',
                 'darkgray-20': '#1e1e1e',
                 'darkgray-80': '#6F6F6F',
-
+                'red': '#F52300',
             },
             fontFamily: {
                 'roboto': ['Roboto', 'sans-serif'],

@@ -1,5 +1,5 @@
 <template>
-  <section class="pr-5 bg-lightgray flex flex-row h-full">
+  <section class="pr-5 bg-lightgray-30 flex flex-row h-full">
     <sidebar-navigation/>
     <router-view></router-view>
   </section>

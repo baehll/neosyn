@@ -10,7 +10,7 @@
 			</div>
 		</div>
 		<div :class="{'w-full flex flex-col items-center': true, 'invisible': !uploadStarted}">
-			<div class="progressbar w-8/12 h-2 mb-2 bg-lightgray overflow-hidden rounded-lg"></div>
+			<div :class="{'progressbar w-8/12 h-2 mb-2 bg-lightgray overflow-hidden rounded-lg': true, 'uploading': uploadStarted}"></div>
 			<div class="mb-16 text-white">Upload progress</div>
 		</div>
 	</div>
@@ -64,7 +64,7 @@ export default {
 		@apply absolute left-0 top-0 w-0 h-full bg-primary rounded-lg;
 	}
 
-&.uploading {
+	&.uploading {
 		&:before {
 			animation: bar 4s infinite;
 		}

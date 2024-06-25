@@ -1,5 +1,5 @@
 <template>
-    <div class="shrink-0 message-post-wrap overflow-hidden h-full py-5 bg-lightgray">
+    <div class="shrink-0 message-post-wrap overflow-hidden h-full py-5 bg-lightgray-30">
       <div class="overflow-hidden flex flex-col justify-between w-full h-full rounded-xl message gap-4">
 				<MessagePost
 					:message-post="messagePost"

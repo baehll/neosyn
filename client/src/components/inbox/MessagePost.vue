@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-darkgray h-1/2 overflow-hidden rounded-xl flex flex-col justify-between">
+  <div class="border border-lightgray-80 bg-darkgray h-1/2 overflow-hidden rounded-xl flex flex-col justify-between">
     <div
       v-if="messagePost"
       class="flex flex-col h-full"
