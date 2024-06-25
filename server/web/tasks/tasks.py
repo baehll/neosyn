@@ -6,14 +6,14 @@ from ...utils import assistant_utils
 from flask import current_app
 from flask_login import current_user
 from ...cache_config import cache
+from rapidfuzz import fuzz
 import os, time
 
 @shared_task
-def init_ig_data(user_id, oauth_token):
-    db.engine.dispose()
-
+def update_ig_entries(user_id):
+    #db.engine.dispose()
     user = db.session.execute(db.select(User).filter(User.id == user_id)).scalar_one()
-    return IGApiFetcher.updateAllEntries(oauth_token, user)
+    return IGApiFetcher.updateAllEntries(user.oauth.token["access_token"], user)
 
 @shared_task
 def add_interactions_to_vector_store(user_id):
@@ -40,14 +40,34 @@ def update_interactions(oauth_token, thread_ids):
 def loadCommentsForMedia(oauth_token, media_fb_id):
     return IGApiFetcher.getLatestComments(oauth_token, media_fb_id) 
 
+def fill_media_trees(oauth_token, medias, worker_numbers, id_to_node, media_trees):
+    active_tasks = [] 
+        
+    while medias or active_tasks:
+        while medias and len(active_tasks) < worker_numbers:
+            media = medias.pop(0)
+            task = loadCommentsForMedia.s(oauth_token, media).delay()
+            active_tasks.append(task)
+        
+        for task in active_tasks:
+            if task.ready():
+                #print(task.result)
+                if len(task.result):
+                    interaction_query.add_tree(id_to_node, media_trees, tuple(task.result))
+                active_tasks.remove(task)
+        
+        time.sleep(0.01)
+
 @shared_task
-def loadCachedResults(oauth_token, cache_id, user_id, updated_media_id=None):
+def loadCachedResults(oauth_token, user_id, updated_media_id=None):
     db.engine.dispose()
     
+    cache_id = f"media_trees_{user_id}"
     cached_data = cache.get(cache_id)
-
-    print(f"test caching {cache_id}")
+    
     if cached_data is not None:
+        print(cached_data.get("media_trees")[:3])
+        updated_medias = update_ig_entries(user_id)
         if updated_media_id is not None:
             # media tree mit fb_id entfernen aus media trees
             interaction_query.remove_tree(cached_data["id_mapping"], cached_data["media_trees"], updated_media_id)
@@ -57,46 +77,36 @@ def loadCachedResults(oauth_token, cache_id, user_id, updated_media_id=None):
                 time.sleep(0.1)
             # in bestehenden media_trees einsortieren
             interaction_query.add_tree(cached_data["id_mapping"], cached_data["media_trees"], task.result)
+        
+        fill_media_trees(oauth_token, updated_medias, 2, cached_data["id_mapping"], cached_data["media_trees"])
         return cached_data
     
     # update IGPage, IGBusiness Account und IGMedia für User
-    init_ig_data.delay(user_id, oauth_token)
+    update_ig_entries(user_id)
     
     # für jedes igMedia comments holen und einen forest erstellen, jede kommentar kette ist ein tree
-    medias = db.session.execute(db.select(IGMedia).join(IGBusinessAccount).join(IGPage).join(User).filter(User.id == user_id).order_by(IGMedia.timestamp.desc()).limit(10)).scalars().all()
-    active_tasks = []
-    
+    medias = db.session.execute(db.select(IGMedia).join(IGBusinessAccount).join(IGPage).join(User).filter(User.id == user_id).filter(IGMedia.comments_count > 0).order_by(IGMedia.timestamp.desc()).limit(10)).scalars().all()
+    #print(medias)
     media_trees = []
     id_to_node = {}
     
     print("starting tasks")
-    while medias or active_tasks:
-        while medias and len(active_tasks) < 2:
-            media = medias.pop(0)
-            task = loadCommentsForMedia.s(oauth_token, media.fb_id).delay()
-            active_tasks.append(task)
-        
-        for task in active_tasks:
-            if task.ready():
-                if len(task.result):
-                    interaction_query.add_tree(id_to_node, media_trees, tuple(task.result))
-                active_tasks.remove(task)
-        
-        time.sleep(0.01)
-    print("finished tasks")         
+    
+    fill_media_trees(oauth_token, [m.fb_id for m in medias], 2, id_to_node, media_trees)
+
+    print("finished tasks")       
     data = {"media_trees": media_trees, "id_mapping": id_to_node}
        
     cache.set(cache_id, data)
 
     orga = db.session.execute(db.select(Organization).join(User).filter(User.id == user_id)).scalar_one_or_none()
     if not orga is None and not len(orga.interaction_examples):
-        initUserCustomerExamples.s(oauth_token, user_id, media_trees).delay()
+        initUserCustomerExamples.s(user_id, media_trees).delay()
     
     return data
 
 @shared_task
-def initUserCustomerExamples(oauth_token, user_id, media_trees):
-    db.engine.dispose()
+def initUserCustomerExamples(user_id, media_trees):
     results = []
     bzacc = db.session.execute(db.select(IGBusinessAccount).join(IGPage).join(User).filter(User.id == user_id)).scalar_one_or_none()
     for tree in media_trees:
@@ -155,3 +165,52 @@ def generate_response(user_id, media_id, GPTConfig, messages):
     
     db_handler.commitAllToDB([db_run])
     return run, gpt_thread
+
+def find_similar_words_in_texts(texts, term, threshold=80):
+    for text in texts:
+        if fuzz.partial_ratio(term, text) >= threshold:
+            return True
+    return False
+
+def search_term_in_comments(data, term, threshold=80):
+    results = []
+    comments = data[1]
+    
+    for comment in comments:
+        texts_to_search = [
+            comment.get('from', {}).get('username', ''),
+            comment.get('text', '')
+        ]
+        
+        if find_similar_words_in_texts(texts_to_search, term, threshold):
+            results.append(comment)
+        
+        results.extend(search_term_in_replies(comment.get('replies', []), term, threshold))
+    
+    return results
+
+
+def search_term_in_replies(replies, term, first_element, threshold=80):
+    results = []
+    
+    for reply in replies:
+        texts_to_search = [
+            reply.get('from', {}).get('username', ''),
+            reply.get('text', '')
+        ]
+        
+        if find_similar_words_in_texts(texts_to_search, term, threshold):
+            results.append(reply)
+        
+        results.extend(search_term_in_replies(reply.get('replies', []), term, threshold))
+    
+    return results
+
+@shared_task
+def search_for_term_in_cache(user_id, term):
+    
+    cache_id = f"media_trees_{user_id}"
+    cached_data = cache.get(cache_id)
+    results = []
+    for tree in cached_data["media_trees"]:
+        results.extend(search_term_in_comments(tree, term))

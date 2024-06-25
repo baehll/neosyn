@@ -27,9 +27,15 @@ def celery_init_app(app: Flask) -> Celery:
         def __call__(self, *args: object, **kwargs: object) -> object:
             with app.app_context():
                 return self.run(*args, **kwargs)
-            
-    celery_app = Celery(app.name, backend=config('REDIS_URL')+"?ssl_cert_reqs=none", broker=config('REDIS_URL')+"?ssl_cert_reqs=none")
-    #celery_app = Celery(app.name, backend=config('REDIS_URL'), broker=config('REDIS_URL'))
+    celery_app = None
+    try:
+        if config("FLASK_DEBUG") == '1':
+            celery_app = Celery(app.name, backend=config('REDIS_URL'), broker=config('REDIS_URL'))
+        else:
+            celery_app = Celery(app.name, backend=config('REDIS_URL')+"?ssl_cert_reqs=none", broker=config('REDIS_URL')+"?ssl_cert_reqs=none")
+    except:
+        celery_app = Celery(app.name, backend=config('REDIS_URL')+"?ssl_cert_reqs=none", broker=config('REDIS_URL')+"?ssl_cert_reqs=none")
+    
     celery_app.Task = FlaskTask
     celery_app.set_default()
     app.extensions["celery"] = celery_app
@@ -96,6 +102,10 @@ def create_app() -> Flask:
     
     # Migration Script for DB
     migrate = Migrate(app, db)
+    
+    # Caching folder
+    if not os.path.isdir(config("CACHE_FOLDER")):
+        os.mkdir(config("CACHE_FOLDER"))
     
     init_cache(app, config={"CACHE_TYPE":"FileSystemCache", "CACHE_DEFAULT_TIMEOUT":900, "CACHE_DIR": config("CACHE_FOLDER")})
     

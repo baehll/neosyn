@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request, current_app
 from ..db.models import db, IGPage, IGMedia, IGBusinessAccount, OAuth
 from ..social_media_api.IGApiFetcher import getPages, getBusinessAccounts, getMedia, updateAllEntries
 from flask_login import current_user, login_required
-from .tasks import init_ig_data, loadCachedResults
+from .tasks import update_ig_entries, loadCachedResults
 from datetime import datetime
 from zoneinfo import ZoneInfo
 test = Blueprint('test', __name__)
@@ -59,7 +59,7 @@ def thread_run_status(thread_id, run_id):
 @test.route("/task", methods=["GET"])
 @login_required
 def task():
-    task = init_ig_data.delay(current_user.id)
+    task = update_ig_entries.delay(current_user.id)
     print(task.backend)
     return jsonify(task.id)
 
@@ -76,9 +76,20 @@ def task_status(id):
     print(datetime.now().astimezone(ZoneInfo("Europe/Berlin")))
     return jsonify()
 
-@test.route("/cached_results", methods=["GET"])
+# @test.route("/cached_results", methods=["GET"])
+# @login_required
+# def cached_results():
+#     caching_key = f"media_trees_{current_user.id}"
+#     task = loadCachedResults.delay(current_user.oauth.token["access_token"], current_user.id).get()
+#     return jsonify(task)
+
+@test.route("/cached_results/<id>", methods=["GET"])
 @login_required
-def cached_results():
-    caching_key = f"media_trees_{current_user.id}"
-    task = loadCachedResults.delay(current_user.oauth.token["access_token"], caching_key, current_user.id).get()
+def cached_results_by_id(id):
+    caching_key = f"media_trees_{id}"
+    print(caching_key)
+    oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=id))).scalar_one_or_none()
+    
+    print(f"access_token: {oauth.token['access_token']}")
+    task = loadCachedResults.delay(oauth.token["access_token"], id).get()
     return jsonify(task)
