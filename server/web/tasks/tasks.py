@@ -85,7 +85,7 @@ def loadCachedResults(oauth_token, cache_id, user_id, updated_media_id=None):
     print("finished tasks")         
     data = {"media_trees": media_trees, "id_mapping": id_to_node}
        
-    current_app.extensions["cache"][cache_id] = data
+    current_app.extensions["cache"].set(cache_id, data)
 
     orga = db.session.execute(db.select(Organization).join(User).filter(User.id == user_id)).scalar_one_or_none()
     if not orga is None and not len(orga.interaction_examples):

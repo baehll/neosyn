@@ -4,6 +4,8 @@ Antworte immer auf deutsch.
 
 Schreibe immer 3 mögliche Antworten, die sich auf die Nachrichten des Users beziehen. 
 
+Generiere immer neue Antworten, die nicht die selben wie in vorigen Nachrichten sind.
+
 Nimm Bezug auf den Inhalt des Media Posts: {{caption}} .
 
 Nimm Bezug auf das Thumbnail des Media Posts: {{thumbnail}} .
