@@ -5,6 +5,7 @@ from ...social_media_api import IGApiFetcher, interaction_query
 from ...utils import assistant_utils
 from flask import current_app
 from flask_login import current_user
+from ...cache_config import cache
 import os, time
 
 @shared_task
@@ -43,9 +44,9 @@ def loadCommentsForMedia(oauth_token, media_fb_id):
 def loadCachedResults(oauth_token, cache_id, user_id, updated_media_id=None):
     db.engine.dispose()
     
-    cached_data = current_app.extensions["cache"].get(cache_id)
+    cached_data = cache.get(cache_id)
 
-    #print(f"test caching {cache_id}")
+    print(f"test caching {cache_id}")
     if cached_data is not None:
         if updated_media_id is not None:
             # media tree mit fb_id entfernen aus media trees
@@ -85,7 +86,7 @@ def loadCachedResults(oauth_token, cache_id, user_id, updated_media_id=None):
     print("finished tasks")         
     data = {"media_trees": media_trees, "id_mapping": id_to_node}
        
-    current_app.extensions["cache"].set(cache_id, data)
+    cache.set(cache_id, data)
 
     orga = db.session.execute(db.select(Organization).join(User).filter(User.id == user_id)).scalar_one_or_none()
     if not orga is None and not len(orga.interaction_examples):

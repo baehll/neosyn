@@ -12,6 +12,7 @@ from datetime import timedelta
 from celery import Celery, Task
 from celery import current_app as current_celery_app
 from flask_caching import Cache
+from .cache_config import cache, init_cache
 import os
 
 ENV = EnvManager()
@@ -26,8 +27,9 @@ def celery_init_app(app: Flask) -> Celery:
         def __call__(self, *args: object, **kwargs: object) -> object:
             with app.app_context():
                 return self.run(*args, **kwargs)
-
+            
     celery_app = Celery(app.name, backend=config('REDIS_URL')+"?ssl_cert_reqs=none", broker=config('REDIS_URL')+"?ssl_cert_reqs=none")
+    #celery_app = Celery(app.name, backend=config('REDIS_URL'), broker=config('REDIS_URL'))
     celery_app.Task = FlaskTask
     celery_app.set_default()
     app.extensions["celery"] = celery_app
@@ -95,17 +97,8 @@ def create_app() -> Flask:
     # Migration Script for DB
     migrate = Migrate(app, db)
     
-    # Caching
-    if not os.path.isdir(config("CACHE_FOLDER")):
-        os.mkdir(config("CACHE_FOLDER"))
+    init_cache(app, config={"CACHE_TYPE":"FileSystemCache", "CACHE_DEFAULT_TIMEOUT":900, "CACHE_DIR": config("CACHE_FOLDER")})
     
-    cache = None
-    if app.debug:
-        cache = Cache(config={"CACHE_TYPE" : "SimpleCache", "CACHE_DEFAULT_TIMEOUT": 900})
-    else:
-        cache = Cache(config={"CACHE_TYPE":"FileSystemCache", "CACHE_DEFAULT_TIMEOUT":900, "CACHE_DIR": config("CACHE_FOLDER")})
-    cache.init_app(app)
-    cache.clear()
     # # Celery Stuff
     # app.config.from_mapping(
     #     CELERY=dict(
