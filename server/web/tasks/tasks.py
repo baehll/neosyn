@@ -53,7 +53,7 @@ def fill_media_trees(oauth_token, medias, worker_numbers, id_to_node, media_tree
             if task.ready():
                 #print(task.result)
                 if len(task.result):
-                    interaction_query.add_tree(id_to_node, media_trees, tuple(task.result))
+                    interaction_query.add_tree(id_to_node, media_trees, task.result)
                 active_tasks.remove(task)
         
         time.sleep(0.01)
@@ -66,7 +66,6 @@ def loadCachedResults(oauth_token, user_id, updated_media_id=None):
     cached_data = cache.get(cache_id)
     
     if cached_data is not None:
-        print(cached_data.get("media_trees")[:3])
         updated_medias = update_ig_entries(user_id)
         if updated_media_id is not None:
             # media tree mit fb_id entfernen aus media trees
