@@ -76,11 +76,12 @@ def all_threads():
         sorting_option = request.args.get("sorting") 
         if sorting_option not in [None, "new", "old", "most_interaction", "least_interaction"]:
             return jsonify({"error":"Unspecified sorting argument, only 'new' (default), 'old', 'most-interaction', 'least-interaction' allowed"}), 500
-        
-        sorted_threads = sort_threads(sorting_option, all_threads, offset, 25)
+              
+        sorted_threads = sort_threads(sorting_option, all_threads, offset, offset+25)
+
         if "q" in request.get_json() and request.get_json()["q"] != "":
             query = replace_symbol(request.get_json()["q"])
-            results = search_for_term_in_cache.delay(current_user.user_id, query).get()
+            results = search_for_term_in_cache.delay(sorted_threads, query).get()
             return jsonify([thread_result_obj(t) for t in results]), 200
         else:
             return jsonify([thread_result_obj(c) for c in sorted_threads]), 200
