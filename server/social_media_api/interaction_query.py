@@ -1,5 +1,6 @@
 from heapq import merge
 from itertools import islice
+from dateutil import parser as date_parser
 
 def create_comment(igcomment):
     parent = {
@@ -12,35 +13,33 @@ def create_comment(igcomment):
         "replies": []
     }
     if "replies" in igcomment:
-        parent["replies"] = [create_comment(r) for r in igcomment["replies"]["data"]]
+        parent["replies"] = [create_comment(r) for r in reversed(igcomment["replies"]["data"])]
     return parent
-
-def max_timestamp(node):
-    if not node['replies']:
-        return node['timestamp']
-    return max(node['timestamp'], max(child['timestamp'] for child in node['replies']))
-
-def traverse_pre_order_gen(node):
-    if not isinstance(node, dict):
-        raise TypeError(f"Expected node to be a dict, got {type(node).__name__} instead")
-    yield node
-    for child in node['replies']:
-        yield from traverse_pre_order_gen(child)
-
-def traverse_post_order_gen(node):
-    if not isinstance(node, dict):
-        raise TypeError(f"Expected node to be a dict, got {type(node).__name__} instead")
-    for child in node['replies']:
-        yield from traverse_post_order_gen(child)
-    yield node
     
-def merge_sorted_trees_gen(trees, traversal_fn):
-    for _, forest in trees:
-        for tree in forest:
-            yield from traversal_fn(tree)
+def merge_sorted_trees_gen(merged_trees, sort_order='new'):
+    def get_sort_key(node):
+        #timestamps = [date_parser.isoparse(n['timestamp']) for n in traversal_fn(node)]
+        if sort_order == 'new' or sort_order == "old":
+            if node['replies']:
+                return date_parser.isoparse(node['replies'][-1]['timestamp'])
+            return date_parser.isoparse(node['timestamp'])
+        elif sort_order == "most_interaction" or sort_order == "least_interaction":
+            return 1 + len(node["replies"])
+        else:
+            raise ValueError("sort_order must be 'new' or 'old'")
+    
+    sorted_trees = sorted(
+        merged_trees,
+        key=lambda comment_chain: get_sort_key(comment_chain),
+        reverse=(sort_order == 'new' or sort_order == "most_interaction")
+    )
+    return iter(sorted_trees)
 
-def get_sorted_slice(data, traversal_fn, start, end):
-    merged_sorted_gen = merge_sorted_trees_gen(data, traversal_fn)
+def get_sorted_slice(data, start, end, sort_order='new'):
+    merged_trees = []
+    for t in data:
+        merged_trees.extend(t[1])
+    merged_sorted_gen = merge_sorted_trees_gen(merged_trees, sort_order)
     sliced_nodes = list(islice(merged_sorted_gen, start, end))
     return sliced_nodes
 
@@ -61,6 +60,3 @@ def assign_ids_and_store(id_to_node, node):
     id_to_node[id] = node
     for r in node["replies"]:
         assign_ids_and_store(id_to_node, r)
-        
-def convert_lists_to_tuples(data):
-    return [tuple([item[0], item[1]]) for item in data]

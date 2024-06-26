@@ -15,6 +15,7 @@ from dateutil import parser as date_parser
 threads_bp = Blueprint('threads', __name__)
 
 def thread_result_obj(comment):
+    #print(comment)
     response = {
         "id": comment["id"],
         "username": comment["from"]["username"],
@@ -29,7 +30,7 @@ def thread_result_obj(comment):
     }
     timestamp = None
     if len(comment["replies"]):
-        timestamp = max(comment["timestamp"], comment["replies"][0]["timestamp"])
+        timestamp = comment["replies"][-1]["timestamp"]
     else: 
         timestamp = comment["timestamp"]
     response["lastUpdated"] = date_parser.isoparse(timestamp).astimezone(ZoneInfo("Europe/Berlin"))
@@ -51,15 +52,10 @@ def serialize_comment(comment, bzaccs):
     return result
 
 def sort_threads(sorting_option, threads, offset, slice_length):
-    # erst sortierung festlegen
     if sorting_option == "new" or sorting_option is None:
-        return interaction_query.get_sorted_slice(threads, interaction_query.traverse_pre_order_gen, offset, offset+slice_length)
-    elif sorting_option == "old":
-        return interaction_query.get_sorted_slice(threads, interaction_query.traverse_post_order_gen, offset, offset+slice_length)
-    #elif sorting_option == "most_interaction":
-        #threads.sort(key=lambda x: len(x[0].comments), reverse=True)
-    #elif sorting_option == "least_interaction":
-        #threads.sort(key=lambda x: len(x[0].comments))
+        return interaction_query.get_sorted_slice(threads, offset, offset+slice_length)
+    else:
+        return interaction_query.get_sorted_slice(threads, offset, offset+slice_length, sort_order=sorting_option)
 
 @threads_bp.route("/", methods=["POST"])
 @login_required
@@ -72,7 +68,7 @@ def all_threads():
         offset = int(request.args.get("offset")) if request.args.get("offset") is not None else 0
         unread = request.args.get("unread") if request.args.get("unread") else None
         cached_data = loadCachedResults.delay(current_user.oauth.token["access_token"], current_user.id).get()
-        all_threads = interaction_query.convert_lists_to_tuples(cached_data["media_trees"])
+        all_threads = cached_data["media_trees"]
         
         if len(all_threads) == 0:
             return jsonify([]), 204
@@ -82,16 +78,12 @@ def all_threads():
             return jsonify({"error":"Unspecified sorting argument, only 'new' (default), 'old', 'most-interaction', 'least-interaction' allowed"}), 500
         
         sorted_threads = sort_threads(sorting_option, all_threads, offset, 25)
-        # Nach Begriff filtern
-            # erste Slice mit 20 Einträgen
-            # durchsuchen nach Begriff in username oder text des Kommentars
-            # wenn weniger als 20 Ergebnisse, dann nächste Slice durchsuchen
         if "q" in request.get_json() and request.get_json()["q"] != "":
             query = replace_symbol(request.get_json()["q"])
             results = search_for_term_in_cache.delay(current_user.user_id, query).get()
             return jsonify([thread_result_obj(t) for t in results]), 200
         else:
-            return jsonify([thread_result_obj(t) for t in sorted_threads]), 200
+            return jsonify([thread_result_obj(c) for c in sorted_threads]), 200
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occoured"}), 500
