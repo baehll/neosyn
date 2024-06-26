@@ -4,6 +4,7 @@ import requests, json
 from ..db.db_handler import commitAllToDB, deleteFromDB
 from urllib.parse import quote
 from .interaction_query import create_comment
+import traceback
 # UTILITY FUNCTIONS UND VARIABLEN
 
 _URL = "https://graph.facebook.com/v20.0"
@@ -226,6 +227,7 @@ def getPages(access_token, user):
     for p in page_res:
         payload.append({"method" : "GET", "relative_url": f"{p['id']}?fields="+_fields})
     page_res = _batchRequest(access_token, payload)
+    #print(page_res)
     db_page_dict = dict([(pg.fb_id, pg) for pg in db_pages])
     fb_page_dict = dict([(pg["id"], (pg,etag)) for pg,etag in page_res])
     
@@ -404,8 +406,9 @@ def getLatestComments(access_token, media_fb_id):
         for com in res:
             try:
                 tree.append(create_comment(com))
-            except:
-                #print(com)
+            except Exception:
+                print(traceback.format_exc())
+                print(com)
                 continue
     return tuple([media_fb_id, tree])
     
@@ -423,5 +426,5 @@ def updateAllEntries(access_token, user):
             bz_accs.extend(db.session.execute(db.select(IGBusinessAccount).filter(IGBusinessAccount.page.has(id=p.id))).scalars().all())
     for b in bz_accs:
         medias.extend(getMedia(access_token, b))
-    
+    return [m.fb_id for m in medias]
     

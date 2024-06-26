@@ -3,10 +3,9 @@ from itertools import islice
 
 def create_comment(igcomment):
     parent = {
-        "text": igcomment["text"],
-        "from": igcomment["from"],
+        "text": igcomment.get("text"),
+        "from": igcomment.get("from"),
         "timestamp": igcomment["timestamp"],
-        "text": igcomment["text"],
         "like_count": igcomment["like_count"],
         "id": igcomment["id"],
         "media": igcomment["media"]["id"],
@@ -15,25 +14,6 @@ def create_comment(igcomment):
     if "replies" in igcomment:
         parent["replies"] = [create_comment(r) for r in igcomment["replies"]["data"]]
     return parent
-
-def get_nested_value(data, attribute_path):
-    keys = attribute_path.split('.')
-    value = data
-    for key in keys:
-        if isinstance(value, dict):
-            value = value.get(key, None)
-        else:
-            return None
-    return value
-
-def search_all_comments(node, attribute_paths, value, results=None):
-    if results is None:
-        results = []
-    if any(get_nested_value(node, path) == value for path in attribute_paths):
-        results.append(node)
-    for child in node['replies']:
-        search_all_comments(child, attribute_paths, value, results)
-    return results
 
 def max_timestamp(node):
     if not node['replies']:
@@ -55,22 +35,14 @@ def traverse_post_order_gen(node):
     yield node
     
 def merge_sorted_trees_gen(trees, traversal_fn):
-    # Create a list of tuples (max_timestamp, tree) for sorting
-    sorted_trees = sorted(
-        ((max_timestamp(tree), tree) for _, forest in trees for tree in forest),
-        key=lambda x: x[0],
-        reverse=True
-    )
-    # Extract only the trees in sorted order
-    sorted_trees = [tree for _, tree in sorted_trees]
-    return iter(sorted_trees)
+    for _, forest in trees:
+        for tree in forest:
+            yield from traversal_fn(tree)
 
 def get_sorted_slice(data, traversal_fn, start, end):
-    # Flatten the top-level structure to work with individual trees within each list
-    all_trees = [tree for _, forest in data for tree in forest]
     merged_sorted_gen = merge_sorted_trees_gen(data, traversal_fn)
-    sliced_trees = list(islice(merged_sorted_gen, start, end))
-    return sliced_trees
+    sliced_nodes = list(islice(merged_sorted_gen, start, end))
+    return sliced_nodes
 
 def add_tree(id_to_node, trees, tree_tuple):
     trees.append(tree_tuple)
