@@ -171,45 +171,23 @@ def find_similar_words_in_texts(texts, term, threshold=80):
             return True
     return False
 
-def search_term_in_comments(data, term, threshold=80):
-    results = []
-    comments = data[1]
+def search_term_in_comment(comment, term, threshold=80):
     
-    for comment in comments:
-        texts_to_search = [
-            comment.get('from', {}).get('username', ''),
-            comment.get('text', '')
-        ]
-        
-        if find_similar_words_in_texts(texts_to_search, term, threshold):
-            results.append(comment)
-        
-        results.extend(search_term_in_replies(comment.get('replies', []), term, threshold))
+    texts_to_search = [
+        comment.get('from', {}).get('username', ''),
+        comment.get('text', '')
+    ]
+    if comment["replies"]:
+        for r in comment["replies"]:
+            if search_term_in_comment(r, term, threshold):
+                return True
+    return find_similar_words_in_texts(texts_to_search, term, threshold)
     
-    return results
-
-
-def search_term_in_replies(replies, term, first_element, threshold=80):
-    results = []
-    
-    for reply in replies:
-        texts_to_search = [
-            reply.get('from', {}).get('username', ''),
-            reply.get('text', '')
-        ]
-        
-        if find_similar_words_in_texts(texts_to_search, term, threshold):
-            results.append(reply)
-        
-        results.extend(search_term_in_replies(reply.get('replies', []), term, threshold))
-    
-    return results
-
 @shared_task
-def search_for_term_in_cache(user_id, term):
-    
-    cache_id = f"media_trees_{user_id}"
-    cached_data = cache.get(cache_id)
+def search_for_term_in_cache(trees, term):
     results = []
-    for tree in cached_data["media_trees"]:
-        results.extend(search_term_in_comments(tree, term))
+    for comment in trees:
+        if search_term_in_comment(comment, term):
+            results.append(comment)
+                    
+    return results
