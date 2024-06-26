@@ -27,7 +27,7 @@ def generate_responses():
         # if not isThreadByUser(body["threadId"], current_user):
         #     return jsonify({"error":"Thread not associated with user"}), 500
         
-        cached_data = loadCachedResults(current_user.oauth.token["access_token"], f"media_trees_{current_user.id}", current_user.id)
+        cached_data = loadCachedResults(current_user.oauth.token["access_token"], current_user.id)
         run, gpt_thread = generate_response(current_user.id , body["threadId"], GPTConfig, cached_data["id_mapping"].get(body["threadId"]))
         
         if run.status == 'completed': 

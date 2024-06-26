@@ -9,7 +9,7 @@ from pathvalidate import replace_symbol
 from flask_login import login_required, current_user
 import traceback
 from zoneinfo import ZoneInfo
-from ...tasks import update_interactions, loadCachedResults
+from ...tasks import loadCachedResults, search_for_term_in_cache
 from dateutil import parser as date_parser
 
 threads_bp = Blueprint('threads', __name__)
@@ -68,14 +68,10 @@ def all_threads():
     #     if len(current_user.pages) == 0:
     #         return jsonify({"error":"No pages associated with user"}), 500
         
-        
-        
         # Offset Query Parameter     
         offset = int(request.args.get("offset")) if request.args.get("offset") is not None else 0
         unread = request.args.get("unread") if request.args.get("unread") else None
-
-        caching_key = f"media_trees_{current_user.id}"
-        cached_data = loadCachedResults.delay(current_user.oauth.token["access_token"], caching_key, current_user.id).get()
+        cached_data = loadCachedResults.delay(current_user.oauth.token["access_token"], current_user.id).get()
         all_threads = interaction_query.convert_lists_to_tuples(cached_data["media_trees"])
         
         if len(all_threads) == 0:
@@ -92,23 +88,8 @@ def all_threads():
             # wenn weniger als 20 Ergebnisse, dann nächste Slice durchsuchen
         if "q" in request.get_json() and request.get_json()["q"] != "":
             query = replace_symbol(request.get_json()["q"])
-            i = 1
-            filtered_threads = []
-            
-            while True:
-                for t in sorted_threads:
-                    if query in t["text"] or query in t["from"]["username"]:
-                        filtered_threads.append(thread_result_obj(t))
-                    elif "replies" in t:
-                        for reply in t["replies"]:
-                            if query in reply["text"] or query in reply["from"]["username"]:
-                                filtered_threads.append(thread_result_obj(t))
-                                break                        
-                if len(filtered_threads) >= 25 or len(sorted_threads) < 25:
-                    return jsonify(filtered_threads), 200
-                else:
-                    sorted_threads = sort_threads(sorting_option, all_threads, offset+(25)*i, offset+(25)*(i+1))
-                    i += 1
+            results = search_for_term_in_cache.delay(current_user.user_id, query).get()
+            return jsonify([thread_result_obj(t) for t in results]), 200
         else:
             return jsonify([thread_result_obj(t) for t in sorted_threads]), 200
     except Exception:
@@ -119,8 +100,7 @@ def all_threads():
 @login_required
 def get_messages_by_threadid(id):
     try:
-        caching_key = f"media_trees_{current_user.id}"
-        cached_data = loadCachedResults.delay(current_user.oauth.token["access_token"], caching_key, current_user.id).get()
+        cached_data = loadCachedResults.delay(current_user.oauth.token["access_token"], current_user.id).get()
         bzaccs = db.session.execute(db.select(IGBusinessAccount.fb_id).join(IGPage).join(User).filter(User.id == current_user.id)).scalar_one_or_none()
         
         if request.method == "GET":    
@@ -176,8 +156,7 @@ def get_messages_by_threadid(id):
 @login_required
 def get_post_information(id):
     try:
-        caching_key = f"media_trees_{current_user.id}"
-        cached_data = loadCachedResults.delay(current_user.oauth.token["access_token"], caching_key, current_user.id).get()
+        cached_data = loadCachedResults.delay(current_user.oauth.token["access_token"], current_user.id).get()
         
         fb_id = cached_data["id_mapping"].get(id)["media"]
         
@@ -211,9 +190,8 @@ def post_message(id):
         
             
         #print(current_user.organization)
-        caching_key = f"media_trees_{current_user.id}"
         res = IGApiFetcher.postReplyToComment(current_user.oauth.token["access_token"], id, body['message'])
-        cached_data = loadCachedResults.delay(current_user.oauth.token["access_token"], caching_key, current_user.id).get()
+        cached_data = loadCachedResults.delay(current_user.oauth.token["access_token"], current_user.id).get()
         
         # tabelle mit Verbesserungen erweitern
         if "generated_message" in body:
@@ -221,7 +199,7 @@ def post_message(id):
             fb_id = cached_data["id_mapping"].get(id)["media"]
             
             media = db.session.execute(db.select(IGMedia).filter(IGMedia.fb_id == fb_id)).scalar_one_or_none()
-            loadCachedResults.delay(current_user.oauth.token["access_token"], caching_key, current_user.id, updated_media_id=media.fb_id)
+            loadCachedResults.delay(current_user.oauth.token["access_token"], current_user.id, updated_media_id=media.fb_id)
             improvement = AnswerImprovements(generated_answer=body["generated_message"], improved_answer=body["message"], user=current_user, media=media)
             db.session.add(improvement)
             db.session.commit()
