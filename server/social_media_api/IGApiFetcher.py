@@ -410,7 +410,7 @@ def getLatestComments(access_token, media_fb_id):
                 print(traceback.format_exc())
                 print(com)
                 continue
-    return tuple([media_fb_id, tree])
+    return [media_fb_id, tree]
     
 def updateAllEntries(access_token, user):
     pages, bz_accs, medias = [], [], []
