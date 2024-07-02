@@ -160,35 +160,41 @@ def initUserCustomerExamples(user_id, media_trees):
     orga = db.session.execute(db.select(Organization).join(User).filter(User.id == user_id)).scalar_one_or_none()
     orga.interaction_examples = results
     db_handler.commitToDB(orga)
-  
+
+def init_gpt_thread(GPTConfig, media, user_id):
+    prompt_msg = ""
+    gpt_thread = GPTConfig().CLIENT.beta.threads.create(
+        tool_resources={
+            "file_search": {
+                "vector_store_ids": [current_user.organization.vec_storage_id]
+            }
+        }
+    )
+    media.gpt_thread_id = gpt_thread.id
+    db_handler.commitAllToDB([media])
+    # wenn interaction examples existieren, bis zu 10 davon an eine message hängen
+    interaction_examples = db.session.execute(db.select(InteractionExamples).join(Organization).join(User).filter(User.id == user_id).limit(10)).scalars().all()
+
+    for ex in interaction_examples:
+        prompt_msg += ex.export()
+    return prompt_msg, gpt_thread
+
 @shared_task
-def generate_response(user_id, media_id, GPTConfig, messages):
+def generate_response(user_id, GPTConfig, messages):
     db.engine.dispose()
     media = db.session.execute(db.select(IGMedia).filter(IGMedia.fb_id == messages["media"])).scalar_one_or_none()
     prompt_msg = ""
     # checken, ob IGMedia gpt_thread hat
     if media.gpt_thread_id is None:
-        gpt_thread = GPTConfig().CLIENT.beta.threads.create(
-            tool_resources={
-                "file_search": {
-                    "vector_store_ids": [current_user.organization.vec_storage_id]
-                }
-            }
-        )
-        media.gpt_thread_id = gpt_thread.id
-        db_handler.commitAllToDB([media])
-        # wenn interaction examples existieren, bis zu 10 davon an eine message hängen
-        interaction_examples = db.session.execute(db.select(InteractionExamples).join(Organization).join(User).filter(User.id == user_id).limit(10)).scalars().all()
-    
-        for ex in interaction_examples:
-            prompt_msg += ex.export()
+        prompt_msg, gpt_thread = init_gpt_thread(GPTConfig, media, user_id)
     else:
         gpt_thread = GPTConfig().CLIENT.beta.threads.retrieve(media.gpt_thread_id)
     
     # prompt instructions anhängen
     instructions = open(os.path.join(current_app.config["CONFIG_FOLDER"], "instruction_template.txt"),"r", encoding="utf-8").read()   
-    prompt_msg += instructions.replace("{{caption}}", media.caption).replace("{{thumbnail}}", media.media_url).replace("{{company_name}}", current_user.organization.name)    
+    system_instructions = instructions.replace("{{caption}}", media.caption).replace("{{thumbnail}}", media.media_url).replace("{{company_name}}", current_user.organization.name)    
     prompt_msg += "Antworte auf dieses Kommentar "
+    
     # letzte Messages aus der Konversation anhängen
     if len(messages["replies"]):
         prompt_msg += f"{messages['replies'][0]['text']}"
@@ -198,13 +204,34 @@ def generate_response(user_id, media_id, GPTConfig, messages):
     run = GPTConfig().CLIENT.beta.threads.runs.create_and_poll(
         thread_id=gpt_thread.id,
         assistant_id=current_app.config["GPT_ASSISTANT_ID"],
-        instructions=prompt_msg
+        instructions=system_instructions,
+        additional_messages=[{
+            "role": "user",
+            "content": prompt_msg
+        }]
     )
     db_run = OpenAIRun(run_id=run.id, organization=current_user.organization)
     
     db_handler.commitAllToDB([db_run])
     return run, gpt_thread
 
+@shared_task
+def send_posted_message(user_id, GPTConfig, message, media_id):
+    db.engine.dispose()
+    media = db.session.execute(db.select(IGMedia).filter(IGMedia.id == media_id)).scalar_one_or_none()
+
+    gpt_thread = GPTConfig().CLIENT.beta.threads.retrieve(media.gpt_thread_id)
+    prompt_msg = f"User hat folgende Nachricht geschrieben: {message}"
+    run = GPTConfig().CLIENT.beta.threads.runs.create(
+            thread_id=gpt_thread.id,
+            assistant_id=current_app.config["GPT_ASSISTANT_ID"],
+            instructions="Berücksichtige diese Nachricht bei der Generierung von neuen Antworten. Generiere hierauf keine Antwort",
+            additional_messages=[{"role":"assistant", "content":prompt_msg}]
+    )
+    db_run = OpenAIRun(run_id=run.id, organization=current_user.organization)
+    
+    db_handler.commitAllToDB([db_run])
+    
 def find_similar_words_in_texts(texts, term, threshold=80):
     for text in texts:
         if fuzz.partial_ratio(term, text) >= threshold:

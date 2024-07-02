@@ -9,9 +9,13 @@ from pathvalidate import replace_symbol
 from flask_login import login_required, current_user
 import traceback
 from zoneinfo import ZoneInfo
-from ...tasks import loadCachedResults, search_for_term_in_cache, get_cached_data
+from ...tasks import loadCachedResults, search_for_term_in_cache, get_cached_data, send_posted_message
 from dateutil import parser as date_parser
 from ....cache_config import cache
+
+def GPTConfig():
+    from server import GPTConfig
+    return GPTConfig
 
 threads_bp = Blueprint('threads', __name__)
 
@@ -23,7 +27,7 @@ def thread_result_obj(comment):
         "avatar": None,
         "platform": _PlatformEnum.Instagram.name,
         "lastUpdated": None,
-        "message": comment["text"],
+        "message": None,
         "unread": True,
         "interactions": len(comment["replies"]) + 1,
         "bookmarked": False,
@@ -32,9 +36,13 @@ def thread_result_obj(comment):
     timestamp = None
     if len(comment["replies"]):
         timestamp = comment["replies"][-1]["timestamp"]
+        text = comment["replies"][-1]["text"]
     else: 
         timestamp = comment["timestamp"]
+        text = comment["text"]
+        
     response["lastUpdated"] = date_parser.isoparse(timestamp).astimezone(ZoneInfo("Europe/Berlin"))
+    response["message"] = text
     
     return response
 
@@ -191,10 +199,12 @@ def post_message(id):
             fb_id = cached_data["id_mapping"].get(id)["media"]
             
             media = db.session.execute(db.select(IGMedia).filter(IGMedia.fb_id == fb_id)).scalar_one_or_none()
-            loadCachedResults.delay(current_user.oauth.token["access_token"], current_user.id, updated_media_id=media.fb_id)
+            loadCachedResults.delay(current_user.oauth.token["access_token"], current_user.id, updated_media_id=media.fb_id).forget()
             improvement = AnswerImprovements(generated_answer=body["generated_message"], improved_answer=body["message"], user=current_user, media=media)
             db.session.add(improvement)
             db.session.commit()
+            # in GPT Thread gesendete Nachricht schicken
+            send_posted_message(current_user.id, GPTConfig, body["message"], media.id)
         return jsonify(), 200
     except Exception:
         print(traceback.format_exc())
