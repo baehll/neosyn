@@ -2,9 +2,10 @@ from flask import Blueprint, jsonify, request, current_app
 from ..db.models import db, IGPage, IGMedia, IGBusinessAccount, OAuth
 from ..social_media_api.IGApiFetcher import getPages, getBusinessAccounts, getMedia, updateAllEntries
 from flask_login import current_user, login_required
-from .tasks import update_ig_entries, loadCachedResults
+from .tasks import update_ig_entries, loadCachedResults, get_cached_data
 from datetime import datetime
 from zoneinfo import ZoneInfo
+from ..cache_config import cache
 test = Blueprint('test', __name__)
 
 def GPTConfig():
@@ -86,10 +87,12 @@ def task_status(id):
 @test.route("/cached_results/<id>", methods=["GET"])
 @login_required
 def cached_results_by_id(id):
-    caching_key = f"media_trees_{id}"
-    print(caching_key)
-    oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=id))).scalar_one_or_none()
+    # caching_key = f"media_trees_{id}"
+    # print(caching_key)
+    # oauth = db.session.execute(db.select(OAuth).filter(OAuth.user.has(id=id))).scalar_one_or_none()
     
-    print(f"access_token: {oauth.token['access_token']}")
-    task = loadCachedResults.delay(oauth.token["access_token"], id).get()
-    return jsonify(task)
+    # print(f"access_token: {oauth.token['access_token']}")
+    # task = loadCachedResults.delay(oauth.token["access_token"], id).get()
+    cached_data = get_cached_data.delay(id).get()
+    print(cache.get(f"media_trees_{id}"))
+    return jsonify(cached_data)

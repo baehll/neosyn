@@ -13,6 +13,7 @@ from celery import Celery, Task
 from celery import current_app as current_celery_app
 from flask_caching import Cache
 from .cache_config import cache, init_cache
+from .web.tasks import build_cache
 import os
 
 ENV = EnvManager()
@@ -107,7 +108,7 @@ def create_app() -> Flask:
     if not os.path.isdir(config("CACHE_FOLDER")):
         os.mkdir(config("CACHE_FOLDER"))
     
-    init_cache(app, config={"CACHE_TYPE":"FileSystemCache", "CACHE_DEFAULT_TIMEOUT":900, "CACHE_DIR": config("CACHE_FOLDER")})
+    init_cache(app, config={"CACHE_TYPE":"FileSystemCache", "CACHE_DEFAULT_TIMEOUT":0, "CACHE_DIR": config("CACHE_FOLDER")})
     
     # # Celery Stuff
     # app.config.from_mapping(
@@ -174,5 +175,7 @@ def create_app() -> Flask:
     if app.debug == True:
         from .web.test import test
         app.register_blueprint(test, url_prefix="/test")
-        
+    
+    build_cache.delay().forget()
+    
     return app    

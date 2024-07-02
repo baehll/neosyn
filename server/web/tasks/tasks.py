@@ -40,6 +40,7 @@ def update_interactions(oauth_token, thread_ids):
 def loadCommentsForMedia(oauth_token, media_fb_id):
     return IGApiFetcher.getLatestComments(oauth_token, media_fb_id) 
 
+@shared_task
 def fill_media_trees(oauth_token, medias, worker_numbers, id_to_node, media_trees):
     active_tasks = [] 
         
@@ -59,9 +60,42 @@ def fill_media_trees(oauth_token, medias, worker_numbers, id_to_node, media_tree
         time.sleep(0.01)
 
 @shared_task
-def loadCachedResults(oauth_token, user_id, updated_media_id=None):
+def get_cached_data(user_id):
+    cache_id = f"media_trees_{user_id}"
+    return cache.get(cache_id)
+
+@shared_task
+def build_cache(user_ids=None):
     db.engine.dispose()
     
+    if not user_ids:
+        users = db.session.execute(db.select(User)).scalars().all()
+    else:
+        users = db.session.execute(db.select(User).filter(User.id.in_(user_ids))).scalars().all()
+        
+    #print(user_ids)
+    for user in users:
+        loadCachedResults.s(user.oauth.token["access_token"], user.id).delay()
+    
+@shared_task
+def presort_cached_results(user_id, option=None):
+    print("presorting")
+    cache_id = f"media_trees_{user_id}"
+    cached_data = cache.get(cache_id)
+    
+    if option is not None:
+        cached_data["sorted"][option] = interaction_query.get_sorted_list(cached_data["media_trees"], sort_order=option)
+    else:
+        if cached_data.get("sorted").get("new") is None:
+            cached_data["sorted"]["new"] = interaction_query.get_sorted_list(cached_data["media_trees"])
+        if cached_data.get("sorted").get("least_interaction") is None:
+            cached_data["sorted"]["least_interaction"] = interaction_query.get_sorted_list(cached_data["media_trees"])
+
+    cache.set(cache_id, cached_data)
+    
+@shared_task
+def loadCachedResults(oauth_token, user_id, updated_media_id=None):
+    print(f"loading for {user_id}")
     cache_id = f"media_trees_{user_id}"
     cached_data = cache.get(cache_id)
     
@@ -91,10 +125,15 @@ def loadCachedResults(oauth_token, user_id, updated_media_id=None):
     
     print("starting tasks")
     
-    fill_media_trees(oauth_token, [m.fb_id for m in medias], 2, id_to_node, media_trees)
+    fill_media_trees(oauth_token, [m.fb_id for m in medias], worker_numbers=2, id_to_node=id_to_node, media_trees=media_trees)
 
     print("finished tasks")       
-    data = {"media_trees": media_trees, "id_mapping": id_to_node}
+    data = {"media_trees": media_trees, 
+            "id_mapping": id_to_node, 
+            "sorted":{
+                "new": None,
+                "least_interaction": None
+    }}
        
     cache.set(cache_id, data)
 
@@ -102,8 +141,9 @@ def loadCachedResults(oauth_token, user_id, updated_media_id=None):
     if not orga is None and not len(orga.interaction_examples):
         initUserCustomerExamples.s(user_id, media_trees).delay()
     
+    presort_cached_results.s(user_id).delay()
     return data
-
+    
 @shared_task
 def initUserCustomerExamples(user_id, media_trees):
     results = []
@@ -172,7 +212,6 @@ def find_similar_words_in_texts(texts, term, threshold=80):
     return False
 
 def search_term_in_comment(comment, term, threshold=80):
-    
     texts_to_search = [
         comment.get('from', {}).get('username', ''),
         comment.get('text', '')

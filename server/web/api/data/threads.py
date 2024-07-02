@@ -9,8 +9,9 @@ from pathvalidate import replace_symbol
 from flask_login import login_required, current_user
 import traceback
 from zoneinfo import ZoneInfo
-from ...tasks import loadCachedResults, search_for_term_in_cache
+from ...tasks import loadCachedResults, search_for_term_in_cache, get_cached_data
 from dateutil import parser as date_parser
+from ....cache_config import cache
 
 threads_bp = Blueprint('threads', __name__)
 
@@ -51,12 +52,16 @@ def serialize_comment(comment, bzaccs):
         
     return result
 
-def sort_threads(sorting_option, threads, offset, slice_length):
+def sort_threads(sorting_option, offset, slice_length):
     if sorting_option == "new" or sorting_option is None:
-        return interaction_query.get_sorted_slice(threads, offset, offset+slice_length)
-    else:
-        return interaction_query.get_sorted_slice(threads, offset, offset+slice_length, sort_order=sorting_option)
-
+        return interaction_query.get_sorted_slice(cache.get(f"media_trees_{current_user.id}")["sorted"]["new"], offset, slice_length)
+    elif sorting_option == "old":
+        return reversed(interaction_query.get_sorted_slice(cache.get(f"media_trees_{current_user.id}")["sorted"]["new"], offset, slice_length))
+    elif sorting_option == "least_interaction":
+        return interaction_query.get_sorted_slice(cache.get(f"media_trees_{current_user.id}")["sorted"]["least_interaction"], offset, slice_length)
+    elif sorting_option == "most_interaction":
+        return reversed(interaction_query.get_sorted_slice(cache.get(f"media_trees_{current_user.id}")["sorted"]["least_interaction"], offset, slice_length))
+    
 @threads_bp.route("/", methods=["POST"])
 @login_required
 def all_threads():
@@ -67,17 +72,12 @@ def all_threads():
         # Offset Query Parameter     
         offset = int(request.args.get("offset")) if request.args.get("offset") is not None else 0
         unread = request.args.get("unread") if request.args.get("unread") else None
-        cached_data = loadCachedResults.delay(current_user.oauth.token["access_token"], current_user.id).get()
-        all_threads = cached_data["media_trees"]
-        
-        if len(all_threads) == 0:
-            return jsonify([]), 204
         
         sorting_option = request.args.get("sorting") 
         if sorting_option not in [None, "new", "old", "most_interaction", "least_interaction"]:
             return jsonify({"error":"Unspecified sorting argument, only 'new' (default), 'old', 'most-interaction', 'least-interaction' allowed"}), 500
               
-        sorted_threads = sort_threads(sorting_option, all_threads, offset, offset+25)
+        sorted_threads = sort_threads(sorting_option, offset, offset+25)
 
         if "q" in request.get_json() and request.get_json()["q"] != "":
             query = replace_symbol(request.get_json()["q"])
@@ -93,7 +93,7 @@ def all_threads():
 @login_required
 def get_messages_by_threadid(id):
     try:
-        cached_data = loadCachedResults.delay(current_user.oauth.token["access_token"], current_user.id).get()
+        cached_data = cache.get(f"media_trees_{current_user.id}")
         bzaccs = db.session.execute(db.select(IGBusinessAccount.fb_id).join(IGPage).join(User).filter(User.id == current_user.id)).scalar_one_or_none()
         
         if request.method == "GET":    
@@ -149,7 +149,7 @@ def get_messages_by_threadid(id):
 @login_required
 def get_post_information(id):
     try:
-        cached_data = loadCachedResults.delay(current_user.oauth.token["access_token"], current_user.id).get()
+        cached_data = cache.get(f"media_trees_{current_user.id}")
         
         fb_id = cached_data["id_mapping"].get(id)["media"]
         
@@ -181,10 +181,9 @@ def post_message(id):
         if "message" not in body or body["message"] == "":
             return jsonify({"error": "No message specified"}), 400
         
-            
         #print(current_user.organization)
         res = IGApiFetcher.postReplyToComment(current_user.oauth.token["access_token"], id, body['message'])
-        cached_data = loadCachedResults.delay(current_user.oauth.token["access_token"], current_user.id).get()
+        cached_data = cache.get(f"media_trees_{current_user.id}")
         
         # tabelle mit Verbesserungen erweitern
         if "generated_message" in body:
@@ -200,64 +199,3 @@ def post_message(id):
     except Exception:
         print(traceback.format_exc())
         return jsonify({"error":"An exception has occoured"}), 500
-    
-# @threads_bp.route("/bookmarks", methods=["GET"])
-# @login_required
-# def get_bookmarked_threads():
-#     try:
-#         # pages für den user finden
-#         pages = db.session.execute(db.select(IGPage).filter_by(user=current_user)).scalars().all()
-#         media_ids = []
-#         for p in pages:
-#             for b in p.business_accounts:
-#                 for m in b.medias:
-#                     media_ids.append(m.id)
-        
-#         # alle Threads finden  
-#         stmt = db.select(IGThread).filter(IGThread.media_id.in_(media_ids)).filter_by(is_bookmarked=True).limit(20)
-#         if request.args.get("offset"):
-#             try:
-#                 stmt.offset((int(request.args.get("offset")) - 1) * 20)
-#             except Exception:
-#                 return jsonify({"error" : "Offset is not a number"}), 500
-#         threads = db.session.execute(stmt).scalars().all()
-#         # Response Objekt bauen, thread um Customer Daten und letzte aktuelle message des Threads + lastUpdated (= zeitpunkt der letzten aktuellen message)
-#         results = []
-#         for at in threads:
-#             last_comment = sorted(at.comments, key=lambda x: x.timestamp)[-1]
-#             results.append(thread_result_obj(at, last_comment))
-            
-#         return jsonify(results)
-#     except Exception:
-#         print(traceback.format_exc())
-#         return jsonify({"error":"An exception has occoured"}), 500
-
-# @threads_bp.route("/bookmarks/<threadId>", methods=["PUT"])
-# @login_required
-# def update_bookmarks(threadId):
-#     try:
-#         if request.method == "PUT":
-#             pages = db.session.execute(db.select(IGPage).filter_by(user=current_user)).scalars().all()
-#             media_ids = []
-#             for p in pages:
-#                 for b in p.business_accounts:
-#                     for m in b.medias:
-#                         media_ids.append(m.id)
-            
-#             # alle Threads finden            
-#             thread = db.session.execute(db.select(IGThread)
-#                                          .filter(IGThread.media_id.in_(media_ids))
-#                                          .filter_by(id=int(threadId))).scalar_one_or_none()
-#             if thread is None:
-#                 return jsonify({"error":"Thread ID not associated with user"}), 500
-            
-#             if "bookmarked" not in request.get_json():
-#                 return jsonify({"error", "Illegal bookmarked status"}), 500
-            
-#             thread.is_bookmarked = request.get_json()["bookmarked"]
-#             db.session.add(thread)
-#             db.session.commit()
-#             return jsonify(), 200
-#     except Exception:
-#         print(traceback.format_exc())
-#         return jsonify({"error":"An exception has occoured"}), 500

@@ -35,13 +35,24 @@ def merge_sorted_trees_gen(merged_trees, sort_order='new'):
     )
     return iter(sorted_trees)
 
-def get_sorted_slice(data, start, end, sort_order='new'):
+def get_sorted_list(data, sort_order="new"):
     merged_trees = []
     for t in data:
         merged_trees.extend(t[1])
-    merged_sorted_gen = merge_sorted_trees_gen(merged_trees, sort_order)
+    merge_sorted_gen = merge_sorted_trees_gen(merged_trees, sort_order)
+    return merge_sorted_gen
+
+def get_sorted_slice(merged_sorted_gen, start, end):
     sliced_nodes = list(islice(merged_sorted_gen, start, end))
     return sliced_nodes
+
+# def get_sorted_slice(data, start, end, sort_order='new'):
+#     merged_trees = []
+#     for t in data:
+#         merged_trees.extend(t[1])
+#     merged_sorted_gen = merge_sorted_trees_gen(merged_trees, sort_order)
+#     sliced_nodes = list(islice(merged_sorted_gen, start, end))
+#     return sliced_nodes
 
 def add_tree(id_to_node, trees, tree_tuple):
     trees.append(tree_tuple)
