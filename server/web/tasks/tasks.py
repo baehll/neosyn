@@ -40,6 +40,7 @@ def update_interactions(oauth_token, thread_ids):
 def loadCommentsForMedia(oauth_token, media_fb_id):
     return IGApiFetcher.getLatestComments(oauth_token, media_fb_id) 
 
+@shared_task
 def fill_media_trees(oauth_token, medias, worker_numbers, id_to_node, media_trees):
     active_tasks = [] 
         
@@ -59,9 +60,42 @@ def fill_media_trees(oauth_token, medias, worker_numbers, id_to_node, media_tree
         time.sleep(0.01)
 
 @shared_task
-def loadCachedResults(oauth_token, user_id, updated_media_id=None):
+def get_cached_data(user_id):
+    cache_id = f"media_trees_{user_id}"
+    return cache.get(cache_id)
+
+@shared_task
+def build_cache(user_ids=None):
     db.engine.dispose()
     
+    if not user_ids:
+        users = db.session.execute(db.select(User)).scalars().all()
+    else:
+        users = db.session.execute(db.select(User).filter(User.id.in_(user_ids))).scalars().all()
+        
+    #print(user_ids)
+    for user in users:
+        loadCachedResults.s(user.oauth.token["access_token"], user.id).delay()
+    
+@shared_task
+def presort_cached_results(user_id, option=None):
+    print("presorting")
+    cache_id = f"media_trees_{user_id}"
+    cached_data = cache.get(cache_id)
+    
+    if option is not None:
+        cached_data["sorted"][option] = interaction_query.get_sorted_list(cached_data["media_trees"], sort_order=option)
+    else:
+        if cached_data.get("sorted").get("new") is None:
+            cached_data["sorted"]["new"] = interaction_query.get_sorted_list(cached_data["media_trees"])
+        if cached_data.get("sorted").get("least_interaction") is None:
+            cached_data["sorted"]["least_interaction"] = interaction_query.get_sorted_list(cached_data["media_trees"])
+
+    cache.set(cache_id, cached_data)
+    
+@shared_task
+def loadCachedResults(oauth_token, user_id, updated_media_id=None):
+    print(f"loading for {user_id}")
     cache_id = f"media_trees_{user_id}"
     cached_data = cache.get(cache_id)
     
@@ -91,10 +125,15 @@ def loadCachedResults(oauth_token, user_id, updated_media_id=None):
     
     print("starting tasks")
     
-    fill_media_trees(oauth_token, [m.fb_id for m in medias], 2, id_to_node, media_trees)
+    fill_media_trees(oauth_token, [m.fb_id for m in medias], worker_numbers=2, id_to_node=id_to_node, media_trees=media_trees)
 
     print("finished tasks")       
-    data = {"media_trees": media_trees, "id_mapping": id_to_node}
+    data = {"media_trees": media_trees, 
+            "id_mapping": id_to_node, 
+            "sorted":{
+                "new": None,
+                "least_interaction": None
+    }}
        
     cache.set(cache_id, data)
 
@@ -102,8 +141,9 @@ def loadCachedResults(oauth_token, user_id, updated_media_id=None):
     if not orga is None and not len(orga.interaction_examples):
         initUserCustomerExamples.s(user_id, media_trees).delay()
     
+    presort_cached_results.s(user_id).delay()
     return data
-
+    
 @shared_task
 def initUserCustomerExamples(user_id, media_trees):
     results = []
@@ -120,35 +160,41 @@ def initUserCustomerExamples(user_id, media_trees):
     orga = db.session.execute(db.select(Organization).join(User).filter(User.id == user_id)).scalar_one_or_none()
     orga.interaction_examples = results
     db_handler.commitToDB(orga)
-  
+
+def init_gpt_thread(GPTConfig, media, user_id):
+    prompt_msg = ""
+    gpt_thread = GPTConfig().CLIENT.beta.threads.create(
+        tool_resources={
+            "file_search": {
+                "vector_store_ids": [current_user.organization.vec_storage_id]
+            }
+        }
+    )
+    media.gpt_thread_id = gpt_thread.id
+    db_handler.commitAllToDB([media])
+    # wenn interaction examples existieren, bis zu 10 davon an eine message hängen
+    interaction_examples = db.session.execute(db.select(InteractionExamples).join(Organization).join(User).filter(User.id == user_id).limit(10)).scalars().all()
+
+    for ex in interaction_examples:
+        prompt_msg += ex.export()
+    return prompt_msg, gpt_thread
+
 @shared_task
-def generate_response(user_id, media_id, GPTConfig, messages):
+def generate_response(user_id, GPTConfig, messages):
     db.engine.dispose()
     media = db.session.execute(db.select(IGMedia).filter(IGMedia.fb_id == messages["media"])).scalar_one_or_none()
     prompt_msg = ""
     # checken, ob IGMedia gpt_thread hat
     if media.gpt_thread_id is None:
-        gpt_thread = GPTConfig().CLIENT.beta.threads.create(
-            tool_resources={
-                "file_search": {
-                    "vector_store_ids": [current_user.organization.vec_storage_id]
-                }
-            }
-        )
-        media.gpt_thread_id = gpt_thread.id
-        db_handler.commitAllToDB([media])
-        # wenn interaction examples existieren, bis zu 10 davon an eine message hängen
-        interaction_examples = db.session.execute(db.select(InteractionExamples).join(Organization).join(User).filter(User.id == user_id).limit(10)).scalars().all()
-    
-        for ex in interaction_examples:
-            prompt_msg += ex.export()
+        prompt_msg, gpt_thread = init_gpt_thread(GPTConfig, media, user_id)
     else:
         gpt_thread = GPTConfig().CLIENT.beta.threads.retrieve(media.gpt_thread_id)
     
     # prompt instructions anhängen
     instructions = open(os.path.join(current_app.config["CONFIG_FOLDER"], "instruction_template.txt"),"r", encoding="utf-8").read()   
-    prompt_msg += instructions.replace("{{caption}}", media.caption).replace("{{thumbnail}}", media.media_url).replace("{{company_name}}", current_user.organization.name)    
+    system_instructions = instructions.replace("{{caption}}", media.caption).replace("{{thumbnail}}", media.media_url).replace("{{company_name}}", current_user.organization.name)    
     prompt_msg += "Antworte auf dieses Kommentar "
+    
     # letzte Messages aus der Konversation anhängen
     if len(messages["replies"]):
         prompt_msg += f"{messages['replies'][0]['text']}"
@@ -158,13 +204,34 @@ def generate_response(user_id, media_id, GPTConfig, messages):
     run = GPTConfig().CLIENT.beta.threads.runs.create_and_poll(
         thread_id=gpt_thread.id,
         assistant_id=current_app.config["GPT_ASSISTANT_ID"],
-        instructions=prompt_msg
+        instructions=system_instructions,
+        additional_messages=[{
+            "role": "user",
+            "content": prompt_msg
+        }]
     )
     db_run = OpenAIRun(run_id=run.id, organization=current_user.organization)
     
     db_handler.commitAllToDB([db_run])
     return run, gpt_thread
 
+@shared_task
+def send_posted_message(user_id, GPTConfig, message, media_id):
+    db.engine.dispose()
+    media = db.session.execute(db.select(IGMedia).filter(IGMedia.id == media_id)).scalar_one_or_none()
+
+    gpt_thread = GPTConfig().CLIENT.beta.threads.retrieve(media.gpt_thread_id)
+    prompt_msg = f"User hat folgende Nachricht geschrieben: {message}"
+    run = GPTConfig().CLIENT.beta.threads.runs.create(
+            thread_id=gpt_thread.id,
+            assistant_id=current_app.config["GPT_ASSISTANT_ID"],
+            instructions="Berücksichtige diese Nachricht bei der Generierung von neuen Antworten. Generiere hierauf keine Antwort",
+            additional_messages=[{"role":"assistant", "content":prompt_msg}]
+    )
+    db_run = OpenAIRun(run_id=run.id, organization=current_user.organization)
+    
+    db_handler.commitAllToDB([db_run])
+    
 def find_similar_words_in_texts(texts, term, threshold=80):
     for text in texts:
         if fuzz.partial_ratio(term, text) >= threshold:
@@ -172,7 +239,6 @@ def find_similar_words_in_texts(texts, term, threshold=80):
     return False
 
 def search_term_in_comment(comment, term, threshold=80):
-    
     texts_to_search = [
         comment.get('from', {}).get('username', ''),
         comment.get('text', '')
