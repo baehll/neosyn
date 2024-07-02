@@ -43,7 +43,7 @@ def celery_init_app(app: Flask) -> Celery:
     return celery_app
 
 
-def create_app() -> Flask:
+def create_app(as_celery=False) -> Flask:
     app = Flask(__name__)
         
     app.config["CONFIG_FOLDER"] = config("CONFIG_FOLDER")
@@ -175,7 +175,8 @@ def create_app() -> Flask:
     if app.debug == True:
         from .web.test import test
         app.register_blueprint(test, url_prefix="/test")
-    
-    build_cache.delay().forget()
+        
+    if not as_celery:
+        build_cache.delay().forget()
     
     return app    
