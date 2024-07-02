@@ -66,9 +66,9 @@ def get_cached_data(user_id):
 
 @shared_task
 def build_cache(user_ids=None):
-    db.engine.dispose()
+    #db.engine.dispose()
     
-    if not user_ids:
+    if user_ids is None:
         users = db.session.execute(db.select(User)).scalars().all()
     else:
         users = db.session.execute(db.select(User).filter(User.id.in_(user_ids))).scalars().all()
@@ -79,7 +79,7 @@ def build_cache(user_ids=None):
     
 @shared_task
 def presort_cached_results(user_id, option=None):
-    print("presorting")
+    print(f"presorting for {user_id}")
     cache_id = f"media_trees_{user_id}"
     cached_data = cache.get(cache_id)
     
@@ -123,11 +123,11 @@ def loadCachedResults(oauth_token, user_id, updated_media_id=None):
     media_trees = []
     id_to_node = {}
     
-    print("starting tasks")
+    print(f"starting tasks for {user_id}")
     
     fill_media_trees(oauth_token, [m.fb_id for m in medias], worker_numbers=2, id_to_node=id_to_node, media_trees=media_trees)
 
-    print("finished tasks")       
+    print(f"finished tasks for {user_id}")       
     data = {"media_trees": media_trees, 
             "id_mapping": id_to_node, 
             "sorted":{
