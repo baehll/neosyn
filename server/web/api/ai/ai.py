@@ -6,7 +6,8 @@ from ....db.models import OpenAIRun, IGMedia, db
 from ....db import db_handler
 from ....utils import assistant_utils as gpt_assistant
 import traceback, json, os, requests
-from ...tasks import generate_response, loadCachedResults
+from ...tasks import generate_response
+from ....cache_config import cache
 
 def GPTConfig():
     from server import GPTConfig
@@ -27,7 +28,7 @@ def generate_responses():
         # if not isThreadByUser(body["threadId"], current_user):
         #     return jsonify({"error":"Thread not associated with user"}), 500
         
-        cached_data = loadCachedResults(current_user.oauth.token["access_token"], current_user.id)
+        cached_data = cache.get(f"media_trees_{current_user.id}")
         run, gpt_thread = generate_response(current_user.id , GPTConfig, cached_data["id_mapping"].get(body["threadId"]))
         
         if run.status == 'completed': 

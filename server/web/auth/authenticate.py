@@ -101,8 +101,6 @@ def facebook_logged_in(blueprint, token):
 
     if oauth.user:
         login_user(oauth.user)
-        # trigger async DB Update
-        init = loadCachedResults.s(oauth.token["access_token"], oauth.user_id).delay()
         print("Successfully signed in.")
         return redirect("/app.html")
     else:
